@@ -37,9 +37,10 @@ This change implements the `block` Behavior only. The Adapter will be updated in
 
 1. Create `packages/opencode/` directory
 2. Implement Adapter function using opencode API
-3. Register `tool.execute.before` hook (Tool Call)
-4. Import Rule Packs and check against them
-5. Throw Error when Rule matches (block Behavior)
+3. Register `tool.execute.before` hook (Tool Call) for **all tools** (not just bash)
+4. Normalize opencode event into `ToolCallContext` (discriminated union on toolName)
+5. Call `matchAndResolve(ctx, ALL_RULE_PACKS, capabilities)` from `@agent-guardrails/engine`
+6. Throw Error with result.message when engine returns a block Action
 
 ## Harness Capabilities (Verified)
 
@@ -56,32 +57,42 @@ For this POC, we only use `block`. `suggest`/`run`/`redact` come later.
 
 ```typescript
 import type { Plugin } from "@opencode-ai/plugin";
-import { envRulePack, sopsRulePack, privateKeyRulePack } from "@agent-guardrails/secrets";
+import type { ToolCallContext } from "@agent-guardrails/core";
+import { matchAndResolve } from "@agent-guardrails/engine";
+import { ALL_RULE_PACKS } from "@agent-guardrails/secrets";
+import { OPENCODE_CAPABILITIES } from "./capabilities";
 
 export const GuardrailsPlugin: Plugin = async ({ $ }) => {
-  const rulePacks = [envRulePack, sopsRulePack, privateKeyRulePack];
-  
   return {
     "tool.execute.before": async (input, output) => {
-      if (input.tool === "bash") {
-        const command = output.args.command as string;
-        for (const pack of rulePacks) {
-          for (const rule of pack.rules) {
-            if (rule.phase === "before-tool" && rule.match.type === "bash-command") {
-              if (rule.match.pattern.test(command)) {
-                if (rule.defaultAction.type === "block") {
-                  // opencode uses Error to carry the Message
-                  throw new Error(rule.defaultAction.message);
-                }
-              }
-            }
-          }
-        }
+      // Step 1: Normalize opencode event into ToolCallContext
+      const toolCtx = normalizeToContext(input, output);
+
+      // Step 2: Call engine
+      const result = matchAndResolve(toolCtx, ALL_RULE_PACKS, OPENCODE_CAPABILITIES);
+
+      // Step 3: Translate to opencode-specific block mechanism
+      if (result?.type === "block" || result?.type === "suggest") {
+        throw new Error(result.message);
       }
     }
   };
 };
+
+function normalizeToContext(input, output): ToolCallContext {
+  switch (input.tool) {
+    case "bash":
+      return { toolName: "bash", command: output.args.command };
+    case "read":
+    case "write":
+      return { toolName: input.tool, filePath: output.args.path };
+    default:
+      return { toolName: input.tool };
+  }
+}
 ```
+
+The Adapter is a thin shim: normalize → engine → translate. All matching logic lives in `@agent-guardrails/engine`.
 
 ## Success Criteria
 

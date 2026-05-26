@@ -42,9 +42,12 @@ Create `packages/core/` with:
 
 1. Create monorepo structure with npm workspaces
 2. Define Behavior enum and Rule types in `src/types.ts`
-3. Define Rule Pack interface in `src/rule-pack.ts`
-4. Define Harness Capabilities in `src/harness.ts`
-5. Set up vitest for deterministic unit tests
+3. Define GuardrailMatcher discriminated union (bash-command, file-path, predicate) in core
+4. Define ToolCallContext discriminated union (on toolName) in core
+5. Define Rule Pack interface in `src/rule-pack.ts`
+6. Define Harness Capabilities in `src/harness.ts`
+7. Create `@agent-guardrails/engine` package with `matchAndResolve()`
+8. Set up vitest for deterministic unit tests
 
 ## Key Design Decisions
 
@@ -64,13 +67,58 @@ type GuardrailBehavior = "block" | "suggest" | "run" | "redact" | "confirm";
 type GuardrailAction =
   | { type: "allow" }
   | { type: "block"; message: string }
-  | { type: "suggest"; replacement: string | string[]; message?: string }
-  | { type: "run"; replacement: string | string[]; message?: string }
+  | { type: "suggest"; replacement: string; message?: string }
+  | { type: "run"; replacement: string; message?: string }
   | { type: "redact"; replacement: string }
   | { type: "confirm"; message: string; fallback?: GuardrailAction };
 ```
 
-Note: `suggest` and `run` support multiple Replacement alternatives. The Harness selects the most appropriate based on context. The first element is the primary recommendation (highest Confidence).
+Note: Messages support `{matched}` template placeholder, interpolated by the engine with the actual matched value (file path or command). `suggest` and `run` carry a single Replacement string.
+
+### Action Fallback Chain
+
+The engine resolves Actions via a formalized fallback chain:
+```
+run → suggest → block
+confirm → suggest
+suggest (no safer command found) → block (generic contextual message)
+```
+
+When a Harness lacks the required Capability, the engine walks the chain. When `suggest` cannot find a safer command, it falls back to `block` with the generic message: `"Blocked: \`{matched}\` — no safer alternative available."`
+
+### GuardrailMatcher Type
+```typescript
+type GuardrailMatcher =
+  | { type: "bash-command"; pattern: RegExp }
+  | { type: "file-path"; pattern: RegExp }
+  | { type: "predicate"; test: (ctx: ToolCallContext) => boolean };
+```
+
+Core owns the full discriminated union. Adding a new matcher type is a core change that forces engine updates.
+
+### ToolCallContext Type
+```typescript
+type ToolCallContext =
+  | { toolName: "bash"; command: string; filePath?: string }
+  | { toolName: "read"; filePath: string }
+  | { toolName: "write"; filePath: string }
+  | { toolName: string; command?: string; filePath?: string };
+```
+
+Discriminated union on `toolName`. The compiler enforces required fields per variant.
+
+### Engine Package
+
+`@agent-guardrails/engine` centralizes matching and Action resolution:
+```typescript
+function matchAndResolve(
+  ctx: ToolCallContext,
+  packs: RulePack[],
+  caps: HarnessCapabilities
+): GuardrailAction | null
+```
+
+Adapters are thin shims: normalize Harness event → ToolCallContext, call `matchAndResolve`, translate result to Harness-specific block mechanism.
 
 ### Rule Pack Interface
 ```typescript
@@ -105,8 +153,12 @@ interface HarnessCapabilities {
 ## Success Criteria
 
 - [ ] Behavior enum compiles and is used consistently
+- [ ] GuardrailMatcher discriminated union compiles (bash-command, file-path, predicate)
+- [ ] ToolCallContext discriminated union compiles with strict per-variant fields
 - [ ] Rule Pack interface is clean and extensible
 - [ ] Harness Capabilities model reflects real limitations
+- [ ] Engine `matchAndResolve()` resolves Actions with fallback chain
+- [ ] Message templates interpolate `{matched}` correctly
 - [ ] vitest runs and passes for type tests
 - [ ] Zero dependencies in core package
 
@@ -120,3 +172,5 @@ None - this is the foundational change.
   - **Mitigation**: Start with minimal interfaces, extend as needed
 - **Risk**: Harness Capabilities change over time
   - **Mitigation**: Model is easy to update, test with real Harnesses
+- **Risk**: Regex-based matchers are bypassable via command composition (redirects, string concatenation, alternative tools)
+  - **Mitigation**: Regex is best-effort first layer; `redact` Behavior (change-9) is the backstop. Shell tokenizer post-POC for more robust matching.

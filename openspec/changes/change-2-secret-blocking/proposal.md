@@ -65,7 +65,7 @@ const envRulePack: RulePack = {
       description: "Block reading .env files via file-path",
       phase: "before-tool",
       match: { type: "file-path", pattern: /\.env(\..*)?$/ },
-      defaultAction: { type: "block", message: "Reading .env files is blocked to prevent secret leaks." }
+      defaultAction: { type: "block", message: "Blocked: attempted to read `{matched}` — .env files may contain secrets." }
     },
     {
       id: "env.read-bash",
@@ -73,7 +73,7 @@ const envRulePack: RulePack = {
       description: "Block commands that display .env content",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\b(cat|bat|head|tail|less|more|type)\b.*\.env(\s|$)/ },
-      defaultAction: { type: "block", message: "Displaying .env file content is blocked." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — displaying .env file content may leak secrets." }
     }
   ]
 };
@@ -94,9 +94,17 @@ const privateKeyRulePack: RulePack = {
       match: [
         { type: "file-path", pattern: /\.(pem|key|p12|pfx|p8)$/ },
         { type: "file-path", pattern: /id_(rsa|ed25519|ecdsa|dsa)$/ },
-        { type: "file-path", pattern: /\.ssh\/(?!.*\.(pub|pubkey)$)(?!known_hosts)(?!config$)[^/]+$/ }
+        { type: "predicate", test: (ctx) => {
+            if (!ctx.filePath || !/\.ssh\//.test(ctx.filePath)) return false;
+            const filename = ctx.filePath.split("/").pop()!;
+            const allowlist = new Set(["known_hosts", "config", "authorized_keys"]);
+            if (allowlist.has(filename)) return false;
+            if (/\.(pub|pubkey)$/.test(filename)) return false;
+            return true;
+          }
+        }
       ],
-      defaultAction: { type: "block", message: "Reading private key files is blocked." }
+      defaultAction: { type: "block", message: "Blocked: attempted to read `{matched}` — private key files may contain secrets." }
     }
   ]
 };
@@ -115,7 +123,7 @@ const encryptionToolsRulePack: RulePack = {
       description: "Block age decrypt commands",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bage\s+(-d|--decrypt)\b/ },
-      defaultAction: { type: "block", message: "Age decrypt blocked to prevent secret leaks." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — age decrypt may expose secrets." }
     },
     {
       id: "encryption-tools.gpg",
@@ -123,7 +131,7 @@ const encryptionToolsRulePack: RulePack = {
       description: "Block gpg decrypt commands",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bgpg\s+.*(-d|--decrypt)\b/ },
-      defaultAction: { type: "block", message: "GPG decrypt blocked to prevent secret leaks." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — GPG decrypt may expose secrets." }
     },
     {
       id: "encryption-tools.openssl",
@@ -131,7 +139,7 @@ const encryptionToolsRulePack: RulePack = {
       description: "Block openssl enc decrypt commands",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bopenssl\s+enc\b.*-d\b/ },
-      defaultAction: { type: "block", message: "OpenSSL decrypt blocked to prevent secret leaks." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — OpenSSL decrypt may expose secrets." }
     }
   ]
 };
@@ -150,7 +158,7 @@ const secretManagersRulePack: RulePack = {
       description: "Block 1Password secret retrieval",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bop\s+(read|get)\b/ },
-      defaultAction: { type: "block", message: "1Password secret retrieval blocked." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — 1Password secret retrieval may expose credentials." }
     },
     {
       id: "secret-managers.gopass",
@@ -158,7 +166,7 @@ const secretManagersRulePack: RulePack = {
       description: "Block gopass secret retrieval",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bgopass\s+show\b/ },
-      defaultAction: { type: "block", message: "Gopass secret retrieval blocked." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — gopass secret retrieval may expose credentials." }
     },
     {
       id: "secret-managers.pass",
@@ -166,7 +174,7 @@ const secretManagersRulePack: RulePack = {
       description: "Block pass secret retrieval",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bpass\s+show\b/ },
-      defaultAction: { type: "block", message: "Pass secret retrieval blocked." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — pass secret retrieval may expose credentials." }
     },
     {
       id: "secret-managers.bitwarden",
@@ -174,7 +182,7 @@ const secretManagersRulePack: RulePack = {
       description: "Block Bitwarden secret retrieval",
       phase: "before-tool",
       match: { type: "bash-command", pattern: /\bbw\s+(get|list)\s+(password|item|note)\b/ },
-      defaultAction: { type: "block", message: "Bitwarden secret retrieval blocked." }
+      defaultAction: { type: "block", message: "Blocked: `{matched}` — Bitwarden secret retrieval may expose credentials." }
     }
   ]
 };

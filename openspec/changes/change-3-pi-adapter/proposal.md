@@ -38,9 +38,10 @@ This change implements the `block` Behavior only. The Adapter will be updated in
 
 1. Create `packages/pi/` directory
 2. Implement Adapter function using Pi API
-3. Register `tool_call` hook (Tool Call)
-4. Import Rule Packs and check against them
-5. Return `{ block: true, reason: "..." }` when Rule matches (reason carries the Message)
+3. Register `tool_call` hook (Tool Call) for **all tools** (not just bash)
+4. Normalize Pi event into `ToolCallContext` (discriminated union on toolName)
+5. Call `matchAndResolve(ctx, ALL_RULE_PACKS, capabilities)` from `@agent-guardrails/engine`
+6. Return `{ block: true, reason: result.message }` when engine returns a block Action
 
 ## Harness Capabilities (Verified)
 
@@ -57,30 +58,40 @@ For this POC, we only use `block`. `suggest`/`run`/`redact`/`confirm` come later
 
 ```typescript
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { envRulePack, sopsRulePack, privateKeyRulePack } from "@agent-guardrails/secrets";
+import type { ToolCallContext } from "@agent-guardrails/core";
+import { matchAndResolve } from "@agent-guardrails/engine";
+import { ALL_RULE_PACKS } from "@agent-guardrails/secrets";
+import { PI_CAPABILITIES } from "./capabilities";
 
 export default function (pi: ExtensionAPI) {
-  const rulePacks = [envRulePack, sopsRulePack, privateKeyRulePack];
-  
   pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName === "bash") {
-      const command = event.input.command as string;
-      for (const pack of rulePacks) {
-        for (const rule of pack.rules) {
-          if (rule.phase === "before-tool" && rule.match.type === "bash-command") {
-            if (rule.match.pattern.test(command)) {
-              if (rule.defaultAction.type === "block") {
-                // Pi uses 'reason' field to carry the Message
-                return { block: true, reason: rule.defaultAction.message };
-              }
-            }
-          }
-        }
-      }
+    // Step 1: Normalize Pi event into ToolCallContext
+    const toolCtx = normalizeToContext(event);
+
+    // Step 2: Call engine
+    const result = matchAndResolve(toolCtx, ALL_RULE_PACKS, PI_CAPABILITIES);
+
+    // Step 3: Translate to Pi-specific block mechanism
+    if (result?.type === "block" || result?.type === "suggest") {
+      return { block: true, reason: result.message };
     }
   });
 }
+
+function normalizeToContext(event): ToolCallContext {
+  switch (event.toolName) {
+    case "bash":
+      return { toolName: "bash", command: event.input.command, filePath: event.input.cwd };
+    case "read":
+    case "write":
+      return { toolName: event.toolName, filePath: event.input.path };
+    default:
+      return { toolName: event.toolName };
+  }
+}
 ```
+
+The Adapter is a thin shim: normalize → engine → translate. All matching logic lives in `@agent-guardrails/engine`.
 
 ## Success Criteria
 

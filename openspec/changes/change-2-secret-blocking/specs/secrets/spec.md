@@ -16,6 +16,7 @@ The system MUST provide an `env` Rule Pack that blocks .env file access.
 #### Scenario: Block .env file read via file-path
 - WHEN agent attempts to read `.env` file via read Tool
 - THEN the Rule MUST match and produce a `block` Action
+- AND the block message MUST include `{matched}` with the actual file path
 
 #### Scenario: Block .env.local file read
 - WHEN agent attempts to read `.env.local` file
@@ -24,6 +25,7 @@ The system MUST provide an `env` Rule Pack that blocks .env file access.
 #### Scenario: Block .env via bash command
 - WHEN agent runs `cat .env`, `bat .env`, `head .env`, `tail .env`, `less .env`, `more .env`
 - THEN the Rule MUST match and produce a `block` Action
+- AND the block message MUST include `{matched}` with the actual command
 
 #### Scenario: Allow non-env files
 - WHEN agent attempts to read `config.json`
@@ -39,6 +41,7 @@ The system MUST provide a `sops` Rule Pack that blocks SOPS decrypt commands.
 #### Scenario: Block sops -d command
 - WHEN agent runs `sops -d secrets.yaml`
 - THEN the Rule MUST match and produce a `block` Action
+- AND the block message MUST include `{matched}` with the actual command
 
 #### Scenario: Block sops --decrypt command
 - WHEN agent runs `sops --decrypt secrets.yaml`
@@ -73,15 +76,16 @@ The system MUST provide a `private-key` Rule Pack that blocks private key file a
 
 #### Scenario: Block any private key in ~/.ssh/
 - WHEN agent attempts to read any file in ~/.ssh/ that does NOT end with `.pub` or `.pubkey`
-- AND the file is NOT `known_hosts`, `config`, `authorized_keys`, `known_hosts.old`
-- THEN the Rule MUST match and produce a `block` Action
+- AND the file is NOT `known_hosts`, `config`, `authorized_keys`
+- THEN the Rule MUST use a `predicate` matcher (not regex)
+- AND the Rule MUST match and produce a `block` Action
 
 #### Scenario: Allow public key read
 - WHEN agent attempts to read `id_rsa.pub`, `id_ed25519.pub`
 - THEN the Rule MUST NOT match
 
 #### Scenario: Allow SSH config files
-- WHEN agent attempts to read `~/.ssh/config`, `~/.ssh/known_hosts`
+- WHEN agent attempts to read `~/.ssh/config`, `~/.ssh/known_hosts`, `~/.ssh/authorized_keys`
 - THEN the Rule MUST NOT match
 
 ### Requirement: encryption-tools Rule Pack

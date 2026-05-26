@@ -62,14 +62,15 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 - LLM can use either path to access secrets
 - Defense in Depth
 
-### Decision 5: SSH directory heuristic
+### Decision 5: SSH directory heuristic with predicate matcher
 
-**Choice**: Block any non-pub file in ~/.ssh/ except known_hosts, config, authorized_keys
+**Choice**: Block any non-pub file in ~/.ssh/ except known_hosts, config, authorized_keys. Use `predicate` matcher (not regex).
 
 **Rationale**:
 - Covers all SSH key types including future ones
 - Allows legitimate SSH config files
-- Simple heuristic in the Guardrail Matcher that's easy to understand
+- Predicate matcher is readable and testable, avoids regex lookahead gymnastics
+- Allowlist is explicit: `known_hosts`, `config`, `authorized_keys`, `*.pub`, `*.pubkey`
 - No false positives for standard SSH usage
 
 ### Decision 6: Scope deferral
@@ -102,6 +103,13 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 - Defer AWS/GCP/Azure, database CLIs
 - Focus on highest-value patterns first
 - Can extend in future changes
+
+### Risk: Regex-based matchers are bypassable via command composition
+**Mitigation**:
+- Regex is best-effort first layer (defense in depth)
+- Agent can evade via redirects (`cat < .env`), string concatenation (`cat .e"nv"`), or alternative tools (`python3 -c "print(open('.env').read())"`)
+- `redact` Behavior (change-9) is the backstop for anything that slips through
+- Shell tokenizer planned for post-POC for more robust matching
 
 ## Migration Plan
 

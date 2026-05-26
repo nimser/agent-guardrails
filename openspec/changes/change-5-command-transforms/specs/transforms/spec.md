@@ -9,77 +9,74 @@ The system MUST provide a `kubernetes` Rule Pack for kubectl secrets commands.
 - WHEN agent runs `kubectl get secrets`
 - THEN rule MUST match and produce `suggest` action with redacted alternative
 
-### Requirement: vault Rule Pack
-The system MUST provide a `vault` Rule Pack for vault read commands.
+### Requirement: gh-cli Rule Pack
+The system MUST provide a `gh-cli` Rule Pack for GitHub CLI secret commands.
 
-#### Scenario: Suggest redacted vault read
-- WHEN agent runs `vault kv get secret/data`
-- THEN rule MUST match and produce `suggest` action with redacted alternative
+#### Scenario: Suggest gh secret list instead of view
+- WHEN agent runs `gh secret view MY_SECRET`
+- THEN rule MUST match and produce `suggest` action with `gh secret list`
 
-### Requirement: Format-Aware SOPS Redaction
-The system MUST implement format-aware SOPS redaction in TypeScript.
+#### Scenario: Allow non-sensitive gh commands
+- WHEN agent runs `gh secret list`, `gh secret set`, `gh pr list`
+- THEN rule MUST NOT match
+
+### Requirement: direnv Rule Pack
+The system MUST provide a `direnv` Rule Pack for direnv/dotenv commands that evaluate .env files.
+
+#### Scenario: Block direnv exec
+- WHEN agent runs `direnv exec . cat .env`
+- THEN rule MUST match and produce `block` action
+
+#### Scenario: Block source .env
+- WHEN agent runs `source .env` or `. .env`
+- THEN rule MUST match and produce `suggest` action with `sed 's/=.*/=[REDACTED]/' .env`
+
+### Requirement: Format-Aware SOPS Redaction (Shell-Based)
+The system MUST implement format-aware SOPS redaction using shell pipelines, with format detected from file extension and flags.
 
 #### Scenario: Redact YAML output
-- WHEN SOPS output is YAML format
-- THEN redaction MUST replace values after `:` with `[REDACTED]`
+- WHEN SOPS command targets a `.yaml` or `.yml` file
+- THEN redaction MUST use: `| sed 's/:.*/: [REDACTED]/'`
 
 #### Scenario: Redact JSON output
-- WHEN SOPS output is JSON format
-- THEN redaction MUST replace all string values with `[REDACTED]`
+- WHEN SOPS command targets a `.json` file
+- THEN redaction MUST use: `| jq 'walk(if type == "string" then "[REDACTED]" else . end)'`
 
 #### Scenario: Redact ENV output
-- WHEN SOPS output is ENV format
-- THEN redaction MUST replace values after `=` with `[REDACTED]`
+- WHEN SOPS command targets a `.env` file
+- THEN redaction MUST use: `| sed 's/=.*/=[REDACTED]/'`
 
-#### Scenario: Respect --output-type flag
+#### Scenario: Respect --output-type flag (highest priority)
 - WHEN SOPS command includes `--output-type json`
 - THEN redaction MUST use JSON format regardless of file extension
-- WHEN SOPS command includes `--output-type yaml`
+
+#### Scenario: Respect --input-type flag (second priority)
+- WHEN SOPS command includes `--input-type yaml` and no `--output-type`
 - THEN redaction MUST use YAML format
 
-### Requirement: Multiple Suggestions
-The system MUST support returning multiple safer alternatives.
+#### Scenario: No detectable format → block
+- WHEN SOPS command has no file extension, no `--output-type`, and no `--input-type`
+- THEN `findSaferCommand()` MUST return `null`
+- AND engine MUST fall back to `block` via Action Fallback Chain
 
-#### Scenario: findSaferCommands returns array
-- WHEN `findSaferCommands(command)` is called
-- THEN it MUST return an array of `SaferCommand` objects
-- AND each object MUST have `command`, `description`, and `confidence` fields
-- AND results MUST be sorted by confidence (highest first)
+### Requirement: Single Safer Command
+The system MUST return a single safer command alternative.
 
-#### Scenario: Multiple suggestions for env read
+#### Scenario: findSaferCommand returns string or null
+- WHEN `findSaferCommand(command)` is called
+- THEN it MUST return a `string` (the safer command) or `null` (no known alternative)
+
+#### Scenario: Single suggestion for env read
 - WHEN command is `cat .env`
-- THEN system MUST return multiple alternatives:
-  - `sed 's/=.*/=[REDACTED]/' .env` (full redaction, high confidence)
-  - `head -c 4 .env && echo '...'` (first 4 chars, medium confidence)
-  - `grep -c '=' .env` (count keys only, low confidence)
+- THEN system MUST return: `sed 's/=.*/=[REDACTED]/' .env`
 
-#### Scenario: Multiple suggestions for sops decrypt
-- WHEN command is `sops -d secrets.yaml`
-- THEN system MUST return multiple alternatives:
-  - `sops -d secrets.yaml | sed 's/:.*/: [REDACTED]/'` (full redaction)
-  - `sops -d secrets.yaml | grep -o '.\\{0,4\\}password.\\{0,4\\}'` (limited context)
-
-### Requirement: Smart Piped Command Detection
-The system MUST detect when piped commands already have proper precautions.
-
-#### Scenario: Allow grep with limited context
-- WHEN command is `sops -d secrets.yaml | grep -o '.{0,4}password.{0,4}'`
-- THEN system MUST NOT block (grep -o with limited context is safe)
-
-#### Scenario: Allow head/tail limiting
-- WHEN command is `sops -d secrets.yaml | head -5`
-- THEN system MUST NOT block (only shows first 5 lines)
-
-#### Scenario: Allow word count
-- WHEN command is `sops -d secrets.yaml | wc -l`
-- THEN system MUST NOT block (only shows line count)
-
-#### Scenario: Block grep without context limit
-- WHEN command is `sops -d secrets.yaml | grep password`
-- THEN system MUST block (grep without -o shows full line with secrets)
+#### Scenario: Suggest → block fallback
+- WHEN `findSaferCommand()` returns `null`
+- THEN engine MUST fall back to `block`
+- AND block message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
 
 ### Requirement: Suggest Behavior
-The system MUST implement `suggest` Behavior for all Harnesses.
+The system MUST implement `suggest` Behavior for all Harnesses via the shared engine.
 
 #### Scenario: Suggest in Claude Code
 - WHEN Claude Code Adapter encounters suggest Action
@@ -111,22 +108,39 @@ The system MUST have comprehensive unit tests for all transforms.
 - WHEN kubernetes rules are tested
 - THEN all positive and negative cases MUST pass
 
-#### Scenario: Test vault rules
-- WHEN vault rules are tested
+#### Scenario: Test gh-cli rules
+- WHEN gh-cli rules are tested
 - THEN all positive and negative cases MUST pass
 
-#### Scenario: Test SOPS redaction
+#### Scenario: Test direnv rules
+- WHEN direnv rules are tested
+- THEN all positive and negative cases MUST pass
+
+#### Scenario: Test SOPS format-aware redaction
 - WHEN SOPS redaction is tested
-- THEN all format variants MUST pass
+- THEN YAML, JSON, and ENV format variants MUST pass
 
 #### Scenario: Test SOPS --output-type handling
 - WHEN SOPS command includes --output-type flag
 - THEN redaction MUST use the specified format
 
-#### Scenario: Test multiple suggestions
-- WHEN findSaferCommands is called
-- THEN it MUST return multiple alternatives sorted by confidence
+#### Scenario: Test SOPS --input-type handling
+- WHEN SOPS command includes --input-type flag
+- THEN redaction MUST use the specified format
 
-#### Scenario: Test smart piped detection
-- WHEN piped commands have proper precautions
-- THEN they MUST NOT be blocked
+#### Scenario: Test SOPS no-format fallback
+- WHEN SOPS command has no detectable format
+- THEN findSaferCommand MUST return null
+- AND engine MUST fall back to block
+
+#### Scenario: Test single suggestion
+- WHEN findSaferCommand is called
+- THEN it MUST return a single string or null
+
+#### Scenario: Test gh-cli rules
+- WHEN gh secret view is tested
+- THEN it MUST suggest gh secret list
+
+#### Scenario: Test direnv rules
+- WHEN direnv exec or source .env is tested
+- THEN it MUST block or suggest accordingly

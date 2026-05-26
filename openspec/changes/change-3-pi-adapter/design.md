@@ -5,9 +5,10 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 ## Goals / Non-Goals
 
 **Goals:**
-- Block dangerous commands in Tool Call hook
-- Import and use Rule Packs from secrets package
-- Provide clear Messages
+- Hook all tool calls (not just bash) and normalize into ToolCallContext
+- Delegate matching to `@agent-guardrails/engine` via `matchAndResolve()`
+- Import all Rule Packs via `ALL_RULE_PACKS` from secrets package
+- Provide clear Messages (with `{matched}` interpolation from engine)
 - Performance testing to ensure < 10ms overhead
 
 **Non-Goals:**
@@ -21,13 +22,14 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 
 ### Decision 1: Adapter-based integration
 
-**Choice**: Use Pi's extension system with `tool_call` hook (Tool Call)
+**Choice**: Use Pi's extension system with `tool_call` hook (Tool Call) for all tools
 
 **Rationale**:
 - Native Pi API
 - Well-documented
 - Can block by returning `{ block: true }`
 - Adapter can be distributed via npm
+- Hooking all tools (not just bash) catches file-path Matcher matches from read/write tools
 
 ### Decision 2: Return object for blocking
 
@@ -38,15 +40,24 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 - The `reason` field carries the Message shown to agent
 - Consistent with Pi conventions
 
-### Decision 3: Rule Pack consumption
+### Decision 3: Engine delegation and ALL_RULE_PACKS consumption
 
-**Choice**: Import Rule Packs from `@agent-guardrails/secrets`
+**Choice**: Import `ALL_RULE_PACKS` from `@agent-guardrails/secrets`, delegate matching to `@agent-guardrails/engine`
 
 **Rationale**:
-- Reusable across Adapters
-- Easy to test
-- Easy to add new packs
-- Consistent with Rule Pack model
+- Adapter is a thin shim (normalize → engine → translate)
+- No inline matching logic — all lives in engine
+- `ALL_RULE_PACKS` ensures all packs are loaded without Adapters curating the list
+- Adding new packs requires zero Adapter changes
+
+### Decision 5: ToolCallContext normalization
+
+**Choice**: Adapter normalizes Pi events into `ToolCallContext` discriminated union
+
+**Rationale**:
+- Compiler enforces correct field extraction per tool type
+- Engine evaluates all matcher types against whatever fields are present
+- Unknown tools get catch-all variant (no fields, no matchers fire, passes through)
 
 ### Decision 4: Performance benchmarking
 
@@ -65,6 +76,9 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 
 ### Risk: False blocking
 **Mitigation**: Precise Guardrail Matchers, test with edge cases
+
+### Risk: Unknown tool types
+**Mitigation**: Catch-all ToolCallContext variant. No matchers fire for unknown tools, so they pass through safely.
 
 ### Risk: Performance degrades with many Rules
 **Mitigation**:
