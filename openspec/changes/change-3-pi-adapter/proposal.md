@@ -10,11 +10,12 @@ Pi (earendil-works/pi) needs native integration with Agent Guardrails. It suppor
 
 ## Solution
 
-Create a Pi Adapter that:
-1. Hooks into `tool_call` (Tool Call) for before-tool Phase (block)
-2. Imports secret Rule Packs from `@agent-guardrails/secrets`
-3. Blocks dangerous commands/files before execution
-4. Provides clear Messages when blocking
+Create `@agent-guardrails/engine` (the shared matching engine) and a Pi Adapter that uses it:
+1. Create the engine package with `matchAndResolve()` — the shared matching function consumed by all Adapters
+2. Create a Pi Adapter that hooks into `tool_call` (Tool Call) for before-tool Phase (block)
+3. Import secret Rule Packs from `@agent-guardrails/secrets`
+4. Block dangerous commands/files before execution
+5. Provide clear Messages when blocking
 
 ## Scope
 

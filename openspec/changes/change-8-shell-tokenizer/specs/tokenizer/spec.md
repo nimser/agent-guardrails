@@ -144,28 +144,6 @@ The tokenizer MUST be implemented without external dependencies.
 - **THEN** it MUST NOT import any external npm packages
 - **AND** it MUST be implemented in pure TypeScript
 
-### Requirement: Engine Tool-Type Early Exit
-The engine's `matchAndResolve()` function MUST skip rule evaluation entirely when the `ToolCallContext` has no fields that any active matcher type can evaluate against.
-
-#### Scenario: Tool with no matchable fields
-- **WHEN** a tool call produces a `ToolCallContext` with no `command` and no `filePath` (e.g., a `search` tool that only returns text)
-- **THEN** `matchAndResolve()` MUST return `null` immediately without iterating rules or running the tokenizer
-- **AND** the tool call MUST be allowed through
-
-#### Scenario: Tool with only filePath
-- **WHEN** a tool call produces a `ToolCallContext` with `filePath` but no `command` (e.g., `read` tool)
-- **THEN** `matchAndResolve()` MUST evaluate only rules with `file-path` matchers
-- **AND** rules with `bash-command` matchers MUST be skipped
-
-#### Scenario: Tool with only command
-- **WHEN** a tool call produces a `ToolCallContext` with `command` but no `filePath` (e.g., `bash` tool)
-- **THEN** `matchAndResolve()` MUST evaluate only rules with `bash-command` matchers
-- **AND** rules with `file-path` matchers MUST be skipped
-
-#### Scenario: Tool with both fields
-- **WHEN** a tool call produces a `ToolCallContext` with both `command` and `filePath`
-- **THEN** `matchAndResolve()` MUST evaluate all matcher types
-
 ### Requirement: Tokenizer Performance
 The tokenizer MUST complete within acceptable time bounds.
 

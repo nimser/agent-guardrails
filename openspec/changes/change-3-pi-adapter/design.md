@@ -5,8 +5,9 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 ## Goals / Non-Goals
 
 **Goals:**
+- Create `@agent-guardrails/engine` package with `matchAndResolve()` — the shared matching function consumed by all Adapters
 - Hook all tool calls (not just bash) and normalize into ToolCallContext
-- Delegate matching to `@agent-guardrails/engine` via `matchAndResolve()`
+- Delegate matching to the engine via `matchAndResolve()`
 - Import all Rule Packs via `ALL_RULE_PACKS` from secrets package
 - Provide clear Messages (with `{matched}` interpolation from engine)
 - Performance testing to ensure < 10ms overhead
@@ -80,9 +81,21 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 ### Risk: Unknown tool types
 **Mitigation**: Catch-all ToolCallContext variant. No matchers fire for unknown tools, so they pass through safely.
 
+### Decision 6: Tool-type early exit in matchAndResolve
+
+**Choice**: `matchAndResolve()` inspects the `ToolCallContext` fields before iterating rules and skips rules whose matcher type requires fields not present in the context.
+
+**Rationale**:
+- Most tool calls won't match any rule — no need to evaluate all rules for every tool call
+- Tools with only `filePath` (read/write) can skip all `bash-command` rules
+- Tools with only `command` (bash) can skip all `file-path` rules
+- Tools with neither field (unknown tools) skip all rules entirely — instant passthrough
+- This is the highest-impact, lowest-cost optimization: a few field checks before the rule loop
+
 ### Risk: Performance degrades with many Rules
 **Mitigation**:
-- Early exit on first match
+- Tool-type early exit skips irrelevant rules before evaluation
+- Early exit on first match within relevant rules
 - Regex compilation cached
 - Benchmark suite catches regressions
 
