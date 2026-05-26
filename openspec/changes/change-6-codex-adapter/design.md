@@ -13,7 +13,7 @@ Codex CLI uses shell hooks that communicate via JSON protocol. Hooks receive JSO
 **Non-Goals:**
 - `run` Behavior (shell hooks cannot execute Replacement commands)
 - `redact` Behavior (PostToolUse cannot modify Tool Output)
-- `confirm` Behavior (comes in change-10-interactive-confirmation)
+- `confirm` Behavior (comes in change-11-interactive-confirmation)
 
 ## Decisions
 

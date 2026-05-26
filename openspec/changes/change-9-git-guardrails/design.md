@@ -12,8 +12,8 @@ Agent Guardrails needs git-specific safety rules to prevent destructive git oper
 
 **Non-Goals:**
 - Secret-related transforms (covered in `change-5-command-transforms`)
-- `redact` Behavior (covered in `change-9-redact-output`)
-- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
+- `redact` Behavior (covered in `change-10-redact-output`)
+- `confirm` Behavior (covered in `change-11-interactive-confirmation`)
 
 ## Decisions
 

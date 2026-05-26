@@ -37,9 +37,9 @@ Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** fro
 
 ### Out of Scope
 - `run` Behavior (deferred to later change - requires shell execution in hooks)
-- `redact` Behavior (covered in `change-9-redact-output`)
-- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
-- Git transforms (covered in `change-8-git-guardrails`)
+- `redact` Behavior (covered in `change-10-redact-output`)
+- `confirm` Behavior (covered in `change-11-interactive-confirmation`)
+- Git transforms (covered in `change-9-git-guardrails`)
 - Smart Piped Command Detection (deferred to post-POC with shell tokenizer)
 - Multiple suggestions / confidence scoring (deferred to post-POC with intent analysis)
 

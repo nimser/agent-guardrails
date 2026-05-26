@@ -27,8 +27,8 @@ Create a Pi Adapter that:
 
 ### Out of Scope
 - `suggest` and `run` Behaviors (covered in `change-5-command-transforms`)
-- `redact` Behavior (covered in `change-9-redact-output`)
-- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
+- `redact` Behavior (covered in `change-10-redact-output`)
+- `confirm` Behavior (covered in `change-11-interactive-confirmation`)
 - Other Adapters (covered in `change-4-opencode-adapter`)
 
 ### Note

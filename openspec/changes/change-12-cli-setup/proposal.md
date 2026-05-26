@@ -25,7 +25,7 @@ Create a CLI that:
 
 ### Out of Scope
 - Core logic (covered in earlier changes)
-- Configuration system (covered in `change-12-rule-configuration`)
+- Configuration system (covered in `change-13-rule-configuration`)
 
 ## Approach
 

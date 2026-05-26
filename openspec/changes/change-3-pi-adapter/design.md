@@ -14,8 +14,8 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 **Non-Goals:**
 - `suggest` Behavior (comes in change-5-command-transforms)
 - `run` Behavior (deferred to later change)
-- `redact` Behavior (comes in change-9-redact-output)
-- `confirm` Behavior (comes in change-10-interactive-confirmation)
+- `redact` Behavior (comes in change-10-redact-output)
+- `confirm` Behavior (comes in change-11-interactive-confirmation)
 - Other Adapters
 
 ## Decisions

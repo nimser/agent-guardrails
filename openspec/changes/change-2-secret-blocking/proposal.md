@@ -32,7 +32,7 @@ Implement:
 
 ### Out of Scope
 - `suggest` and `run` Behaviors (covered in `change-5-command-transforms`)
-- `redact` Behavior (covered in `change-9-redact-output`)
+- `redact` Behavior (covered in `change-10-redact-output`)
 - Platform Adapters (covered in `change-3-pi-adapter`, `change-4-opencode-adapter`)
 - AWS/GCP/Azure CLI secret commands (deferred - more complex patterns)
 - Database CLI password detection (deferred - hard to match reliably)

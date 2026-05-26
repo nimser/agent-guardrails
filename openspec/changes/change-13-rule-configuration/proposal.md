@@ -29,7 +29,7 @@ Implement configuration system that:
 
 ### Out of Scope
 - Core logic (covered in earlier changes)
-- CLI (covered in `change-11-cli-setup`)
+- CLI (covered in `change-12-cli-setup`)
 
 ## Approach
 

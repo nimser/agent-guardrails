@@ -14,7 +14,7 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 **Non-Goals:**
 - `suggest` Behavior (comes in change-5-command-transforms)
 - `run` Behavior (deferred to later change)
-- `redact` Behavior (comes in change-9-redact-output)
+- `redact` Behavior (comes in change-10-redact-output)
 - Other Adapters
 
 ## Decisions

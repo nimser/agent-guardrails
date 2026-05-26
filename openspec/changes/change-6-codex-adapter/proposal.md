@@ -29,7 +29,7 @@ Create a Codex CLI Adapter that:
 ### Out of Scope
 - `redact` Behavior (shell hooks cannot modify Tool Output)
 - `run` Behavior (shell hooks cannot execute Replacement commands)
-- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
+- `confirm` Behavior (covered in `change-11-interactive-confirmation`)
 - Other Adapters
 
 ## Approach
@@ -50,7 +50,7 @@ Codex CLI supports:
 - **redact**: No (PostToolUse cannot modify Tool Output, only add context)
 - **confirm**: Yes (forces approval prompt via `PermissionRequest`)
 
-For this change, we implement `block` and `suggest`. `confirm` comes in `change-10-interactive-confirmation`.
+For this change, we implement `block` and `suggest`. `confirm` comes in `change-11-interactive-confirmation`.
 
 ## Hook Protocol
 

@@ -41,7 +41,7 @@ For Claude Code/Codex, the hook can warn that secrets were found, but can't prev
 ### Out of Scope
 - PreToolUse blocking (covered in `change-2-secret-blocking`)
 - Command Transforms (covered in `change-5-command-transforms`)
-- Confirmation Behavior (covered in `change-10-interactive-confirmation`)
+- Confirmation Behavior (covered in `change-11-interactive-confirmation`)
 - Claude Code/Codex Adapters (can't redact Output)
 
 ## Approach

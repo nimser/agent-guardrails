@@ -27,7 +27,7 @@ Create an opencode Adapter that:
 
 ### Out of Scope
 - `suggest` and `run` Behaviors (covered in `change-5-command-transforms`)
-- `redact` Behavior (covered in `change-9-redact-output`)
+- `redact` Behavior (covered in `change-10-redact-output`)
 - Other Adapters (covered in `change-3-pi-adapter`)
 
 ### Note

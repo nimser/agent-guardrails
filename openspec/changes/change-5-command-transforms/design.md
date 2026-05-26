@@ -22,9 +22,9 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 **Non-Goals:**
 - `block` Behavior (covered in `change-2-secret-blocking`)
 - `run` Behavior (deferred to later change)
-- `redact` Behavior (covered in `change-9-redact-output`)
-- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
-- Git Transforms (covered in `change-8-git-guardrails`)
+- `redact` Behavior (covered in `change-10-redact-output`)
+- `confirm` Behavior (covered in `change-11-interactive-confirmation`)
+- Git Transforms (covered in `change-9-git-guardrails`)
 - Smart Piped Command Detection (deferred to post-POC with shell tokenizer)
 - Multiple suggestions / confidence scoring (deferred to post-POC with intent analysis)
 

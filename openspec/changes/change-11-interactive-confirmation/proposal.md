@@ -32,7 +32,7 @@ Implement confirmation that:
 ### Out of Scope
 - PreToolUse blocking (covered in `change-2-secret-blocking`)
 - Command Transforms (covered in `change-5-command-transforms`)
-- Redaction (covered in `change-9-redact-output`)
+- Redaction (covered in `change-10-redact-output`)
 
 ## Approach
 

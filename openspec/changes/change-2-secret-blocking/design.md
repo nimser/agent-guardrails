@@ -15,7 +15,7 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 **Non-Goals:**
 - `suggest` Behavior (comes in change-5-command-transforms)
 - `run` Behavior (deferred to later change)
-- `redact` Behavior (comes in change-9-redact-output)
+- `redact` Behavior (comes in change-10-redact-output)
 - Platform Adapters (come in change-3/4)
 - AWS/GCP/Azure CLI secret commands (deferred - more complex)
 - Database CLI password detection (deferred - hard to match reliably)
@@ -108,7 +108,7 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 **Mitigation**:
 - Regex is best-effort first layer (defense in depth)
 - Agent can evade via redirects (`cat < .env`), string concatenation (`cat .e"nv"`), or alternative tools (`python3 -c "print(open('.env').read())"`)
-- `redact` Behavior (change-9) is the backstop for anything that slips through
+- `redact` Behavior (change-10) is the backstop for anything that slips through
 - Shell tokenizer planned for post-POC for more robust matching
 
 ## Migration Plan

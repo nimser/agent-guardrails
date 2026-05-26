@@ -35,7 +35,7 @@ Create `packages/core/` with:
 ### Out of Scope
 - Actual matching logic (covered in `change-2-secret-blocking`)
 - Transform logic (covered in `change-5-command-transforms`)
-- Redaction logic (covered in `change-9-redact-output`)
+- Redaction logic (covered in `change-10-redact-output`)
 - Platform Adapters (covered in `change-3-opencode-adapter`, `change-4-pi-adapter`)
 
 ## Approach
@@ -173,4 +173,4 @@ None - this is the foundational change.
 - **Risk**: Harness Capabilities change over time
   - **Mitigation**: Model is easy to update, test with real Harnesses
 - **Risk**: Regex-based matchers are bypassable via command composition (redirects, string concatenation, alternative tools)
-  - **Mitigation**: Regex is best-effort first layer; `redact` Behavior (change-9) is the backstop. Shell tokenizer post-POC for more robust matching.
+  - **Mitigation**: Regex is best-effort first layer; `redact` Behavior (change-10) is the backstop. Shell tokenizer post-POC for more robust matching.

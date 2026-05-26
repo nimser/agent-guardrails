@@ -26,8 +26,8 @@ Implement git Rule Pack with:
 
 ### Out of Scope
 - Secret-related Transforms (covered in `change-5-command-transforms`)
-- `redact` Behavior (covered in `change-9-redact-output`)
-- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
+- `redact` Behavior (covered in `change-10-redact-output`)
+- `confirm` Behavior (covered in `change-11-interactive-confirmation`)
 
 ## Approach
 
