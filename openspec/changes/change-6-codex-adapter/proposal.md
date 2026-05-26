@@ -1,0 +1,122 @@
+# Proposal: Codex CLI Adapter (Change #6)
+
+## Intent
+
+Create a Codex CLI hook adapter that uses `block` and `suggest` behaviors to prevent secret leaks and dangerous operations. Codex CLI uses shell hooks with JSON protocol for tool interception.
+
+## Problem
+
+Codex CLI (openai/codex) needs native integration with Agent Guardrails. It supports `PreToolUse` and `PostToolUse` shell hooks that communicate via JSON on stdin/stdout.
+
+## Solution
+
+Create a Codex CLI hook that:
+1. Implements `guard.sh` shell script for PreToolUse/PostToolUse
+2. Creates `hooks.json` for hook registration
+3. Blocks dangerous commands with JSON permission decision
+4. Suggests safer alternatives when available
+
+## Scope
+
+### In Scope
+- `guard.sh` shell hook script
+- `hooks.json` for hook registration
+- PreToolUse: block and suggest behaviors via JSON protocol
+- Import and consume rule packs (compiled into shell script or via companion)
+- Clear block/suggest messages in JSON output
+- Installation via CLI (`npx ag setup codex`)
+
+### Out of Scope
+- `redact` behavior (shell hooks cannot modify tool output)
+- `run` behavior (shell hooks cannot execute replacement commands)
+- `confirm` behavior (covered in `change-10-interactive-confirmation`)
+- Other adapters
+
+## Approach
+
+1. Create `packages/codex/` directory
+2. Implement `guard.sh` shell hook script
+3. Create `hooks.json` for hook registration
+4. Handle PreToolUse: output JSON with `permissionDecision: deny` or `suggest`
+5. Handle PostToolUse: output JSON with redacted content (when possible)
+6. Test with mock Codex environment
+
+## Harness Capabilities (Verified)
+
+Codex CLI supports:
+- **block**: Yes (`permissionDecision: deny` in PreToolUse JSON)
+- **suggest**: Yes (message in `permissionDecisionReason`)
+- **run**: No (shell hooks cannot execute replacement commands)
+- **redact**: No (PostToolUse cannot modify tool output, only add context)
+- **confirm**: Yes (forces approval prompt via `PermissionRequest`)
+
+For this change, we implement `block` and `suggest`. `confirm` comes in `change-10-interactive-confirmation`.
+
+## Hook Protocol
+
+### PreToolUse
+
+Input (stdin):
+```json
+{
+  "hook_event_name": "PreToolUse",
+  "tool_name": "bash",
+  "tool_input": {
+    "command": "sops -d secrets.yaml"
+  }
+}
+```
+
+Output (stdout):
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "SOPS decrypt blocked to prevent secret leaks. Run: sops -d secrets.yaml | sed 's/:.*/: [REDACTED]/'"
+  }
+}
+```
+
+### PostToolUse
+
+Input (stdin):
+```json
+{
+  "hook_event_name": "PostToolUse",
+  "tool_name": "bash",
+  "tool_output": "api_key: AKIAIOSFODNN7EXAMPLE\nregion: us-east-1"
+}
+```
+
+Output (stdout):
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "WARNING: Output contained secrets and was redacted. 1 secret(s) removed."
+  }
+}
+```
+
+## Success Criteria
+
+- [ ] `guard.sh` is executable and outputs valid JSON
+- [ ] PreToolUse blocks .env file reads
+- [ ] PreToolUse blocks sops -d commands with suggestion
+- [ ] PreToolUse suggests safer alternatives for dangerous commands
+- [ ] PostToolUse detects secrets in output
+- [ ] Installation via `npx ag setup codex` works
+
+## Dependencies
+
+- Depends on `change-1-project-foundation` (types, harness model)
+- Depends on `change-2-secret-blocking` (rule packs)
+- Depends on `change-5-command-transforms` (suggest behavior)
+
+## Risks
+
+- **Risk**: Shell script complexity for JSON parsing
+  - **Mitigation**: Use `jq` for JSON handling, keep script simple
+- **Risk**: Codex CLI API changes
+  - **Mitigation**: Pin adapter version, test with multiple Codex versions
