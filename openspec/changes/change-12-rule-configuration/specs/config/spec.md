@@ -37,26 +37,27 @@ The system MUST merge configurations with proper precedence.
 ### Requirement: Rule Actions
 The system MUST support different rule actions.
 
-#### Scenario: Rule action types
-- **WHEN** a rule action is specified
+#### Scenario: Rule Action types
+- **WHEN** a Rule Action is specified as a Configured Action
 - **THEN** it MUST be one of:
   - `block` - Hard block, no alternative suggested
-  - `suggest` - Block + suggest safer alternative
+  - `suggest` - Block + suggest safer alternative (Replacement)
   - `warn` - Allow but warn
   - `off` - Rule disabled
+- **AND** it MUST override the Default Action for that Rule ID
 
 ### Requirement: Custom Rules
-The system MUST support custom rules via configuration.
+The system MUST support custom Rules via configuration.
 
-#### Scenario: Custom secret rules
+#### Scenario: Custom secret Rules
 - **WHEN** configuration contains `customRules` array
-- **THEN** custom rules MUST be merged with built-in rules
+- **THEN** custom Rules MUST be merged with built-in Rules
 
-#### Scenario: Custom rule structure
-- **WHEN** a custom rule is defined
+#### Scenario: Custom Rule structure
+- **WHEN** a custom Rule is defined
 - **THEN** it MUST have:
-  - `name: string` - Unique identifier
-  - `pattern: string` - Regex pattern (as string)
+  - `name: string` - Unique identifier (Rule ID)
+  - `pattern: string` - Regex pattern (as string, used in Guardrail Matcher)
   - `description: string` - Human-readable description
   - `severity: "critical" | "high" | "medium"` - Severity level
 

@@ -3,59 +3,65 @@
 ## ADDED Requirements
 
 ### Requirement: Behavior Enum
-The system MUST define a TypeScript enum for guardrail behaviors.
+The system MUST define a TypeScript enum for guardrail Behaviors.
 
 #### Scenario: Behavior types
-- WHEN the behavior enum is defined
+- WHEN the Behavior enum is defined
 - THEN it MUST contain:
-  - `block` - Stop tool call, no alternative
-  - `suggest` - Stop tool call, suggest safer alternative to LLM
-  - `run` - Stop tool call, execute safer alternative in hook
-  - `redact` - Allow tool call, sanitize output before LLM sees it
-  - `confirm` - Ask user (native UI or fallback to suggest)
+  - `block` - Stop Tool Call, no alternative. Works in all Harnesses, all Phases.
+  - `suggest` - Stop Tool Call, suggest safer alternative to LLM. Works in all Harnesses, before-tool Phase only.
+  - `run` - Stop Tool Call, execute safer alternative in hook, return sanitized Output. Requires shell execution Capability.
+  - `redact` - Allow Tool Call, sanitize Output before LLM sees it. Works in after-tool Phase only.
+  - `confirm` - Ask user (native UI or Fallback to suggest).
+
+#### Scenario: Phase-Behavior Matrix
+- WHEN Behaviors are defined
+- THEN the following Phase constraints MUST apply:
+  - `before-tool` Phase: block, suggest, run, confirm are available
+  - `after-tool` Phase: only redact is available
 
 ### Requirement: Guardrail Rule Interface
-The system MUST define a TypeScript interface for guardrail rules.
+The system MUST define a TypeScript interface for guardrail Rules.
 
 #### Scenario: Rule structure
-- WHEN a guardrail rule is defined
+- WHEN a Guardrail Rule is defined
 - THEN it MUST have:
-  - `id: string` - Unique identifier (e.g., `sops.decrypt`, `git.reset-hard`)
+  - `id: string` - Stable Rule ID (e.g., `sops.decrypt`, `git.reset-hard`)
   - `title: string` - Human-readable name
-  - `description: string` - What the rule detects
-  - `phase: "before-tool" | "after-tool"` - When the rule fires
-  - `match: GuardrailMatcher` - How to detect the condition
-  - `defaultAction: GuardrailAction` - Default behavior
+  - `description: string` - What the Rule matches
+  - `phase: "before-tool" | "after-tool"` - Phase when the Rule fires
+  - `match: GuardrailMatcher` - Guardrail Matcher for matching the condition
+  - `defaultAction: GuardrailAction` - Default Action
 
 ### Requirement: Guardrail Action Types
-The system MUST define TypeScript types for guardrail actions.
+The system MUST define TypeScript types for guardrail Actions.
 
 #### Scenario: Action types
-- WHEN a guardrail action is defined
+- WHEN a Guardrail Action is defined
 - THEN it MUST be one of:
   - `{ type: "allow" }` - Allow without modification
-  - `{ type: "block"; message: string }` - Block with explanation
-  - `{ type: "suggest"; replacement: string | string[]; message?: string }` - Block + suggest alternative(s)
-  - `{ type: "run"; replacement: string | string[]; message?: string }` - Block + execute alternative, optional message shown to user
-  - `{ type: "redact"; replacement: string }` - Allow + sanitize output
-  - `{ type: "confirm"; message: string; fallback?: GuardrailAction }` - Ask user
+  - `{ type: "block"; message: string }` - Block with Message
+  - `{ type: "suggest"; replacement: string | string[]; message?: string }` - Block + suggest Replacement(s)
+  - `{ type: "run"; replacement: string | string[]; message?: string }` - Block + execute Replacement, optional Message shown to user
+  - `{ type: "redact"; replacement: string }` - Allow + sanitize Output
+  - `{ type: "confirm"; message: string; fallback?: GuardrailAction }` - Ask user with Fallback
 
 #### Scenario: Multiple replacements
-- WHEN a suggest or run action has `replacement: string[]`
-- THEN the first element is the primary recommendation
+- WHEN a suggest or run Action has `replacement: string[]`
+- THEN the first element is the primary recommendation (highest Confidence)
 - AND subsequent elements are alternative approaches
-- AND the harness selects the most appropriate based on context
+- AND the Harness selects the most appropriate based on context
 
 #### Scenario: Run with message
-- WHEN a run action has a `message` field
-- THEN the message MUST be shown to the user/agent before or during execution
-- AND the message SHOULD explain what the safe alternative does
+- WHEN a run Action has a `message` field
+- THEN the Message MUST be shown to the user/agent before or during execution
+- AND the Message SHOULD explain what the safer alternative does
 
 ### Requirement: Rule Pack Interface
-The system MUST define a TypeScript interface for rule packs.
+The system MUST define a TypeScript interface for Rule Packs.
 
-#### Scenario: Rule pack structure
-- WHEN a rule pack is defined
+#### Scenario: Rule Pack structure
+- WHEN a Rule Pack is defined
 - THEN it MUST have:
   - `id: string` - Unique identifier (e.g., `env`, `sops`, `git`)
   - `name: string` - Human-readable name
@@ -63,34 +69,34 @@ The system MUST define a TypeScript interface for rule packs.
   - `rules: GuardrailRule[]` - Rules in the pack
 
 ### Requirement: Harness Capabilities
-The system MUST define a TypeScript interface for harness capabilities.
+The system MUST define a TypeScript interface for Harness Capabilities.
 
 #### Scenario: Capability model
-- WHEN harness capabilities are defined
+- WHEN Harness Capabilities are defined
 - THEN it MUST have:
-  - `block: boolean` - Can block tool calls (all harnesses: true)
-  - `suggest: boolean` - Can suggest alternatives (all harnesses: true)
-  - `run: boolean` - Can execute replacement commands (opencode, Pi only)
-  - `redact: boolean` - Can modify tool output (opencode, Pi only)
+  - `block: boolean` - Can block Tool Calls (all Harnesses: true)
+  - `suggest: boolean` - Can suggest alternatives (all Harnesses: true)
+  - `run: boolean` - Can execute Replacement commands (opencode, Pi only)
+  - `redact: boolean` - Can modify Tool Output (opencode, Pi only)
   - `confirm: boolean` - Has native confirmation UI (Pi, Codex only)
 
 ### Requirement: Built-in Harness Capabilities
-The system MUST define capabilities for supported harnesses.
+The system MUST define Capabilities for supported Harnesses.
 
-#### Scenario: opencode capabilities
-- WHEN opencode capabilities are queried
+#### Scenario: opencode Capabilities
+- WHEN opencode Capabilities are queried
 - THEN it MUST return: `{ block: true, suggest: true, run: true, redact: true, confirm: false }`
 
-#### Scenario: Pi capabilities
-- WHEN Pi capabilities are queried
+#### Scenario: Pi Capabilities
+- WHEN Pi Capabilities are queried
 - THEN it MUST return: `{ block: true, suggest: true, run: true, redact: true, confirm: true }`
 
-#### Scenario: Claude Code capabilities
-- WHEN Claude Code capabilities are queried
+#### Scenario: Claude Code Capabilities
+- WHEN Claude Code Capabilities are queried
 - THEN it MUST return: `{ block: true, suggest: true, run: false, redact: false, confirm: false }`
 
-#### Scenario: Codex capabilities
-- WHEN Codex capabilities are queried
+#### Scenario: Codex Capabilities
+- WHEN Codex Capabilities are queried
 - THEN it MUST return: `{ block: true, suggest: true, run: false, redact: false, confirm: true }`
 
 ### Requirement: Zero Dependencies

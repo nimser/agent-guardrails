@@ -1,19 +1,19 @@
 ## Context
 
-Agent Guardrails needs a configuration system to allow users to customize guardrails behavior per-project and globally. This enables different teams to have different risk tolerances.
+Agent Guardrails needs a configuration system to allow users to customize guardrails Behavior per-project and globally. This enables different teams to have different risk tolerances.
 
 ## Goals / Non-Goals
 
 **Goals:**
 - Read config from project and global locations
 - Merge with proper precedence (project > global > defaults)
-- Support custom rules
+- Support custom Rules via Configured Action
 - Validate configuration
 - Generate default config
 
 **Non-Goals:**
 - Core guardrails logic (covered in Changes 1-5)
-- Platform adapters (covered in Changes 6-9)
+- Platform Adapters (covered in Changes 6-9)
 - CLI commands (covered in Change 10)
 
 ## Decisions
@@ -43,26 +43,26 @@ Agent Guardrails needs a configuration system to allow users to customize guardr
 - Built-in defaults are always available
 - Consistent with other tools (eslint, prettier)
 
-### Decision 3: Rule action types
+### Decision 3: Rule Action types
 
-**Choice**: Four action types: block, suggest, warn, off
+**Choice**: Four Action types: block, suggest, warn, off
 
 **Rationale**:
 - `block`: Hard block, no alternative
-- `suggest`: Block + suggest safer alternative
+- `suggest`: Block + suggest safer alternative (Replacement)
 - `warn`: Allow but warn (PostToolUse redaction still applies)
 - `off`: Rule disabled
-- Covers all use cases
+- These are Configured Action values that override Default Action
 
-### Decision 4: Custom rules via array
+### Decision 4: Custom Rules via array
 
-**Choice**: Support custom rules via `customRules` array
+**Choice**: Support custom Rules via `customRules` array
 
 **Rationale**:
 - Users may have internal secret patterns
-- Easy to add custom patterns
-- Merged with built-in rules
-- Consistent with rule structure
+- Easy to add custom Guardrail Matchers
+- Merged with built-in Rules
+- Consistent with Rule structure
 
 ### Decision 5: JSON schema validation
 
@@ -91,7 +91,7 @@ Agent Guardrails needs a configuration system to allow users to customize guardr
 ### Risk: Config file conflicts
 **Mitigation**:
 - Clear precedence rules
-- Document merging behavior
+- Document merging Behavior
 - Test with edge cases
 
 ## Migration Plan

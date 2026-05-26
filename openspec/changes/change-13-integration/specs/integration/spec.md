@@ -15,7 +15,7 @@ The system MUST handle the SOPS decrypt workflow end-to-end.
 - **THEN** system MUST block and suggest safer alternative
 
 #### Scenario: Agent retries with safe command
-- **WHEN** agent retries with safer command
+- **WHEN** agent retries with Safer Command
 - **THEN** command MUST execute successfully
 
 ### Requirement: .env Workflow
@@ -30,11 +30,11 @@ The system MUST handle .env file reading workflow end-to-end.
 - **THEN** output MUST have values redacted
 
 ### Requirement: PostToolUse Workflow
-The system MUST handle PostToolUse redaction workflow end-to-end.
+The system MUST handle PostToolUse (Tool Result) redaction workflow end-to-end.
 
 #### Scenario: Unexpected secrets caught
-- **WHEN** tool output contains unexpected secrets
-- **THEN** PostToolUse MUST redact before agent sees output
+- **WHEN** Tool Output contains unexpected secrets
+- **THEN** PostToolUse MUST redact before agent sees Output
 
 ### Requirement: Git Workflow
 The system MUST handle git guardrails workflow end-to-end.

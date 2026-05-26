@@ -2,53 +2,53 @@
 
 ## Intent
 
-Implement deterministic secret detection with `block` behavior for the first vertical slice. This proves the hook path works in opencode and Pi.
+Implement deterministic secret matching with `block` Behavior for the first vertical slice. This proves the hook path works in opencode and Pi.
 
 ## Problem
 
-Agents can read files containing secrets (.env, private keys, SOPS-encrypted files) and include their content in LLM context. We need to block these operations before they execute.
+Agents can read files containing secrets (.env, private keys, SOPS-encrypted files) and include their content in LLM context. We need to block these operations before they execute via Tool Call hooks.
 
 ## Solution
 
 Implement:
-1. Deterministic secret detection rules (regex-based)
-2. `env` rule pack for .env file blocking (file-path AND bash-command matchers)
-3. `sops` rule pack for SOPS decrypt blocking
-4. `private-key` rule pack for private key file blocking (including SSH directory)
-5. `encryption-tools` rule pack for age, gpg, openssl decrypt blocking
-6. `secret-managers` rule pack for op, gopass, pass, bw commands
-7. `block` behavior only (suggest/run/redact come later)
+1. Deterministic secret matching Rules (regex-based Guardrail Matchers)
+2. `env` Rule Pack for .env file blocking (file-path AND bash-command Matchers)
+3. `sops` Rule Pack for SOPS decrypt blocking
+4. `private-key` Rule Pack for private key file blocking (including SSH directory)
+5. `encryption-tools` Rule Pack for age, gpg, openssl decrypt blocking
+6. `secret-managers` Rule Pack for op, gopass, pass, bw commands
+7. `block` Behavior only (suggest/run/redact come later)
 
 ## Scope
 
 ### In Scope
-- `env` rule pack: block reads of `.env` files via file-path AND bash commands (cat, bat, tee, etc.)
-- `sops` rule pack: block `sops -d` commands
-- `private-key` rule pack: block reads of `*.pem`, `*.key`, SSH keys, and any non-pub file in ~/.ssh/
-- `encryption-tools` rule pack: block `age -d`, `gpg --decrypt`, `openssl enc -d` commands
-- `secret-managers` rule pack: block `op read`, `gopass show`, `pass show`, `bw get` commands
-- `block` behavior implementation
-- Unit tests for all detection rules
+- `env` Rule Pack: block reads of `.env` files via file-path AND bash commands (cat, bat, tee, etc.)
+- `sops` Rule Pack: block `sops -d` commands
+- `private-key` Rule Pack: block reads of `*.pem`, `*.key`, SSH keys, and any non-pub file in ~/.ssh/
+- `encryption-tools` Rule Pack: block `age -d`, `gpg --decrypt`, `openssl enc -d` commands
+- `secret-managers` Rule Pack: block `op read`, `gopass show`, `pass show`, `bw get` commands
+- `block` Behavior implementation
+- Unit tests for all matching Rules
 
 ### Out of Scope
-- `suggest` and `run` behaviors (covered in `change-5-command-transforms`)
-- `redact` behavior (covered in `change-9-redact-output`)
-- Platform adapters (covered in `change-3-pi-adapter`, `change-4-opencode-adapter`)
+- `suggest` and `run` Behaviors (covered in `change-5-command-transforms`)
+- `redact` Behavior (covered in `change-9-redact-output`)
+- Platform Adapters (covered in `change-3-pi-adapter`, `change-4-opencode-adapter`)
 - AWS/GCP/Azure CLI secret commands (deferred - more complex patterns)
-- Database CLI password detection (deferred - hard to detect reliably)
+- Database CLI password detection (deferred - hard to match reliably)
 
 ### Note on Rule Packs
-This change defines the **detection logic** and **default actions** for secret-related rules. The same rule packs are used by `change-5-command-transforms` which adds `suggest` and `run` behavior support. Rule IDs are stable identifiers - the action (block/suggest/run) is configurable per harness.
+This change defines the **matching logic** and **Default Actions** for secret-related Rules. The same Rule Packs are used by `change-5-command-transforms` which adds `suggest` and `run` Behavior support. Rule IDs are stable identifiers - the Action (block/suggest/run) is configurable per Harness via Configured Action.
 
 ## Approach
 
 1. Create `packages/secrets/` directory
-2. Implement `env` rule pack with dual matchers (file-path + bash-command)
-3. Implement `sops` rule pack
-4. Implement `private-key` rule pack with SSH directory support
-5. Implement `encryption-tools` rule pack (age, gpg, openssl)
-6. Implement `secret-managers` rule pack (op, gopass, pass, bw)
-7. Export rule packs for adapters to consume
+2. Implement `env` Rule Pack with dual Matchers (file-path + bash-command) — Defense in Depth
+3. Implement `sops` Rule Pack
+4. Implement `private-key` Rule Pack with SSH directory support
+5. Implement `encryption-tools` Rule Pack (age, gpg, openssl)
+6. Implement `secret-managers` Rule Pack (op, gopass, pass, bw)
+7. Export Rule Packs for Adapters to consume
 
 ## Rule Packs
 
@@ -182,22 +182,22 @@ const secretManagersRulePack: RulePack = {
 
 ## Success Criteria
 
-- [ ] `env` rule pack blocks `.env` file reads via file-path AND bash commands
-- [ ] `sops` rule pack blocks `sops -d` commands
-- [ ] `private-key` rule pack blocks private key reads including SSH directory
-- [ ] `encryption-tools` rule pack blocks age, gpg, openssl decrypt
-- [ ] `secret-managers` rule pack blocks op, gopass, pass, bw commands
-- [ ] All rules have unit tests
-- [ ] Rule packs export cleanly for adapter consumption
+- [ ] `env` Rule Pack blocks `.env` file reads via file-path AND bash commands
+- [ ] `sops` Rule Pack blocks `sops -d` commands
+- [ ] `private-key` Rule Pack blocks private key reads including SSH directory
+- [ ] `encryption-tools` Rule Pack blocks age, gpg, openssl decrypt
+- [ ] `secret-managers` Rule Pack blocks op, gopass, pass, bw commands
+- [ ] All Rules have unit tests
+- [ ] Rule Packs export cleanly for Adapter consumption
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, rule pack interface)
+- Depends on `change-1-project-foundation` (types, Rule Pack interface)
 
 ## Risks
 
 - **Risk**: False positives (legitimate file reads blocked)
-  - **Mitigation**: Precise patterns, configurable per-project
+  - **Mitigation**: Precise Guardrail Matchers, configurable per-project
 - **Risk**: Missing patterns
   - **Mitigation**: Start with common patterns, extend as needed
 - **Risk**: Scope creep

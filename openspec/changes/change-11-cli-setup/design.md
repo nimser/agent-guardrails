@@ -1,19 +1,19 @@
 ## Context
 
-Agent Guardrails needs a CLI for zero-friction installation across different agents. Users should be able to install with a single command: `npx ag setup <agent>`.
+Agent Guardrails needs a CLI for zero-friction installation across different Harnesses. Users should be able to install with a single command: `npx ag setup <agent>`.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Detect agent config locations automatically
-- Copy adapter files and register hooks
+- Detect Harness config locations automatically
+- Copy Adapter files and register hooks
 - Report installed versions
 - Run self-tests
 - Work on macOS and Linux
 
 **Non-Goals:**
 - Core guardrails logic (covered in Changes 1-5)
-- Platform adapters (covered in Changes 6-9)
+- Platform Adapters (covered in Changes 6-9)
 - Configuration system (covered in Change 11)
 
 ## Decisions
@@ -33,9 +33,9 @@ Agent Guardrails needs a CLI for zero-friction installation across different age
 - Meow: Too simple
 - Custom: Too much work
 
-### Decision 2: Auto-detection of agent config locations
+### Decision 2: Auto-detection of Harness config locations
 
-**Choice**: Detect agent config locations automatically
+**Choice**: Detect Harness config locations automatically
 
 **Rationale**:
 - Users don't need to know where configs are
@@ -51,7 +51,7 @@ Agent Guardrails needs a CLI for zero-friction installation across different age
 
 ### Decision 3: File copy for installation
 
-**Choice**: Copy adapter files to agent config directories
+**Choice**: Copy Adapter files to Harness config directories
 
 **Rationale**:
 - Simple and reliable
@@ -66,7 +66,7 @@ Agent Guardrails needs a CLI for zero-friction installation across different age
 
 ### Decision 4: Version embedding
 
-**Choice**: Embed version in CLI and adapter files
+**Choice**: Embed version in CLI and Adapter files
 
 **Rationale**:
 - Easy to report versions
@@ -76,9 +76,9 @@ Agent Guardrails needs a CLI for zero-friction installation across different age
 
 ## Risks / Trade-offs
 
-### Risk: Agent config locations change
+### Risk: Harness config locations change
 **Mitigation**:
-- Test with multiple agent versions
+- Test with multiple Harness versions
 - Update detection logic
 - Document manual override
 

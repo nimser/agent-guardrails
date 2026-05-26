@@ -3,14 +3,14 @@
 ## ADDED Requirements
 
 ### Requirement: kubernetes Rule Pack
-The system MUST provide a `kubernetes` rule pack for kubectl secrets commands.
+The system MUST provide a `kubernetes` Rule Pack for kubectl secrets commands.
 
 #### Scenario: Suggest redacted kubectl secrets
 - WHEN agent runs `kubectl get secrets`
 - THEN rule MUST match and produce `suggest` action with redacted alternative
 
 ### Requirement: vault Rule Pack
-The system MUST provide a `vault` rule pack for vault read commands.
+The system MUST provide a `vault` Rule Pack for vault read commands.
 
 #### Scenario: Suggest redacted vault read
 - WHEN agent runs `vault kv get secret/data`
@@ -79,22 +79,22 @@ The system MUST detect when piped commands already have proper precautions.
 - THEN system MUST block (grep without -o shows full line with secrets)
 
 ### Requirement: Suggest Behavior
-The system MUST implement `suggest` behavior for all harnesses.
+The system MUST implement `suggest` Behavior for all Harnesses.
 
 #### Scenario: Suggest in Claude Code
-- WHEN Claude Code adapter encounters suggest action
-- THEN it MUST throw Error with suggestion message
+- WHEN Claude Code Adapter encounters suggest Action
+- THEN it MUST throw Error with suggestion Message
 
 #### Scenario: Suggest in Codex
-- WHEN Codex adapter encounters suggest action
-- THEN it MUST return deny with suggestion message
+- WHEN Codex Adapter encounters suggest Action
+- THEN it MUST return deny with suggestion Message
 
 #### Scenario: Suggest in opencode
-- WHEN opencode adapter encounters suggest action
-- THEN it MUST throw Error with suggestion message
+- WHEN opencode Adapter encounters suggest Action
+- THEN it MUST throw Error with suggestion Message
 
 #### Scenario: Suggest in Pi
-- WHEN Pi adapter encounters suggest action
+- WHEN Pi Adapter encounters suggest Action
 - THEN it MUST return `{ block: true, reason: "..." }`
 
 ### Requirement: Action Configuration

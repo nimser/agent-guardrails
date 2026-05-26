@@ -7,7 +7,7 @@
 
 ## 2. Git Rule Pack
 
-- [ ] 2.1 Create `src/packs/git.ts` with git rule pack
+- [ ] 2.1 Create `src/packs/git.ts` with git Rule Pack
 - [ ] 2.2 Implement rm -rf detection
 - [ ] 2.3 Implement git reset --hard detection
 - [ ] 2.4 Implement git clean -f detection

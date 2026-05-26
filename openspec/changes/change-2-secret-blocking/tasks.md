@@ -67,7 +67,7 @@
 
 ## 7. Module Exports
 
-- [ ] 7.1 Create `src/index.ts` exporting all rule packs
+- [ ] 7.1 Create `src/index.ts` exporting all Rule Packs
 - [ ] 7.2 Export `ALL_RULE_PACKS` array combining all packs
 - [ ] 7.3 Export individual packs: envRulePack, sopsRulePack, privateKeyRulePack, encryptionToolsRulePack, secretManagersRulePack
 
@@ -81,6 +81,6 @@
 
 ## 9. Documentation
 
-- [ ] 9.1 Create `packages/secrets/README.md` documenting each rule pack
+- [ ] 9.1 Create `packages/secrets/README.md` documenting each Rule Pack
 - [ ] 9.2 Document pattern syntax for contributors
 - [ ] 9.3 Document which tools/commands are blocked by each pack

@@ -2,15 +2,15 @@
 
 ## Intent
 
-Create a Claude Code hook adapter that uses `block` and `suggest` behaviors to prevent secret leaks and dangerous operations. Claude Code uses shell hooks with exit code protocol for tool interception.
+Create a Claude Code Adapter that uses `block` and `suggest` Behaviors to prevent secret leaks and dangerous operations. Claude Code uses shell hooks with exit code protocol for tool interception.
 
 ## Problem
 
-Claude Code (anthropics/claude-code) needs native integration with Agent Guardrails. It supports `PreToolUse` and `PostToolUse` shell hooks that communicate via JSON on stdout and exit codes.
+Claude Code (anthropics/claude-code) needs native integration with Agent Guardrails. It supports `PreToolUse` (Tool Call) and `PostToolUse` (Tool Result) shell hooks that communicate via JSON on stdout and exit codes.
 
 ## Solution
 
-Create a Claude Code hook that:
+Create a Claude Code Adapter that:
 1. Implements `guard.sh` shell script for PreToolUse/PostToolUse
 2. Creates `settings.json` snippet for hook configuration
 3. Blocks dangerous commands with exit code 2 and JSON message
@@ -21,16 +21,16 @@ Create a Claude Code hook that:
 ### In Scope
 - `guard.sh` shell hook script
 - `settings.json` snippet for hook configuration
-- PreToolUse: block and suggest behaviors via exit code 2
-- Import and consume rule packs (compiled into shell script)
-- Clear block/suggest messages in JSON output
+- PreToolUse: block and suggest Behaviors via exit code 2
+- Import and consume Rule Packs (compiled into shell script)
+- Clear block/suggest Messages in JSON output
 - Installation via CLI (`npx ag setup claude-code`)
 
 ### Out of Scope
-- `redact` behavior (shell hooks cannot modify tool output)
-- `run` behavior (shell hooks cannot execute replacement commands)
-- `confirm` behavior (Claude Code has no native confirmation UI)
-- Other adapters
+- `redact` Behavior (shell hooks cannot modify Tool Output)
+- `run` Behavior (shell hooks cannot execute Replacement commands)
+- `confirm` Behavior (Claude Code has no native confirmation UI)
+- Other Adapters
 
 ## Approach
 
@@ -45,12 +45,12 @@ Create a Claude Code hook that:
 
 Claude Code supports:
 - **block**: Yes (exit 2 with JSON `decision: block`)
-- **suggest**: Yes (reason in JSON `reason` field)
-- **run**: No (shell hooks cannot execute replacement commands)
-- **redact**: No (PostToolUse cannot modify tool output)
+- **suggest**: Yes (Message in JSON `reason` field)
+- **run**: No (shell hooks cannot execute Replacement commands)
+- **redact**: No (PostToolUse cannot modify Tool Output)
 - **confirm**: No (no native confirmation UI)
 
-For this change, we implement `block` and `suggest`. This is the simplest adapter.
+For this change, we implement `block` and `suggest`. This is the simplest Adapter.
 
 ## Hook Protocol
 
@@ -109,13 +109,13 @@ Exit code: 2
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, harness model)
-- Depends on `change-2-secret-blocking` (rule packs)
-- Depends on `change-5-command-transforms` (suggest behavior)
+- Depends on `change-1-project-foundation` (types, Harness model)
+- Depends on `change-2-secret-blocking` (Rule Packs)
+- Depends on `change-5-command-transforms` (suggest Behavior)
 
 ## Risks
 
 - **Risk**: Shell script complexity for JSON parsing
   - **Mitigation**: Use `jq` for JSON handling, keep script simple
 - **Risk**: Claude Code API changes
-  - **Mitigation**: Pin adapter version, test with multiple Claude Code versions
+  - **Mitigation**: Pin Adapter version, test with multiple Claude Code versions

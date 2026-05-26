@@ -25,12 +25,12 @@ Agent Guardrails needs end-to-end integration testing to ensure all components w
 - Tests complete workflows
 - Catches integration issues early
 - Validates performance targets
-- Documents expected behavior
+- Documents expected Behavior
 
 **Test scenarios**:
 - SOPS decrypt workflow
 - .env file reading workflow
-- PostToolUse redaction workflow
+- PostToolUse (Tool Result) redaction workflow
 - Git guardrails workflow
 
 ### Decision 2: Performance benchmarking

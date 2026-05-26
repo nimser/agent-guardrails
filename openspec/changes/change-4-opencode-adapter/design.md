@@ -1,32 +1,32 @@
 ## Context
 
-opencode is a popular AI coding assistant with a plugin system that supports `tool.execute.before` and `tool.execute.after` hooks. We need to integrate Agent Guardrails into this hook system.
+opencode is a popular AI coding assistant with a plugin system that supports `tool.execute.before` (Tool Call) and `tool.execute.after` (Tool Result) hooks. We need to integrate Agent Guardrails into this hook system via an Adapter.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Block dangerous commands in PreToolUse
-- Import and use rule packs from secrets package
-- Provide clear error messages
+- Block dangerous commands in Tool Call hook
+- Import and use Rule Packs from secrets package
+- Provide clear Messages
 - Performance testing to ensure < 10ms overhead
 
 **Non-Goals:**
-- `suggest` behavior (comes in change-5-command-transforms)
-- `run` behavior (deferred to later change)
-- `redact` behavior (comes in change-9-redact-output)
-- Other adapters
+- `suggest` Behavior (comes in change-5-command-transforms)
+- `run` Behavior (deferred to later change)
+- `redact` Behavior (comes in change-9-redact-output)
+- Other Adapters
 
 ## Decisions
 
-### Decision 1: Plugin-based integration
+### Decision 1: Adapter-based integration
 
-**Choice**: Use opencode's plugin system with `tool.execute.before`
+**Choice**: Use opencode's plugin system with `tool.execute.before` (Tool Call)
 
 **Rationale**:
 - Native opencode API
 - Well-documented
 - Can block by throwing Error
-- Plugin can be distributed via npm
+- Adapter can be distributed via npm
 
 ### Decision 2: Error throwing for blocking
 
@@ -34,18 +34,18 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 
 **Rationale**:
 - opencode API uses errors for blocking
-- Error message is shown to agent
+- Error Message is shown to agent
 - Consistent with opencode conventions
 
-### Decision 3: Rule pack consumption
+### Decision 3: Rule Pack consumption
 
-**Choice**: Import rule packs from `@agent-guardrails/secrets`
+**Choice**: Import Rule Packs from `@agent-guardrails/secrets`
 
 **Rationale**:
-- Reusable across adapters
+- Reusable across Adapters
 - Easy to test
 - Easy to add new packs
-- Consistent with rule pack model
+- Consistent with Rule Pack model
 
 ### Decision 4: Performance benchmarking
 
@@ -60,12 +60,12 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 ## Risks / Trade-offs
 
 ### Risk: opencode API changes
-**Mitigation**: Pin adapter version, test with multiple versions
+**Mitigation**: Pin Adapter version, test with multiple versions
 
 ### Risk: False blocking
-**Mitigation**: Precise patterns, test with edge cases
+**Mitigation**: Precise Guardrail Matchers, test with edge cases
 
-### Risk: Performance degrades with many rules
+### Risk: Performance degrades with many Rules
 **Mitigation**:
 - Early exit on first match
 - Regex compilation cached

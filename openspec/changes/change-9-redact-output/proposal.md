@@ -2,20 +2,20 @@
 
 ## Intent
 
-Implement `redact` behavior for PostToolUse output sanitization. This is defense-in-depth that catches secrets that slip through PreToolUse hooks.
+Implement `redact` Behavior for PostToolUse (Tool Result) Output sanitization. This is Defense in Depth that catches secrets that slip through PreToolUse (Tool Call) hooks.
 
 ## Problem
 
 Even with PreToolUse hooks blocking dangerous commands, agents can still encounter secrets through:
-- Unusual commands that don't match known patterns
+- Unusual commands that don't match known Guardrail Matchers
 - Already-decrypted files in the working tree
 - Custom scripts that decrypt secrets
-- Tool output that contains secrets from other sources
+- Tool Output that contains secrets from other sources
 
 ## Solution
 
-Implement PostToolUse redaction that:
-1. Scans tool output for secret patterns
+Implement PostToolUse (Tool Result) redaction that:
+1. Scans Tool Output for secret patterns
 2. Replaces secrets with descriptive redaction markers
 3. Returns sanitized content to the agent
 
@@ -25,32 +25,32 @@ Implement PostToolUse redaction that:
 |----------|:-----------:|:-----:|:--------:|:--:|
 | **redact** | ❌ | ❌ | ✅ | ✅ |
 
-**Critical limitation**: Only opencode and Pi can modify tool output. Claude Code and Codex can only add system messages, not replace tool output.
+**Critical limitation**: Only opencode and Pi can modify Tool Output. Claude Code and Codex can only add system messages, not replace Tool Output.
 
-For Claude Code/Codex, the hook can warn that secrets were found, but can't prevent them from reaching the LLM. This is why `redact` is defense-in-depth, not the primary defense.
+For Claude Code/Codex, the hook can warn that secrets were found, but can't prevent them from reaching the LLM. This is why `redact` is Defense in Depth, not the primary defense.
 
 ## Scope
 
 ### In Scope
-- Secret detection in tool output (reuse patterns from `change-2-secret-blocking`)
+- Secret matching in Tool Output (reuse Guardrail Matchers from `change-2-secret-blocking`)
 - Redaction with descriptive markers (`[REDACTED: GitHub Token]`)
-- PostToolUse hook in opencode adapter
-- PostToolUse hook in Pi adapter
+- PostToolUse hook (Tool Result) in opencode Adapter
+- PostToolUse hook (Tool Result) in Pi Adapter
 - Unit tests for redaction logic
 
 ### Out of Scope
 - PreToolUse blocking (covered in `change-2-secret-blocking`)
-- Command transforms (covered in `change-5-command-transforms`)
-- Confirmation behavior (covered in `change-10-interactive-confirmation`)
-- Claude Code/Codex adapters (can't redact output)
+- Command Transforms (covered in `change-5-command-transforms`)
+- Confirmation Behavior (covered in `change-10-interactive-confirmation`)
+- Claude Code/Codex Adapters (can't redact Output)
 
 ## Approach
 
 1. Create `packages/redact/` directory
 2. Implement secret detection for tool output
 3. Implement redaction with descriptive markers
-4. Update opencode adapter with PostToolUse hook
-5. Update Pi adapter with tool_result hook
+4. Update opencode Adapter with PostToolUse hook (Tool Result)
+5. Update Pi Adapter with tool_result hook (Tool Result)
 
 ## Key Design Decisions
 
@@ -66,10 +66,10 @@ For Claude Code/Codex, the hook can warn that secrets were found, but can't prev
 
 ### Decision 2: Only risky commands
 
-**Choice**: Only scan output from commands that matched pre-hook rules
+**Choice**: Only scan Output from commands that matched pre-hook Rules
 
 **Rationale**:
-- Scanning all output is expensive (10-50ms per 100KB)
+- Scanning all Output is expensive (10-50ms per 100KB)
 - Most commands don't produce secrets
 - Focus scanning on known risky commands
 - Balance between safety and performance
@@ -79,10 +79,10 @@ For Claude Code/Codex, the hook can warn that secrets were found, but can't prev
 **Choice**: Only implement redact for opencode and Pi
 
 **Rationale**:
-- Claude Code/Codex can't modify tool output
+- Claude Code/Codex can't modify Tool Output
 - They can only add system messages
-- Redact is defense-in-depth, not primary defense
-- Focus resources on harnesses that can actually redact
+- Redact is Defense in Depth, not primary defense
+- Focus resources on Harnesses that can actually redact
 
 ## Success Criteria
 
@@ -96,12 +96,12 @@ For Claude Code/Codex, the hook can warn that secrets were found, but can't prev
 
 - Depends on `change-1-project-foundation` (types)
 - Depends on `change-2-secret-blocking` (detection patterns)
-- Depends on `change-3-opencode-adapter` (opencode hook)
-- Depends on `change-4-pi-adapter` (Pi hook)
+- Depends on `change-3-opencode-adapter` (opencode Adapter)
+- Depends on `change-4-pi-adapter` (Pi Adapter)
 
 ## Risks
 
 - **Risk**: Redaction misses secrets
-  - **Mitigation**: Defense-in-depth, primary defense is blocking
+  - **Mitigation**: Defense in Depth, primary defense is blocking
 - **Risk**: Performance overhead
-  - **Mitigation**: Only scan risky command output
+  - **Mitigation**: Only scan risky command Output

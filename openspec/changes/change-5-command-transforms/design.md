@@ -4,33 +4,33 @@ Agent Guardrails needs to suggest safer alternatives when dangerous commands are
 
 ## Clarification: suggest vs run
 
-This change implements **`suggest` behavior only**:
+This change implements **`suggest` Behavior only**:
 - **suggest**: Block original command, suggest alternative(s) to LLM. LLM decides whether to retry.
 - **run**: Block original, execute alternative in hook, return output. **Deferred to a later change.**
 
-The `suggest` behavior is universal (works in all harnesses). The `run` behavior requires shell execution in hooks (opencode/Pi only) and will be added in a future increment.
+The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior requires shell execution in hooks (opencode/Pi only) and will be added in a future increment.
 
 ## Goals / Non-Goals
 
 **Goals:**
 - Suggest safer alternatives for env, sops, kubectl, vault, private key commands
-- Implement multiple suggestions with prioritization
-- Implement smart piped command detection (allow safe pipes)
-- Implement format-aware SOPS redaction with --output-type support
-- Implement `suggest` behavior for all harnesses
+- Implement multiple Safer Commands with prioritization
+- Implement Smart Piped Command Detection (allow safe pipes)
+- Implement Format-aware Redaction for SOPS with --output-type support
+- Implement `suggest` Behavior for all Harnesses
 
 **Non-Goals:**
-- `block` behavior (covered in `change-2-secret-blocking`)
-- `run` behavior (deferred to later change)
-- `redact` behavior (covered in `change-9-redact-output`)
-- `confirm` behavior (covered in `change-10-interactive-confirmation`)
-- Git transforms (covered in `change-8-git-guardrails`)
+- `block` Behavior (covered in `change-2-secret-blocking`)
+- `run` Behavior (deferred to later change)
+- `redact` Behavior (covered in `change-9-redact-output`)
+- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
+- Git Transforms (covered in `change-8-git-guardrails`)
 
 ## Decisions
 
 ### Decision 1: Multiple suggestions with prioritization
 
-**Choice**: `findSaferCommands()` returns array sorted by confidence
+**Choice**: `findSaferCommands()` returns array of Safer Commands sorted by Confidence
 
 **Rationale**:
 - Different contexts may warrant different approaches
@@ -38,7 +38,7 @@ The `suggest` behavior is universal (works in all harnesses). The `run` behavior
 - LLM can choose most appropriate based on task
 - Better UX than single suggestion
 
-### Decision 2: Smart piped command detection
+### Decision 2: Smart Piped Command Detection
 
 **Choice**: Allow commands with proper precautions (grep -o, head, wc)
 
@@ -51,7 +51,7 @@ The `suggest` behavior is universal (works in all harnesses). The `run` behavior
 
 ### Decision 3: SOPS --output-type awareness
 
-**Choice**: Parse --output-type flag to determine redaction format
+**Choice**: Parse --output-type flag to determine Format-aware Redaction format
 
 **Rationale**:
 - Default SOPS output is YAML, but user may specify JSON/ENV
@@ -59,9 +59,9 @@ The `suggest` behavior is universal (works in all harnesses). The `run` behavior
 - Prevents false positives from YAML redaction on JSON output
 - Simple flag parsing, no complex logic
 
-### Decision 4: Format-aware SOPS redaction in TypeScript
+### Decision 4: Format-aware Redaction in TypeScript
 
-**Choice**: Implement SOPS redaction in TypeScript, not shell scripts
+**Choice**: Implement SOPS Format-aware Redaction in TypeScript, not shell scripts
 
 **Rationale**:
 - SOPS handles YAML, JSON, ENV, INI formats
@@ -69,32 +69,32 @@ The `suggest` behavior is universal (works in all harnesses). The `run` behavior
 - TypeScript can detect format and apply appropriate redaction
 - More maintainable than shell scripts
 
-### Decision 5: Reuse existing rule packs
+### Decision 5: Reuse existing Rule Packs
 
-**Choice**: Use the same rule packs from `change-2-secret-blocking`, add kubernetes and vault packs
+**Choice**: Use the same Rule Packs from `change-2-secret-blocking`, add kubernetes and vault packs
 
 **Rationale**:
 - Rule IDs (`sops.decrypt`, `env.read`) remain stable
-- Only the action changes (block → suggest)
-- Users configure action per rule via config
+- Only the Action changes (block → suggest)
+- Users configure Action per Rule via Configured Action
 - No duplicate packs needed
 
-### Decision 6: Suggest as universal behavior
+### Decision 6: Suggest as universal Behavior
 
-**Choice**: `suggest` works in all harnesses
+**Choice**: `suggest` works in all Harnesses
 
 **Rationale**:
-- Claude Code/Codex can't execute replacement commands
-- `suggest` is the only option for these harnesses
+- Claude Code/Codex can't execute Replacement commands
+- `suggest` is the only option for these Harnesses
 - LLM sees suggestion and decides whether to retry
-- Works everywhere, no capability limitations
+- Works everywhere, no Capability limitations
 
 ## Risks / Trade-offs
 
 ### Risk: Suggested command doesn't accomplish same goal
 **Mitigation**:
-- Test each transform with real commands
-- Provide clear description of what safer command does
+- Test each Transform with real commands
+- Provide clear description of what Safer Command does
 - Multiple suggestions give fallback options
 
 ### Risk: SOPS format detection fails
@@ -103,7 +103,7 @@ The `suggest` behavior is universal (works in all harnesses). The `run` behavior
 - Test with various SOPS formats
 - Parse --output-type flag explicitly
 
-### Risk: Smart piped detection too permissive
+### Risk: Smart Piped Command Detection too permissive
 **Mitigation**:
 - Conservative defaults (only known-safe patterns)
 - Warn even when allowing
@@ -111,7 +111,7 @@ The `suggest` behavior is universal (works in all harnesses). The `run` behavior
 
 ### Risk: Multiple suggestions overwhelm LLM
 **Mitigation**:
-- Sort by confidence (primary suggestion first)
+- Sort by Confidence (primary suggestion first)
 - Limit to 3-4 alternatives
 - Clear descriptions for each
 

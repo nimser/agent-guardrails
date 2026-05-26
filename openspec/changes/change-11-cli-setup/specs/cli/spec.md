@@ -12,13 +12,13 @@ The system MUST provide a CLI interface for Agent Guardrails management.
   - `test` - Run self-test
 
 ### Requirement: Setup Command
-The system MUST install Agent Guardrails for specified agents.
+The system MUST install Agent Guardrails for specified Harnesses.
 
 #### Scenario: Setup opencode
 - **WHEN** `npx ag setup opencode` is executed
 - **THEN** it MUST:
   - Detect opencode config location (`.opencode/plugins/`)
-  - Copy adapter file
+  - Copy Adapter file
   - Register hook in opencode config
   - Print success message with version
 
@@ -26,7 +26,7 @@ The system MUST install Agent Guardrails for specified agents.
 - **WHEN** `npx ag setup pi` is executed
 - **THEN** it MUST:
   - Detect Pi config location (`.pi/extensions/`)
-  - Copy adapter file
+  - Copy Adapter file
   - Print success message with version
 
 #### Scenario: Setup Codex CLI
@@ -50,12 +50,12 @@ The system MUST install Agent Guardrails for specified agents.
 - **THEN** it MUST install globally (e.g., `~/.config/agent-guardrails/`)
 
 ### Requirement: Status Command
-The system MUST report installed agents and versions.
+The system MUST report installed Harnesses and versions.
 
 #### Scenario: Show status
 - **WHEN** `npx ag status` is executed
 - **THEN** it MUST:
-  - Check each agent's config directory
+  - Check each Harness's config directory
   - Report installed version
   - Show which features are enabled
 
@@ -66,8 +66,8 @@ The system MUST validate hook functionality.
 - **WHEN** `npx ag test` is executed
 - **THEN** it MUST:
   - Pipe sample commands through hooks
-  - Validate blocking behavior
-  - Validate redaction behavior
+  - Validate blocking Behavior
+  - Validate redaction Behavior
   - Report test results
 
 ### Requirement: Version Embedding
@@ -80,8 +80,8 @@ The system MUST embed version information.
 ### Requirement: Error Handling
 The system MUST provide clear error messages.
 
-#### Scenario: Agent not found
-- **WHEN** agent config directory doesn't exist
+#### Scenario: Harness not found
+- **WHEN** Harness config directory doesn't exist
 - **THEN** CLI MUST output clear error message
 
 #### Scenario: Permission denied

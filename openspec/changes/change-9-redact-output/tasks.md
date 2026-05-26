@@ -16,8 +16,8 @@
 
 ## 4. Adapter Updates
 
-- [ ] 4.1 Update opencode adapter with PostToolUse hook
-- [ ] 4.2 Update Pi adapter with tool_result hook
+- [ ] 4.1 Update opencode Adapter with PostToolUse hook (Tool Result)
+- [ ] 4.2 Update Pi Adapter with tool_result hook (Tool Result)
 
 ## 5. Testing
 
@@ -27,5 +27,5 @@
 
 ## 6. Documentation
 
-- [ ] 6.1 Document redaction behavior
+- [ ] 6.1 Document redaction Behavior
 - [ ] 6.2 Add usage examples

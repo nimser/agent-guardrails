@@ -2,51 +2,51 @@
 
 ## Intent
 
-Implement `suggest` behavior for dangerous commands. This adds safer alternatives that the LLM can retry. `run` behavior (executing the alternative directly) is deferred to a later change.
+Implement `suggest` Behavior for dangerous commands. This adds safer alternatives that the LLM can retry. `run` Behavior (executing the alternative directly) is deferred to a later change.
 
 ## Problem
 
-Blocking alone is not enough. Users want to accomplish the same task safely. For example, `sops -d secrets.yaml` should suggest `sops -d secrets.yaml | sed 's/:.*/: [REDACTED]/'` rather than just blocking.
+Blocking alone is not enough. Users want to accomplish the same task safely. For example, `sops -d secrets.yaml` should suggest `sops -d secrets.yaml | sed 's/:.*/: [REDACTED]/'` rather than just blocking. This is the `suggest` Behavior — a Replacement is offered as a Message to the LLM.
 
 ## Clarification: suggest vs run
 
-This change implements **`suggest` behavior only**:
-- **suggest**: Block original command, suggest alternative(s) to LLM. LLM decides whether to retry.
-- **run**: Block original, execute alternative in hook, return output. **Deferred to a later change.**
+This change implements **`suggest` Behavior only**:
+- **suggest**: Block original command, suggest Replacement(s) to LLM via Message. LLM decides whether to retry.
+- **run**: Block original, execute alternative in hook, return Output. **Deferred to a later change.**
 
-The `suggest` behavior is universal (works in all harnesses). The `run` behavior requires shell execution in hooks (opencode/Pi only) and will be added in a future increment.
+The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior requires shell execution in hooks (opencode/Pi only) and will be added in a future increment.
 
 ## Solution
 
-Enhance adapters to support `suggest` behavior using the **same rule packs** from `change-2-secret-blocking`:
-1. Reuse all rule packs from `@agent-guardrails/secrets`
-2. Update rule defaultActions from `block` to `suggest` with replacement commands
-3. Implement `findSaferCommands()` returning multiple alternatives with prioritization
-4. Handle smart piped commands that already have proper precautions
-5. Implement format-aware SOPS redaction in TypeScript
+Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** from `change-2-secret-blocking`:
+1. Reuse all Rule Packs from `@agent-guardrails/secrets`
+2. Update Rule Default Actions from `block` to `suggest` with Replacement commands
+3. Implement `findSaferCommands()` returning multiple Safer Commands with prioritization
+4. Handle Smart Piped Commands that already have proper precautions
+5. Implement Format-aware Redaction for SOPS in TypeScript
 
 ## Scope
 
 ### In Scope
-- Update rule pack defaultActions to `suggest` with replacement commands
+- Update Rule Pack Default Actions to `suggest` with Replacement commands
 - `findSaferCommands()` function returning multiple alternatives
 - Prioritization logic for selecting most relevant suggestion
 - Smart detection of piped commands with proper precautions (grep flags, etc.)
 - Format-aware SOPS redaction in TypeScript
 - Adapter updates to support `suggest` action
-- Multiple suggestion support in adapters
+- Multiple suggestion support in Adapters
 
 ### Out of Scope
-- `run` behavior (deferred to later change - requires shell execution in hooks)
-- `redact` behavior (covered in `change-9-redact-output`)
-- `confirm` behavior (covered in `change-10-interactive-confirmation`)
+- `run` Behavior (deferred to later change - requires shell execution in hooks)
+- `redact` Behavior (covered in `change-9-redact-output`)
+- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
 - Git transforms (covered in `change-8-git-guardrails`)
 
 ## Key Design Decisions
 
 ### Multiple Suggestions
 
-Instead of a single `findSaferCommand()`, implement `findSaferCommands()` that returns an array:
+Instead of a single `findSaferCommand()`, implement `findSaferCommands()` that returns an array of Safer Commands:
 
 ```typescript
 interface SaferCommand {
@@ -56,15 +56,15 @@ interface SaferCommand {
 }
 
 function findSaferCommands(originalCmd: string): SaferCommand[] {
-  // Returns multiple alternatives, sorted by confidence
+  // Returns multiple alternatives, sorted by Confidence (highest first)
   // e.g., for "cat .env":
-  // 1. sed 's/=.*/=[REDACTED]/' .env (full redaction)
-  // 2. head -c 4 .env && echo "..." (first 4 chars)
-  // 3. grep -c '=' .env (count of keys only)
+  // 1. sed 's/=.*/=[REDACTED]/' .env (full redaction, high Confidence)
+  // 2. head -c 4 .env && echo "..." (first 4 chars, medium Confidence)
+  // 3. grep -c '=' .env (count of keys only, low Confidence)
 }
 ```
 
-The harness selects the primary suggestion, but can show alternatives if the first doesn't work.
+The Harness selects the primary Replacement (first element), but can show alternatives if the first doesn't work.
 
 ### Smart Piped Command Detection
 
@@ -77,15 +77,15 @@ When a command already has proper precautions (grep with limited context), don't
 "sops -d secrets.yaml | head -5" // Only shows first 5 lines
 ```
 
-Detection: If piped command has `grep -o` with limited context, `head`, `tail`, `wc`, allow it through.
+Matching: If piped command has `grep -o` with limited context, `head`, `tail`, `wc`, allow it through.
 
 ### SOPS Output-Type Handling
 
-When SOPS command specifies `--output-type`, use that for redaction instead of defaulting to YAML:
+When SOPS command specifies `--output-type`, use that for Format-aware Redaction instead of defaulting to YAML:
 
 ```typescript
 // Command: sops -d --output-type json secrets.yaml
-// Redaction should use JSON format, not YAML
+// Format-aware Redaction should use JSON format, not YAML
 ```
 
 ## Transform Examples
@@ -130,22 +130,22 @@ When SOPS command specifies `--output-type`, use that for redaction instead of d
 - [ ] SOPS redaction is format-aware (YAML, JSON, ENV)
 - [ ] SOPS redaction respects `--output-type` flag
 - [ ] Smart piped commands with precautions are allowed through
-- [ ] `suggest` works in all harnesses
+- [ ] `suggest` works in all Harnesses
 - [ ] Multiple suggestions are returned and prioritized
 - [ ] All transforms have unit tests
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, behavior model)
-- Depends on `change-2-secret-blocking` (rule packs)
-- Depends on `change-3-pi-adapter` (Pi adapter to update)
-- Depends on `change-4-opencode-adapter` (opencode adapter to update)
+- Depends on `change-1-project-foundation` (types, Behavior model)
+- Depends on `change-2-secret-blocking` (Rule Packs)
+- Depends on `change-3-pi-adapter` (Pi Adapter to update)
+- Depends on `change-4-opencode-adapter` (opencode Adapter to update)
 
 ## Risks
 
 - **Risk**: Suggested command doesn't accomplish same goal
-  - **Mitigation**: Test each transform with real commands
+  - **Mitigation**: Test each Transform with real commands
 - **Risk**: SOPS format detection fails
   - **Mitigation**: Default to generic redaction pattern
-- **Risk**: Smart piped detection is too permissive
+- **Risk**: Smart Piped Command Detection is too permissive
   - **Mitigation**: Conservative defaults, warn even when allowing

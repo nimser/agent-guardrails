@@ -5,15 +5,15 @@ Claude Code uses shell hooks with exit code protocol. Exit code 2 signals a bloc
 ## Goals / Non-Goals
 
 **Goals:**
-- Block dangerous commands via PreToolUse hook
+- Block dangerous commands via PreToolUse hook (Tool Call)
 - Suggest safer alternatives when available
-- Detect secrets in PostToolUse output
-- Provide clear JSON messages
+- Detect secrets in PostToolUse Output (Tool Result)
+- Provide clear Messages in JSON
 
 **Non-Goals:**
-- `run` behavior (shell hooks cannot execute replacement commands)
-- `redact` behavior (PostToolUse cannot modify tool output)
-- `confirm` behavior (Claude Code has no native UI)
+- `run` Behavior (shell hooks cannot execute Replacement commands)
+- `redact` Behavior (PostToolUse cannot modify Tool Output)
+- `confirm` Behavior (Claude Code has no native UI)
 
 ## Decisions
 
@@ -29,11 +29,11 @@ Claude Code uses shell hooks with exit code protocol. Exit code 2 signals a bloc
 
 ### Decision 2: Shared implementation with Codex
 
-**Choice**: Share core logic between Codex and Claude Code adapters
+**Choice**: Share core logic between Codex and Claude Code Adapters
 
 **Rationale**:
 - Both use shell hooks with JSON protocol
-- Both have similar block/suggest behavior
+- Both have similar block/suggest Behavior
 - Differences are in JSON structure and exit codes
 - Build step can generate both variants from shared source
 
@@ -43,7 +43,7 @@ Claude Code uses shell hooks with exit code protocol. Exit code 2 signals a bloc
 
 **Rationale**:
 - Claude Code protocol uses exit 2 for blocking
-- Suggestion is included in the reason field
+- Suggestion (Replacement) is included in the reason field (Message)
 - Consistent with Claude Code conventions
 
 ## Risks / Trade-offs

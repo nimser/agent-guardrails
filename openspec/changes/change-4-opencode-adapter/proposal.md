@@ -2,57 +2,57 @@
 
 ## Intent
 
-Create an opencode plugin adapter that uses `block` behavior to prevent secret leaks. This is the second adapter in the POC, proving portability across harnesses.
+Create an opencode Adapter that uses `block` Behavior to prevent secret leaks. This is the second Adapter in the POC, proving portability across Harnesses.
 
 ## Problem
 
-opencode (anomalyco/opencode) needs native integration with Agent Guardrails. It supports `tool.execute.before` and `tool.execute.after` hooks with full capability for block, suggest, run, and redact behaviors.
+opencode (anomalyco/opencode) needs native integration with Agent Guardrails. It supports `tool.execute.before` (Tool Call) and `tool.execute.after` (Tool Result) hooks with full Capability for block, suggest, run, and redact Behaviors.
 
 ## Solution
 
-Create an opencode plugin that:
-1. Hooks into `tool.execute.before` for PreToolUse (block)
-2. Imports secret rule packs from `@agent-guardrails/secrets`
+Create an opencode Adapter that:
+1. Hooks into `tool.execute.before` (Tool Call) for before-tool Phase (block)
+2. Imports secret Rule Packs from `@agent-guardrails/secrets`
 3. Blocks dangerous commands/files before execution
-4. Provides clear error messages when blocking
+4. Provides clear Messages when blocking
 
 ## Scope
 
 ### In Scope
-- opencode plugin function
-- `tool.execute.before` hook for block behavior
-- Import and consume secret rule packs
-- Error messages with block reason
+- opencode Adapter function
+- `tool.execute.before` hook (Tool Call) for block Behavior
+- Import and consume secret Rule Packs
+- Messages with block reason
 - Integration tests with mock opencode API
 
 ### Out of Scope
-- `suggest` and `run` behaviors (covered in `change-5-command-transforms`)
-- `redact` behavior (covered in `change-9-redact-output`)
-- Other adapters (covered in `change-3-pi-adapter`)
+- `suggest` and `run` Behaviors (covered in `change-5-command-transforms`)
+- `redact` Behavior (covered in `change-9-redact-output`)
+- Other Adapters (covered in `change-3-pi-adapter`)
 
 ### Note
-This change implements the `block` behavior only. The adapter will be updated in `change-5-command-transforms` to support `suggest` and `run` behaviors using the same rule packs.
+This change implements the `block` Behavior only. The Adapter will be updated in `change-5-command-transforms` to support `suggest` and `run` Behaviors using the same Rule Packs.
 
 ## Approach
 
 1. Create `packages/opencode/` directory
-2. Implement plugin function using opencode API
-3. Register `tool.execute.before` hook
-4. Import rule packs and check against them
-5. Throw Error when rule matches (block behavior)
+2. Implement Adapter function using opencode API
+3. Register `tool.execute.before` hook (Tool Call)
+4. Import Rule Packs and check against them
+5. Throw Error when Rule matches (block Behavior)
 
 ## Harness Capabilities (Verified)
 
 opencode supports:
 - **block**: Yes (throw Error in `tool.execute.before`)
-- **suggest**: Yes (error message with suggestion)
+- **suggest**: Yes (error Message with Replacement)
 - **run**: Yes (has `$` Bun shell API)
-- **redact**: Yes (can mutate `output.result` in `tool.execute.after`)
+- **redact**: Yes (can mutate `output.result` in `tool.execute.after` — Tool Result)
 - **confirm**: No (no native UI)
 
 For this POC, we only use `block`. `suggest`/`run`/`redact` come later.
 
-## Plugin Structure
+## Adapter Structure
 
 ```typescript
 import type { Plugin } from "@opencode-ai/plugin";
@@ -70,6 +70,7 @@ export const GuardrailsPlugin: Plugin = async ({ $ }) => {
             if (rule.phase === "before-tool" && rule.match.type === "bash-command") {
               if (rule.match.pattern.test(command)) {
                 if (rule.defaultAction.type === "block") {
+                  // opencode uses Error to carry the Message
                   throw new Error(rule.defaultAction.message);
                 }
               }
@@ -84,19 +85,19 @@ export const GuardrailsPlugin: Plugin = async ({ $ }) => {
 
 ## Success Criteria
 
-- [ ] Plugin loads without errors
-- [ ] PreToolUse blocks .env file reads
-- [ ] PreToolUse blocks sops -d commands
-- [ ] PreToolUse blocks private key reads
-- [ ] Error messages are clear and actionable
+- [ ] Adapter loads without errors
+- [ ] Tool Call hook blocks .env file reads
+- [ ] Tool Call hook blocks sops -d commands
+- [ ] Tool Call hook blocks private key reads
+- [ ] Messages are clear and actionable
 - [ ] No false blocking of safe commands
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, harness model)
-- Depends on `change-2-secret-blocking` (rule packs: env, sops, private-key)
+- Depends on `change-1-project-foundation` (types, Harness model)
+- Depends on `change-2-secret-blocking` (Rule Packs: env, sops, private-key)
 
 ## Risks
 
 - **Risk**: opencode API changes
-  - **Mitigation**: Pin adapter version, test with multiple opencode versions
+  - **Mitigation**: Pin Adapter version, test with multiple opencode versions

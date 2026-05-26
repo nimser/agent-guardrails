@@ -11,14 +11,14 @@ Individual components are tested in isolation, but we need to verify complete wo
 ## Solution
 
 Implement integration tests that:
-1. Wire all adapters to core module
+1. Wire all Adapters to core module
 2. Test complete workflows
 3. Validate performance targets
 
 ## Scope
 
 ### In Scope
-- SOPS workflow: block → suggest → agent retries
+- SOPS workflow: block → suggest → agent retries with Safer Command
 - .env workflow: block → suggest redacted version
 - Git workflow: block → suggest safer alternative
 - Performance benchmarking

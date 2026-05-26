@@ -2,15 +2,15 @@
 
 ## Intent
 
-Create a Codex CLI hook adapter that uses `block` and `suggest` behaviors to prevent secret leaks and dangerous operations. Codex CLI uses shell hooks with JSON protocol for tool interception.
+Create a Codex CLI Adapter that uses `block` and `suggest` Behaviors to prevent secret leaks and dangerous operations. Codex CLI uses shell hooks with JSON protocol for tool interception.
 
 ## Problem
 
-Codex CLI (openai/codex) needs native integration with Agent Guardrails. It supports `PreToolUse` and `PostToolUse` shell hooks that communicate via JSON on stdin/stdout.
+Codex CLI (openai/codex) needs native integration with Agent Guardrails. It supports `PreToolUse` (Tool Call) and `PostToolUse` (Tool Result) shell hooks that communicate via JSON on stdin/stdout.
 
 ## Solution
 
-Create a Codex CLI hook that:
+Create a Codex CLI Adapter that:
 1. Implements `guard.sh` shell script for PreToolUse/PostToolUse
 2. Creates `hooks.json` for hook registration
 3. Blocks dangerous commands with JSON permission decision
@@ -21,16 +21,16 @@ Create a Codex CLI hook that:
 ### In Scope
 - `guard.sh` shell hook script
 - `hooks.json` for hook registration
-- PreToolUse: block and suggest behaviors via JSON protocol
-- Import and consume rule packs (compiled into shell script or via companion)
-- Clear block/suggest messages in JSON output
+- PreToolUse: block and suggest Behaviors via JSON protocol
+- Import and consume Rule Packs (compiled into shell script or via companion)
+- Clear block/suggest Messages in JSON output
 - Installation via CLI (`npx ag setup codex`)
 
 ### Out of Scope
-- `redact` behavior (shell hooks cannot modify tool output)
-- `run` behavior (shell hooks cannot execute replacement commands)
-- `confirm` behavior (covered in `change-10-interactive-confirmation`)
-- Other adapters
+- `redact` Behavior (shell hooks cannot modify Tool Output)
+- `run` Behavior (shell hooks cannot execute Replacement commands)
+- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
+- Other Adapters
 
 ## Approach
 
@@ -45,9 +45,9 @@ Create a Codex CLI hook that:
 
 Codex CLI supports:
 - **block**: Yes (`permissionDecision: deny` in PreToolUse JSON)
-- **suggest**: Yes (message in `permissionDecisionReason`)
-- **run**: No (shell hooks cannot execute replacement commands)
-- **redact**: No (PostToolUse cannot modify tool output, only add context)
+- **suggest**: Yes (Message in `permissionDecisionReason`)
+- **run**: No (shell hooks cannot execute Replacement commands)
+- **redact**: No (PostToolUse cannot modify Tool Output, only add context)
 - **confirm**: Yes (forces approval prompt via `PermissionRequest`)
 
 For this change, we implement `block` and `suggest`. `confirm` comes in `change-10-interactive-confirmation`.
@@ -110,13 +110,13 @@ Output (stdout):
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, harness model)
-- Depends on `change-2-secret-blocking` (rule packs)
-- Depends on `change-5-command-transforms` (suggest behavior)
+- Depends on `change-1-project-foundation` (types, Harness model)
+- Depends on `change-2-secret-blocking` (Rule Packs)
+- Depends on `change-5-command-transforms` (suggest Behavior)
 
 ## Risks
 
 - **Risk**: Shell script complexity for JSON parsing
   - **Mitigation**: Use `jq` for JSON handling, keep script simple
 - **Risk**: Codex CLI API changes
-  - **Mitigation**: Pin adapter version, test with multiple Codex versions
+  - **Mitigation**: Pin Adapter version, test with multiple Codex versions

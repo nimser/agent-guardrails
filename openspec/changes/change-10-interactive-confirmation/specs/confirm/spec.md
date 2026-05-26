@@ -6,7 +6,7 @@
 The system MUST use `ctx.ui.confirm()` for confirmation in Pi.
 
 #### Scenario: Show confirmation dialog
-- WHEN Pi adapter encounters `confirm` action
+- WHEN Pi Adapter encounters `confirm` Action
 - THEN it MUST show native confirmation dialog via `ctx.ui.confirm()`
 
 #### Scenario: User approves
@@ -21,16 +21,16 @@ The system MUST use `ctx.ui.confirm()` for confirmation in Pi.
 The system MUST use Codex approval prompt for confirmation.
 
 #### Scenario: Show approval prompt
-- WHEN Codex adapter encounters `confirm` action
+- WHEN Codex Adapter encounters `confirm` Action
 - THEN it MUST show native approval prompt
 
 ### Requirement: Fallback to Suggest
-The system MUST fall back to `suggest` for harnesses without native confirmation.
+The system MUST fall back to `suggest` for Harnesses without native confirmation.
 
 #### Scenario: Fallback in Claude Code
-- WHEN Claude Code adapter encounters `confirm` action
-- THEN it MUST fall back to `suggest` behavior
+- WHEN Claude Code Adapter encounters `confirm` Action
+- THEN it MUST fall back to `suggest` Behavior
 
 #### Scenario: Fallback in opencode
-- WHEN opencode adapter encounters `confirm` action
-- THEN it MUST fall back to `suggest` behavior
+- WHEN opencode Adapter encounters `confirm` Action
+- THEN it MUST fall back to `suggest` Behavior

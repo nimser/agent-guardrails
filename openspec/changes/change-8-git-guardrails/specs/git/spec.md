@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Git Rule Pack
-The system MUST provide a `git` rule pack with safety rules for git operations.
+The system MUST provide a `git` Rule Pack with safety Rules for git operations.
 
 #### Scenario: Block rm -rf
 - WHEN agent runs `rm -rf directory`
@@ -45,10 +45,10 @@ The system MUST allow safe git commands.
 - THEN rule MUST NOT match
 
 ### Requirement: Rule Pack Export
-The system MUST export git rule pack for adapter consumption.
+The system MUST export git Rule Pack for Adapter consumption.
 
-#### Scenario: Import git rule pack
-- WHEN adapter imports from `@agent-guardrails/git`
+#### Scenario: Import git Rule Pack
+- WHEN Adapter imports from `@agent-guardrails/git`
 - THEN it MUST receive the `gitRulePack` object
 
 ### Requirement: Unit Tests

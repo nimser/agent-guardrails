@@ -1,6 +1,6 @@
 ## Context
 
-Agent Guardrails needs to block secret leaks in the first vertical slice. This change implements deterministic detection rules with `block` behavior across multiple attack vectors.
+Agent Guardrails needs to block secret leaks in the first vertical slice. This change implements deterministic matching Rules with `block` Behavior across multiple attack vectors.
 
 ## Goals / Non-Goals
 
@@ -10,57 +10,57 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 - Block private key file reads (including SSH directory)
 - Block encryption tool decrypt commands (age, gpg, openssl)
 - Block secret manager retrieval commands (op, gopass, pass, bw)
-- Export rule packs for adapter consumption
+- Export Rule Packs for Adapter consumption
 
 **Non-Goals:**
-- `suggest` behavior (comes in change-5-command-transforms)
-- `run` behavior (deferred to later change)
-- `redact` behavior (comes in change-9-redact-output)
-- Platform adapters (come in change-3/4)
+- `suggest` Behavior (comes in change-5-command-transforms)
+- `run` Behavior (deferred to later change)
+- `redact` Behavior (comes in change-9-redact-output)
+- Platform Adapters (come in change-3/4)
 - AWS/GCP/Azure CLI secret commands (deferred - more complex)
-- Database CLI password detection (deferred - hard to detect)
+- Database CLI password detection (deferred - hard to match reliably)
 
 ## Decisions
 
-### Decision 1: Separate rule packs per concern
+### Decision 1: Separate Rule Packs per concern
 
-**Choice**: `env`, `sops`, `private-key`, `encryption-tools`, `secret-managers` as separate packs
+**Choice**: `env`, `sops`, `private-key`, `encryption-tools`, `secret-managers` as separate Rule Packs
 
 **Rationale**:
 - Users can enable/disable packs independently
 - Clear separation of concerns
 - Easy to add new packs later
-- Matches extension model
+- Consistent with Rule Pack model
 
-### Decision 2: Regex-based detection
+### Decision 2: Regex-based matching
 
-**Choice**: Use regex patterns for all detection
+**Choice**: Use regex patterns in Guardrail Matchers for all matching
 
 **Rationale**:
 - Deterministic - no false negatives for known patterns
 - Fast - regex matching is O(n)
-- Testable - each pattern can be tested independently
+- Testable - each Guardrail Matcher can be tested independently
 - No external dependencies
 
 ### Decision 3: Block-only for first slice
 
-**Choice**: Only implement `block` behavior
+**Choice**: Only implement `block` Behavior
 
 **Rationale**:
-- Simplest behavior to implement
+- Simplest Behavior to implement
 - Proves hook path works in opencode/Pi
 - `suggest`/`run`/`redact` come in later changes
 - Can be enhanced incrementally
 
-### Decision 4: Dual matchers for env files
+### Decision 4: Dual Matchers for env files
 
-**Choice**: Both file-path AND bash-command matchers for .env files
+**Choice**: Both file-path AND bash-command Matchers for .env files
 
 **Rationale**:
-- File-path catches read tool usage
+- File-path catches read Tool usage
 - Bash-command catches cat, bat, head, tail, less, more, type
 - LLM can use either path to access secrets
-- Defense in depth
+- Defense in Depth
 
 ### Decision 5: SSH directory heuristic
 
@@ -69,7 +69,7 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 **Rationale**:
 - Covers all SSH key types including future ones
 - Allows legitimate SSH config files
-- Simple heuristic that's easy to understand
+- Simple heuristic in the Guardrail Matcher that's easy to understand
 - No false positives for standard SSH usage
 
 ### Decision 6: Scope deferral
@@ -86,15 +86,15 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 
 ### Risk: False positives
 **Mitigation**:
-- Precise patterns (e.g., `.env` not `env`)
+- Precise Guardrail Matchers (e.g., `.env` not `env`)
 - SSH directory allows known_hosts, config, authorized_keys
 - Configurable per-project (later)
-- Can be overridden in config (later)
+- Can be overridden via Configured Action (later)
 
 ### Risk: Missing patterns
 **Mitigation**:
 - Start with common patterns
-- Easy to add new patterns
+- Easy to add new Guardrail Matchers
 - Community contributions welcome
 
 ### Risk: Scope creep

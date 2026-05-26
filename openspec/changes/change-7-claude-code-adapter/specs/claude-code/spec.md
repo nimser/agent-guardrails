@@ -14,7 +14,7 @@ The system MUST implement a shell hook script for Claude Code.
 - THEN hook MUST parse JSON from stdin using `jq`
 
 ### Requirement: PreToolUse Block
-The system MUST block dangerous commands via PreToolUse hook.
+The system MUST block dangerous commands via PreToolUse hook (Tool Call).
 
 #### Scenario: Block .env file read
 - WHEN agent runs bash command that reads `.env`
@@ -41,25 +41,25 @@ The system MUST suggest safer alternatives for dangerous commands.
 
 #### Scenario: Suggest safer sops command
 - WHEN agent runs `sops -d secrets.yaml`
-- THEN reason MUST include `sops -d secrets.yaml | sed 's/:.*/: [REDACTED]/'`
+- THEN `reason` MUST include `sops -d secrets.yaml | sed 's/:.*/: [REDACTED]/'` (Replacement as Message)
 
 #### Scenario: Suggest safer cat .env command
 - WHEN agent runs `cat .env`
-- THEN reason MUST include `sed 's/=.*/=[REDACTED]/' .env`
+- THEN `reason` MUST include `sed 's/=.*/=[REDACTED]/' .env`
 
 #### Scenario: Suggest force-with-lease
 - WHEN agent runs `git push --force`
-- THEN reason MUST include `git push --force-with-lease`
+- THEN `reason` MUST include `git push --force-with-lease`
 
 ### Requirement: PostToolUse Secret Detection
-The system MUST detect secrets in tool output.
+The system MUST detect secrets in Tool Output.
 
 #### Scenario: Detect AWS key in output
-- WHEN tool output contains `AKIAIOSFODNN7EXAMPLE`
+- WHEN Tool Output contains `AKIAIOSFODNN7EXAMPLE`
 - THEN hook MUST exit with code 2 and JSON warning
 
 #### Scenario: Detect GitHub token in output
-- WHEN tool output contains `ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh`
+- WHEN Tool Output contains `ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh`
 - THEN hook MUST exit with code 2 and JSON warning
 
 ### Requirement: Settings Configuration
@@ -81,8 +81,8 @@ The system MUST add minimal overhead to tool execution.
 - THEN hook execution time MUST be < 10ms
 - AND overhead compared to baseline MUST be < 50%
 
-#### Scenario: Performance with many rule packs
-- WHEN 10+ rule packs are loaded
+#### Scenario: Performance with many Rule Packs
+- WHEN 10+ Rule Packs are loaded
 - THEN hook execution time MUST still be < 10ms
 
 #### Scenario: Performance test suite

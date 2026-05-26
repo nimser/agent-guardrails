@@ -8,16 +8,16 @@ Agent Guardrails needs git-specific safety rules to prevent destructive git oper
 - Block destructive git operations
 - Suggest safer alternatives
 - Allow safe git commands
-- Export rule pack for adapter consumption
+- Export Rule Pack for Adapter consumption
 
 **Non-Goals:**
 - Secret-related transforms (covered in `change-5-command-transforms`)
-- `redact` behavior (covered in `change-9-redact-output`)
-- `confirm` behavior (covered in `change-10-interactive-confirmation`)
+- `redact` Behavior (covered in `change-9-redact-output`)
+- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
 
 ## Decisions
 
-### Decision 1: Separate git rule pack
+### Decision 1: Separate git Rule Pack
 
 **Choice**: Git rules as separate pack from command transforms
 
@@ -26,7 +26,7 @@ Agent Guardrails needs git-specific safety rules to prevent destructive git oper
 - Different configuration needs (block vs suggest)
 - Users may want git rules without secret transforms
 
-### Decision 2: Configurable behavior
+### Decision 2: Configurable Behavior
 
 **Choice**: Users can configure block vs suggest per rule
 

@@ -24,24 +24,24 @@
 ## 3. Harness Capabilities
 
 - [ ] 3.1 Create `src/harness.ts` with `HarnessCapabilities` interface
-- [ ] 3.2 Implement `HARNESSES` constant with capabilities for pi, opencode, codex, claude-code
-- [ ] 3.3 Implement `hasCapability(harness, behavior)` helper function
-- [ ] 3.4 Add unit tests for capability lookups per harness
+- [ ] 3.2 Implement `HARNESSES` constant with Capabilities for pi, opencode, codex, claude-code
+- [ ] 3.3 Implement `hasCapability(harness, Behavior)` helper function
+- [ ] 3.4 Add unit tests for Capability lookups per Harness
 
 ## 4. Module Exports
 
 - [ ] 4.1 Create `src/index.ts` exporting all types from types.ts
-- [ ] 4.2 Export harness capabilities from harness.ts
+- [ ] 4.2 Export Harness Capabilities from harness.ts
 
 ## 5. Testing
 
-- [ ] 5.1 Test behavior enum values compile correctly
+- [ ] 5.1 Test Behavior enum values compile correctly
 - [ ] 5.2 Test rule type compilation with sample rules
-- [ ] 5.3 Test harness capabilities match spec (pi: all true, opencode: confirm false, etc.)
+- [ ] 5.3 Test Harness Capabilities match spec (pi: all true, opencode: confirm false, etc.)
 - [ ] 5.4 Test hasCapability helper returns correct booleans
 - [ ] 5.5 Verify zero dependencies in package.json
 
 ## 6. Documentation
 
 - [ ] 6.1 Create `packages/core/README.md` with usage examples
-- [ ] 6.2 Document behavior model and rule pack interface
+- [ ] 6.2 Document Behavior model and Rule Pack interface

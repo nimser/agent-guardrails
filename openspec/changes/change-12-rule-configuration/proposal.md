@@ -2,13 +2,13 @@
 
 ## Intent
 
-Implement the configuration file system for customizing guardrails behavior.
+Implement the configuration file system for customizing guardrails Behavior.
 
 ## Problem
 
-Users need to customize guardrails behavior:
-- Enable/disable specific rules
-- Configure rule actions (block, suggest, run, redact, confirm, off)
+Users need to customize guardrails Behavior:
+- Enable/disable specific Rules
+- Configure Rule Actions (block, suggest, run, redact, confirm, off) via Configured Action
 - Different settings per project
 
 ## Solution
@@ -25,7 +25,7 @@ Implement configuration system that:
 - Project-level config (repo root)
 - Global config (`~/.config/agent-guardrails.json`)
 - Priority: project > global > built-in defaults
-- Rule actions: `block`, `suggest`, `run`, `redact`, `confirm`, `off`
+- Rule Actions: `block`, `suggest`, `run`, `redact`, `confirm`, `off` (Configured Action overrides Default Action)
 
 ### Out of Scope
 - Core logic (covered in earlier changes)

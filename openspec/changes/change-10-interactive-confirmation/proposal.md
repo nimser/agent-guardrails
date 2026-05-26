@@ -2,24 +2,24 @@
 
 ## Intent
 
-Implement `confirm` behavior for native user confirmation in Pi and Codex. For Claude Code and opencode, fall back to `suggest` behavior.
+Implement `confirm` Behavior for native user confirmation in Pi and Codex. For Claude Code and opencode, fall back to `suggest` Behavior via Fallback.
 
 ## Problem
 
-Some operations are risky but valid. Users want to approve them before execution rather than blocking outright or letting the LLM decide.
+Some operations are risky but valid. Users want to approve them before execution rather than blocking outright or letting the LLM decide. This is the `confirm` Behavior.
 
 ## Solution
 
 Implement confirmation that:
 1. Uses native `ctx.ui.confirm()` in Pi
 2. Uses native approval prompt in Codex
-3. Falls back to `suggest` in Claude Code and opencode
+3. Falls back to `suggest` in Claude Code and opencode via Fallback
 
 ## Harness Capabilities
 
 | Behavior | Claude Code | Codex | opencode | Pi |
 |----------|:-----------:|:-----:|:--------:|:--:|
-| **confirm** | ❌ fallback to suggest | ✅ native | ❌ fallback to suggest | ✅ native |
+| **confirm** | ❌ Fallback to suggest | ✅ native | ❌ Fallback to suggest | ✅ native |
 
 ## Scope
 
@@ -31,13 +31,13 @@ Implement confirmation that:
 
 ### Out of Scope
 - PreToolUse blocking (covered in `change-2-secret-blocking`)
-- Command transforms (covered in `change-5-command-transforms`)
+- Command Transforms (covered in `change-5-command-transforms`)
 - Redaction (covered in `change-9-redact-output`)
 
 ## Approach
 
-1. Implement confirm behavior in Pi adapter
-2. Implement confirm behavior in Codex adapter
+1. Implement confirm Behavior in Pi Adapter
+2. Implement confirm Behavior in Codex Adapter
 3. Implement fallback to suggest for Claude Code/opencode
 4. Add integration tests
 
@@ -45,21 +45,21 @@ Implement confirmation that:
 
 ### Decision 1: Fallback to suggest
 
-**Choice**: Claude Code/opencode fall back to `suggest` when `confirm` is requested
+**Choice**: Claude Code/opencode fall back to `suggest` when `confirm` is requested via Fallback
 
 **Rationale**:
-- These harnesses have no native confirmation UI
-- `suggest` is the closest behavior (LLM sees message and decides)
+- These Harnesses have no native confirmation UI
+- `suggest` is the closest Behavior (LLM sees Message and decides)
 - User can still approve by having LLM retry
 
 ### Decision 2: Separate change
 
-**Choice**: Confirmation as separate change from blocking/transforms
+**Choice**: Confirmation as separate change from blocking/Transforms
 
 **Rationale**:
 - Confirmation is UX enhancement, not core safety
 - Can be added after POC is proven
-- Different harnesses have different capabilities
+- Different Harnesses have different Capabilities
 
 ## Success Criteria
 
@@ -71,10 +71,10 @@ Implement confirmation that:
 ## Dependencies
 
 - Depends on `change-1-project-foundation` (types)
-- Depends on `change-3-opencode-adapter` (opencode adapter)
-- Depends on `change-4-pi-adapter` (Pi adapter)
+- Depends on `change-3-opencode-adapter` (opencode Adapter)
+- Depends on `change-4-pi-adapter` (Pi Adapter)
 
 ## Risks
 
-- **Risk**: Fallback behavior is confusing
-  - **Mitigation**: Clear messages explaining the fallback
+- **Risk**: Fallback Behavior is confusing
+  - **Mitigation**: Clear Messages explaining the Fallback

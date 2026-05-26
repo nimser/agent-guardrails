@@ -55,17 +55,17 @@
 
 ## 6. Pi Adapter Updates
 
-- [ ] 6.1 Update Pi adapter to check `defaultAction.type` for suggest behavior
-- [ ] 6.2 For suggest: return `{ block: true, reason: "Suggestion: ..." }` with primary replacement
-- [ ] 6.3 Include description of what suggestion does in reason message
-- [ ] 6.4 Add unit tests for suggest behavior in Pi adapter
+- [ ] 6.1 Update Pi Adapter to check `defaultAction.type` for suggest Behavior
+- [ ] 6.2 For suggest: return `{ block: true, reason: "Suggestion: ..." }` with primary Replacement
+- [ ] 6.3 Include description of what suggestion does in Message
+- [ ] 6.4 Add unit tests for suggest Behavior in Pi Adapter
 
 ## 7. opencode Adapter Updates
 
-- [ ] 7.1 Update opencode adapter to check `defaultAction.type` for suggest behavior
-- [ ] 7.2 For suggest: throw Error with primary suggestion message
-- [ ] 7.3 Include description of what suggestion does in error message
-- [ ] 7.4 Add unit tests for suggest behavior in opencode adapter
+- [ ] 7.1 Update opencode Adapter to check `defaultAction.type` for suggest Behavior
+- [ ] 7.2 For suggest: throw Error with primary Replacement Message
+- [ ] 7.3 Include description of what suggestion does in Message
+- [ ] 7.4 Add unit tests for suggest Behavior in opencode Adapter
 
 ## 8. Module Exports
 
@@ -86,11 +86,11 @@
 - [ ] 9.7 Test findSaferCommands returns multiple alternatives
 - [ ] 9.8 Test smart piped detection allows safe commands
 - [ ] 9.9 Test smart piped detection blocks unsafe commands
-- [ ] 9.10 Test suggest works in all harnesses
+- [ ] 9.10 Test suggest works in all Harnesses
 
 ## 10. Documentation
 
-- [ ] 10.1 Document kubernetes and vault rule packs
-- [ ] 10.2 Document SOPS redaction behavior and --output-type handling
+- [ ] 10.1 Document kubernetes and vault Rule Packs
+- [ ] 10.2 Document SOPS redaction Behavior and --output-type handling
 - [ ] 10.3 Document multiple suggestions and prioritization
 - [ ] 10.4 Document smart piped command detection

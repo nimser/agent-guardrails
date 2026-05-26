@@ -1,6 +1,6 @@
 ## Context
 
-Interactive confirmation enhances UX by letting users approve risky operations. Only Pi and Codex have native support.
+Interactive confirmation enhances UX by letting users approve risky operations. Only Pi and Codex have native support. Other Harnesses use Fallback to suggest.
 
 ## Goals / Non-Goals
 
@@ -9,14 +9,14 @@ Interactive confirmation enhances UX by letting users approve risky operations. 
 - Fallback to suggest for Claude Code/opencode
 
 **Non-Goals:**
-- Core safety (covered by blocking/transforms)
+- Core safety (covered by blocking/Transforms)
 - Redaction (covered elsewhere)
 
 ## Decisions
 
 ### Decision 1: Fallback to suggest
-**Choice**: Claude Code/opencode fall back to `suggest`
-**Rationale**: No native UI available, `suggest` is closest behavior
+**Choice**: Claude Code/opencode fall back to `suggest` via Fallback
+**Rationale**: No native UI available, `suggest` is closest Behavior
 
 ## Risks / Trade-offs
 

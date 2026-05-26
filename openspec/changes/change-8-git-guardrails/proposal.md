@@ -2,39 +2,39 @@
 
 ## Intent
 
-Implement git-specific safety rules with configurable behavior (block or suggest). This covers destructive git operations that can destroy local work or rewrite shared history.
+Implement git-specific safety Rules with configurable Behavior (block or suggest). This covers destructive git operations that can destroy local work or rewrite shared history.
 
 ## Problem
 
-Agents can run destructive git commands like `git reset --hard`, `rm -rf`, `git push --force` without user consent. Some users want to block these outright, others want to suggest safer alternatives.
+Agents can run destructive git commands like `git reset --hard`, `rm -rf`, `git push --force` without user consent. Some users want to block these outright, others want to suggest safer alternatives via Configured Action.
 
 ## Solution
 
-Implement git rule pack with:
+Implement git Rule Pack with:
 1. Rules for destructive git operations
-2. Configurable behavior: `block` or `suggest` per rule
+2. Configurable Behavior: `block` or `suggest` per Rule via Configured Action
 3. Safer alternatives for `git push --force` → `--force-with-lease`
 4. Safer alternatives for `git reset --hard` → `git stash`
 
 ## Scope
 
 ### In Scope
-- `git` rule pack with configurable behavior
+- `git` Rule Pack with configurable Behavior
 - Rules for: `rm -rf`, `git reset --hard`, `git clean -f`, `git branch -D`, `git checkout .`, `git restore .`, `git push --force`
 - Safer alternatives: `--force-with-lease`, `git stash`
-- Unit tests for all rules
+- Unit tests for all Rules
 
 ### Out of Scope
-- Secret-related transforms (covered in `change-5-command-transforms`)
-- `redact` behavior (covered in `change-9-redact-output`)
-- `confirm` behavior (covered in `change-10-interactive-confirmation`)
+- Secret-related Transforms (covered in `change-5-command-transforms`)
+- `redact` Behavior (covered in `change-9-redact-output`)
+- `confirm` Behavior (covered in `change-10-interactive-confirmation`)
 
 ## Approach
 
 1. Create `packages/git/` directory
-2. Implement git rule pack
+2. Implement git Rule Pack
 3. Implement safer alternatives
-4. Export rule pack for adapter consumption
+4. Export Rule Pack for Adapter consumption
 
 ## Git Rule Pack
 
@@ -74,43 +74,43 @@ const gitRulePack: RulePack = {
 
 ## Key Design Decisions
 
-### Decision 1: Configurable behavior per rule
+### Decision 1: Configurable Behavior per Rule
 
-**Choice**: Users can configure `block` or `suggest` per git rule
+**Choice**: Users can configure `block` or `suggest` per git Rule via Configured Action
 
 **Rationale**:
 - Some users want to block `git push --force` outright
 - Others want to suggest `--force-with-lease` and let LLM decide
 - Configuration allows both use cases
-- Default is `suggest` for most rules, `block` for destructive ones
+- Default is `suggest` for most Rules, `block` for destructive ones
 
-### Decision 2: Keep git separate from command transforms
+### Decision 2: Keep git separate from command Transforms
 
-**Choice**: Git guardrails as separate change from command transforms
+**Choice**: Git guardrails as separate change from command Transforms
 
 **Rationale**:
-- Git rules are conceptually different from secret-related transforms
-- Git rules have different configuration needs (block vs suggest)
-- Users may want git rules without secret transforms
+- Git Rules are conceptually different from secret-related Transforms
+- Git Rules have different configuration needs (block vs suggest)
+- Users may want git Rules without secret Transforms
 - Clear separation of concerns
 
 ### Decision 3: Safer alternatives as suggestions
 
-**Choice**: Provide safer alternatives as suggestions, not replacements
+**Choice**: Provide safer alternatives as suggestions, not Replacements
 
 **Rationale**:
 - Git operations are context-dependent
 - `git stash` may not always be the right alternative
 - LLM can decide based on context
-- User can override if needed
+- User can override via Configured Action if needed
 
 ## Success Criteria
 
-- [ ] Git rule pack blocks destructive operations
-- [ ] Git rule pack suggests safer alternatives
-- [ ] Users can configure block vs suggest per rule
-- [ ] All rules have unit tests
-- [ ] Rule pack exports cleanly for adapter consumption
+- [ ] Git Rule Pack blocks destructive operations
+- [ ] Git Rule Pack suggests safer alternatives
+- [ ] Users can configure block vs suggest per Rule via Configured Action
+- [ ] All Rules have unit tests
+- [ ] Rule Pack exports cleanly for Adapter consumption
 
 ## Dependencies
 
@@ -121,4 +121,4 @@ const gitRulePack: RulePack = {
 - **Risk**: Safer alternatives don't accomplish same goal
   - **Mitigation**: Test each alternative with real git operations
 - **Risk**: False positives
-  - **Mitigation**: Precise patterns, configurable per-project
+  - **Mitigation**: Precise Guardrail Matchers, configurable per-project

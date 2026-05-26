@@ -9,7 +9,7 @@
 
 - [ ] 2.1 Create `src/index.ts` with plugin function signature
 - [ ] 2.2 Import `Plugin` type or define minimal interface
-- [ ] 2.3 Import rule packs from `@agent-guardrails/secrets`
+- [ ] 2.3 Import Rule Packs from `@agent-guardrails/secrets`
 - [ ] 2.4 Register `tool.execute.before` hook
 
 ## 3. PreToolUse Logic
@@ -17,7 +17,7 @@
 - [ ] 3.1 Extract tool name from `input.tool`
 - [ ] 3.2 Extract command from `output.args.command` for bash tool
 - [ ] 3.3 Extract file path from `output.args.path` for read/write tools
-- [ ] 3.4 Iterate rule packs and match against rules with `phase: "before-tool"`
+- [ ] 3.4 Iterate Rule Packs and match against Rules with `phase: "before-tool"`
 - [ ] 3.5 Throw `Error` with rule.defaultAction.message when rule matches
 - [ ] 3.6 Return normally when no rules match
 
@@ -55,8 +55,8 @@
 - [ ] 7.2 Test plugin returns object with `tool.execute.before` handler
 - [ ] 7.3 Test blocking throws Error with message to opencode
 - [ ] 7.4 Test passthrough does not throw
-- [ ] 7.5 Test multiple rule packs are checked in order
-- [ ] 7.6 Test all rule packs are exercised (env, sops, private-key, encryption-tools, secret-managers)
+- [ ] 7.5 Test multiple Rule Packs are checked in order
+- [ ] 7.6 Test all Rule Packs are exercised (env, sops, private-key, encryption-tools, secret-managers)
 
 ## 8. Performance Tests
 
@@ -70,4 +70,4 @@
 ## 9. Documentation
 
 - [ ] 9.1 Create `packages/opencode/README.md` with installation instructions
-- [ ] 9.2 Document plugin hooks and expected behavior
+- [ ] 9.2 Document Adapter hooks and expected Behavior

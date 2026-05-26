@@ -1,16 +1,16 @@
 ## Context
 
-PostToolUse redaction is defense-in-depth that catches secrets in tool output. Only works in opencode and Pi.
+PostToolUse (Tool Result) redaction is Defense in Depth that catches secrets in Tool Output. Only works in opencode and Pi.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Detect secrets in tool output
+- Detect secrets in Tool Output
 - Replace with descriptive markers
 - Work in opencode and Pi
 
 **Non-Goals:**
-- Claude Code/Codex (can't modify output)
+- Claude Code/Codex (can't modify Output)
 - PreToolUse blocking (covered elsewhere)
 
 ## Decisions
@@ -20,13 +20,13 @@ PostToolUse redaction is defense-in-depth that catches secrets in tool output. O
 **Rationale**: Agent knows what was removed, can reason about context
 
 ### Decision 2: Only risky commands
-**Choice**: Only scan output from commands that matched pre-hook rules
-**Rationale**: Performance - scanning all output is expensive
+**Choice**: Only scan Output from commands that matched pre-hook Rules
+**Rationale**: Performance - scanning all Output is expensive
 
 ## Risks / Trade-offs
 
 ### Risk: Misses secrets
-**Mitigation**: Defense-in-depth, primary defense is blocking
+**Mitigation**: Defense in Depth, primary defense is blocking
 
 ### Risk: Performance
-**Mitigation**: Only scan risky command output
+**Mitigation**: Only scan risky command Output
