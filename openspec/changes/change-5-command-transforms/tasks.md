@@ -11,7 +11,7 @@
 - [ ] 1.9 Add unit tests for kubernetes rules (positive + negative)
 - [ ] 1.10 Add unit tests for gh-cli rules (positive + negative)
 - [ ] 1.11 Add unit tests for direnv rules (positive + negative)
-- [ ] 1.12 Export new packs from `@agent-guardrails/secrets` index
+- [ ] 1.12 Export new packs from rule packs (`src/packs/`) index
 - [ ] 1.13 Update `ALL_RULE_PACKS` to include kubernetes, gh-cli, direnv
 
 ## 2. Update Rule Pack DefaultActions to Suggest

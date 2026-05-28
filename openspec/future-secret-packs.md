@@ -1,6 +1,6 @@
 # Future Secret Pack Backlog
 
-Unspec'ed Rule Packs for `@agent-guardrails/secrets`.
+Unspec'ed Rule Packs for rule packs (`src/packs/`).
 Pick these up as post-MVP changes. Reference `change-2-secret-blocking` and `change-5-command-transforms` for the spec pattern.
 
 ---

@@ -1,6 +1,6 @@
 ## 1. Tokenizer Foundation
 
-- [ ] 1.1 Define `ParsedCommand`, `Token`, and `Redirect` TypeScript interfaces in `packages/engine/src/tokenizer/types.ts`
+- [ ] 1.1 Define `ParsedCommand`, `Token`, and `Redirect` TypeScript interfaces in `src/engine/tokenizer/types.ts`
 - [ ] 1.2 Implement subshell marker detection scan (`$(`, `${`, backticks) with early exit — returns `hasSubshell: boolean`. Unit tests for detection and non-detection (simple `$VAR`)
 - [ ] 1.3 Implement quote resolution state machine — handles `"double"`, `'single'`, and concatenated strings (`.e"nv"` → `.env`). Unit tests for all quote variants and evasion cases
 - [ ] 1.4 Implement main tokenizer: split on whitespace, classify tokens (`word`, `flag`, `glob`), detect operators (`&&`, `||`, `;`, `|`), detect redirects (`<`, `>`, `>>`, `2>`, `&>`). Unit tests for each construct

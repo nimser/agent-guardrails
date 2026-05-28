@@ -142,11 +142,11 @@ The system MUST provide a `secret-managers` Rule Pack that blocks secret retriev
 The system MUST export Rule Packs for Adapter consumption.
 
 #### Scenario: Import all Rule Packs
-- WHEN Adapter imports from `@agent-guardrails/secrets`
+- WHEN Adapter imports from rule packs (`src/packs/`)
 - THEN it MUST receive: envRulePack, sopsRulePack, privateKeyRulePack, encryptionToolsRulePack, secretManagersRulePack
 
 #### Scenario: Import ALL_RULE_PACKS array
-- WHEN Adapter imports `ALL_RULE_PACKS` from `@agent-guardrails/secrets`
+- WHEN Adapter imports `ALL_RULE_PACKS` from rule packs (`src/packs/`)
 - THEN it MUST receive an array containing all Rule Packs
 
 ### Requirement: Unit Tests

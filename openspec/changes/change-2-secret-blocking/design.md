@@ -83,6 +83,40 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 - Can be added in future changes without breaking changes
 - Keeps initial scope manageable
 
+### Decision 7: Multi-layer matching strategy
+
+**Choice**: Implement three-layer matching (substring + regex + wrapper detection)
+
+**Rationale**:
+- Layer 1 (substring): engine-level optimization, no rule pack changes needed
+- Layer 2 (regex): existing rule packs handle this
+- Layer 3 (wrappers): new `hardening` rule pack detects adversarial patterns
+- Aligns with `docs/matching-strategy.md` specification
+
+**Alternative considered**: Single-layer regex only
+- Rejected: Regex alone is bypassable via eval, bash -c, redirects
+- Layer 3 catches adversarial wrapping that regex structure matching misses
+
+**Implementation**:
+- Multi-line splitting (Layer 1) in `src/matcher/multi-line.ts` (Change 1 task 5.x)
+- Regex rules (Layer 2) in existing rule packs (this change)
+- Hardening rules (Layer 3) in new `hardening` pack (this change)
+
+### Decision 8: Risk escalation for hardening rules
+
+**Choice**: Hardening rules force-block and cannot be overridden by user configuration
+
+**Rationale**:
+- Adversarial patterns (eval, bash -c) are inherently suspicious in coding agent context
+- "Guilty until proven innocent" principle from matching strategy
+- Force-block prevents users from accidentally disabling critical security layer
+- Post-MVP: could add escape hatch for legitimate use cases based on issue reports
+
+**Implementation**:
+- Engine marks hardening pack rules as non-overridable
+- `agent-guardrails.json` configuration cannot change hardening rule actions
+- Documented in `docs/yaml-rule-packs.md` as special case
+
 ## Risks / Trade-offs
 
 ### Risk: False positives
@@ -92,11 +126,17 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 - Configurable per-project (later)
 - Can be overridden via Configured Action (later)
 
+### Risk: Layer 3 hardening rules cause false positives
+**Mitigation**:
+- eval/bash-c are rare in legitimate coding agent workflows
+- Force-block is acceptable default; post-MVP could add escape hatch
+- Document known false positive scenarios in troubleshooting guide
+
 ### Risk: Missing patterns
 **Mitigation**:
 - Start with common patterns
 - Easy to add new Guardrail Matchers
-- Community contributions welcome
+- Community contributions welcome via YAML rule packs
 
 ### Risk: Scope creep
 **Mitigation**:
@@ -106,10 +146,11 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 
 ### Risk: Regex-based matchers are bypassable via command composition
 **Mitigation**:
-- Regex is best-effort first layer (defense in depth)
-- Agent can evade via redirects (`cat < .env`), string concatenation (`cat .e"nv"`), or alternative tools (`python3 -c "print(open('.env').read())"`)
+- Multi-layer strategy catches most bypass attempts:
+  - Layer 1 (multi-line split): catches `cmd1; cmd2` composition
+  - Layer 3 (hardening): catches eval, bash -c, redirects, subshells
 - `redact` Behavior (change-10) is the backstop for anything that slips through
-- Shell tokenizer planned for post-MVP for more robust matching
+- Shell tokenizer (post-MVP) will provide structural analysis for remaining bypass vectors
 
 ## Migration Plan
 

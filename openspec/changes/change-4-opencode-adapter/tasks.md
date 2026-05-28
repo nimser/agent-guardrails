@@ -1,17 +1,17 @@
 ## 1. Setup
 
-- [ ] 1.1 Create `packages/opencode/` directory structure
-- [ ] 1.2 Create `packages/opencode/package.json` with dependencies on core, engine, and secrets
-- [ ] 1.3 Create `packages/opencode/tsconfig.json`
-- [ ] 1.4 Create `packages/opencode/vitest.config.ts`
+- [ ] 1.1 Create `src/adapters/opencode/` directory structure
+- [ ] 1.2 Create `src/adapters/opencode/package.json` with dependencies on core, engine, and secrets
+- [ ] 1.3 Create `src/adapters/opencode/tsconfig.json`
+- [ ] 1.4 Create `src/adapters/opencode/vitest.config.ts`
 
 ## 2. Plugin Implementation
 
 - [ ] 2.1 Create `src/index.ts` with plugin function signature
 - [ ] 2.2 Import `Plugin` type or define minimal interface
-- [ ] 2.3 Import `matchAndResolve` from `@agent-guardrails/engine`
-- [ ] 2.4 Import `ALL_RULE_PACKS` from `@agent-guardrails/secrets`
-- [ ] 2.5 Import or define `OPENCODE_CAPABILITIES` from `@agent-guardrails/core`
+- [ ] 2.3 Import `matchAndResolve` from engine (`src/engine/`)
+- [ ] 2.4 Import `ALL_RULE_PACKS` from rule packs (`src/packs/`)
+- [ ] 2.5 Import or define `OPENCODE_CAPABILITIES` from core (`src/core/`)
 - [ ] 2.6 Register `tool.execute.before` hook for ALL tools
 
 ## 3. ToolCallContext Normalization
@@ -76,5 +76,5 @@
 
 ## 9. Documentation
 
-- [ ] 9.1 Create `packages/opencode/README.md` with installation instructions
+- [ ] 9.1 Create `src/adapters/opencode/README.md` with installation instructions
 - [ ] 9.2 Document Adapter hooks and expected Behavior

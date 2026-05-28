@@ -6,7 +6,7 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 
 **Goals:**
 - Hook all tool calls (not just bash) and normalize into ToolCallContext
-- Delegate matching to `@agent-guardrails/engine` via `matchAndResolve()`
+- Delegate matching to engine (`src/engine/`) via `matchAndResolve()`
 - Import all Rule Packs via `ALL_RULE_PACKS` from secrets package
 - Provide clear Messages (with `{matched}` interpolation from engine)
 - Performance testing to ensure < 10ms overhead
@@ -41,7 +41,7 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 
 ### Decision 3: Engine delegation and ALL_RULE_PACKS consumption
 
-**Choice**: Import `ALL_RULE_PACKS` from `@agent-guardrails/secrets`, delegate matching to `@agent-guardrails/engine`
+**Choice**: Import `ALL_RULE_PACKS` from rule packs (`src/packs/`), delegate matching to engine (`src/engine/`)
 
 **Rationale**:
 - Adapter is a thin shim (normalize → engine → translate)
@@ -68,6 +68,38 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 - Measure min, max, mean, p95, p99 latencies
 - Catch performance regressions early
 
+### Decision 5: Observability Tier 1 (session-teardown logging)
+
+**Choice**: Adapter reads engine stats and logs one-line summary at session teardown via `console.log()`
+
+**Rationale**:
+- Minimal implementation (~10 lines per adapter)
+- Uses harness-native logging (opencode's `console.log()`)
+- Provides immediate value to users
+- No persistence overhead (in-memory stats)
+- Resets after each session
+
+**Implementation** (see proposal.md Adapter Structure section)
+
+Other adapters (Pi, Claude Code, Codex) will implement equivalent logging using their harness's native mechanisms (pi.log, stderr, feedback hook).
+
+### Note: Input/Output Ports (Deferred)
+
+**Current (MVP)**: Adapters depend directly on engine implementation:
+```typescript
+import { matchAndResolve } from "../../../engine";
+```
+
+**Post-MVP (when adding Codex adapter)**: Introduce port interface in core:
+```typescript
+// src/core/ports.ts
+export interface GuardrailEngine {
+  evaluate(ctx: ToolCallContext): Promise<GuardrailAction | null>;
+}
+```
+
+See `openspec/future-architecture-decisions.md` for full port/interface specification.
+
 ## Risks / Trade-offs
 
 ### Risk: opencode API changes
@@ -93,3 +125,4 @@ No migration needed - this is a new feature.
 
 1. Should we hook into all tools or just bash/read/write?
 2. How to handle opencode's plugin configuration?
+3. Should observability stats be configurable (opt-out)?

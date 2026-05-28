@@ -1,9 +1,8 @@
 ## 1. Setup
 
-- [ ] 1.1 Create `packages/secrets/` directory structure
-- [ ] 1.2 Create `packages/secrets/package.json` with `@agent-guardrails/core` dependency
-- [ ] 1.3 Create `packages/secrets/tsconfig.json`
-- [ ] 1.4 Create `packages/secrets/vitest.config.ts`
+- [ ] 1.1 Create `src/packs/` directory (single-package structure from Change 1)
+- [ ] 1.2 Create YAML rule pack files in `src/packs/`
+- [ ] 1.3 Use `infrastructure/yaml-pack-loader.ts` to load packs at runtime (from Change 1)
 
 ## 2. env Rule Pack
 
@@ -65,22 +64,45 @@
 - [ ] 6.13 Add unit tests: bitwarden positive (`bw get password item`, `bw get item`)
 - [ ] 6.14 Add unit tests: bitwarden negative (`bw login`, `bw sync`)
 
-## 7. Module Exports
+## 7. hardening Rule Pack
 
-- [ ] 7.1 Create `src/index.ts` exporting all Rule Packs
-- [ ] 7.2 Export `ALL_RULE_PACKS` array combining all packs
-- [ ] 7.3 Export individual packs: envRulePack, sopsRulePack, privateKeyRulePack, encryptionToolsRulePack, secretManagersRulePack
+- [ ] 7.1 Create `src/packs/hardening.yaml` with hardening rule pack definition
+- [ ] 7.2 Add rule `hardening.wrapper-eval` with bash-command matcher `/\beval\b/`
+- [ ] 7.3 Add rule `hardening.wrapper-bash-c` with bash-command matcher `/\b(bash|sh)\s+-c\b/`
+- [ ] 7.4 Add rule `hardening.wrapper-subshell` with bash-command matcher `/(\$\(|`)/`
+- [ ] 7.5 Add rule `hardening.redirect-read-sensitive` with bash-command matcher `/<\s*[^\s]*\.(env|pem|key|p12|pfx|p8)/`
+- [ ] 7.6 Add rule `hardening.redirect-write-sensitive` with bash-command matcher `/(>|>>)\s*[^\s]*\.(env|pem|key)$/`
+- [ ] 7.7 Add rule `hardening.redirect-tee-sensitive` with bash-command matcher `/\btee\b[^|]*\.(env|pem|key)/`
+- [ ] 7.8 Set all actions to `{ type: "block", message: "Blocked: \`{matched}\` — [reason]" }`
+- [ ] 7.9 Mark hardening pack as non-overridable in metadata
+- [ ] 7.10 Add unit tests: wrapper detection positives (`eval "cmd"`, `bash -c 'cmd'`, `$(cmd)`)
+- [ ] 7.11 Add unit tests: wrapper detection negatives (`echo eval`, `cat script.sh`)
+- [ ] 7.12 Add unit tests: redirect detection positives (`cat < .env`, `echo x > secret.key`)
+- [ ] 7.13 Add unit tests: redirect detection negatives (`cat file.txt > output.log`)
+- [ ] 7.14 Add unit tests: verify hardening rules cannot be overridden by config
 
-## 8. Integration Tests
+## 8. Module Exports
 
-- [ ] 8.1 Test iterating ALL_RULE_PACKS against mock tool calls
-- [ ] 8.2 Test rule matching with both file-path and bash-command matchers
-- [ ] 8.3 Test safe commands pass through all rules without blocking
-- [ ] 8.4 Test blocked rules return correct action type and message
-- [ ] 8.5 Test that multiple matchers in same rule are OR'd together
+- [ ] 8.1 Create `src/index.ts` exporting all Rule Packs
+- [ ] 8.2 Export `ALL_RULE_PACKS` array combining all packs (loaded from YAML)
+- [ ] 8.3 Export individual packs: envRulePack, sopsRulePack, privateKeyRulePack, encryptionToolsRulePack, secretManagersRulePack, hardeningRulePack
 
-## 9. Documentation
+## 9. Integration Tests
 
-- [ ] 9.1 Create `packages/secrets/README.md` documenting each Rule Pack
-- [ ] 9.2 Document pattern syntax for contributors
-- [ ] 9.3 Document which tools/commands are blocked by each pack
+- [ ] 9.1 Test iterating ALL_RULE_PACKS against mock tool calls
+- [ ] 9.2 Test rule matching with both file-path and bash-command matchers
+- [ ] 9.3 Test safe commands pass through all rules without blocking
+- [ ] 9.4 Test blocked rules return correct action type and message
+- [ ] 9.5 Test that multiple matchers in same rule are OR'd together
+- [ ] 9.6 Test multi-line splitting catches `cmd1; cmd2` composition
+- [ ] 9.7 Test hardening rules fire on adversarial patterns
+- [ ] 9.8 Test hardening rules force-block (cannot be overridden)
+
+## 10. Documentation
+
+- [ ] 10.1 Create `docs/rule-packs.md` documenting each Rule Pack
+- [ ] 10.2 Document pattern syntax for contributors
+- [ ] 10.3 Document which tools/commands are blocked by each pack
+- [ ] 10.4 Document hardening pack behavior and force-block semantics
+- [ ] 10.5 Document multi-line splitting behavior
+- [ ] 10.6 Add troubleshooting guide for false positives

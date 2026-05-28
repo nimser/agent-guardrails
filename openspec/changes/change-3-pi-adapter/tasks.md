@@ -1,6 +1,6 @@
 ## 1. Engine Package
 
-- [ ] 1.1 Create `packages/engine/` directory with `package.json`, `tsconfig.json`, `vitest.config.ts`
+- [ ] 1.1 Create `src/engine/` directory with `package.json`, `tsconfig.json`, `vitest.config.ts`
 - [ ] 1.2 Implement `ToolCallContext` discriminated union type (or import from core if defined there)
 - [ ] 1.3 Implement `matchAndResolve(ctx, packs, capabilities)` — iterates rules, evaluates matchers, resolves fallback chain, interpolates `{matched}` templates
 - [ ] 1.4 Implement tool-type early exit — when `ctx` has no `command` and no `filePath`, return `null` without iterating rules. When only one field is present, skip rules whose matcher type requires the other
@@ -10,18 +10,18 @@
 
 ## 2. Pi Package Setup
 
-- [ ] 2.1 Create `packages/pi/` directory structure
-- [ ] 2.2 Create `packages/pi/package.json` with dependencies on core, engine, and secrets
-- [ ] 2.3 Create `packages/pi/tsconfig.json`
-- [ ] 2.4 Create `packages/pi/vitest.config.ts`
+- [ ] 2.1 Create `src/adapters/pi/` directory structure
+- [ ] 2.2 Create `src/adapters/pi/package.json` with dependencies on core, engine, and secrets
+- [ ] 2.3 Create `src/adapters/pi/tsconfig.json`
+- [ ] 2.4 Create `src/adapters/pi/vitest.config.ts`
 
 ## 3. Extension Implementation
 
 - [ ] 3.1 Create `src/index.ts` with extension function signature
 - [ ] 3.2 Import `ExtensionAPI` type or define minimal interface
-- [ ] 3.3 Import `matchAndResolve` from `@agent-guardrails/engine`
-- [ ] 3.4 Import `ALL_RULE_PACKS` from `@agent-guardrails/secrets`
-- [ ] 3.5 Import or define `PI_CAPABILITIES` from `@agent-guardrails/core`
+- [ ] 3.3 Import `matchAndResolve` from engine (`src/engine/`)
+- [ ] 3.4 Import `ALL_RULE_PACKS` from rule packs (`src/packs/`)
+- [ ] 3.5 Import or define `PI_CAPABILITIES` from core (`src/core/`)
 - [ ] 3.6 Register `tool_call` hook via `pi.on("tool_call", handler)` for ALL tools
 
 ## 4. ToolCallContext Normalization
@@ -86,5 +86,5 @@
 
 ## 10. Documentation
 
-- [ ] 10.1 Create `packages/pi/README.md` with installation instructions
+- [ ] 10.1 Create `src/adapters/pi/README.md` with installation instructions
 - [ ] 10.2 Document Adapter hooks and expected Behavior

@@ -16,7 +16,7 @@ The system MUST hook `tool_call` (Tool Call) for ALL tools, not just bash.
 - WHEN the Adapter registers its hook
 - THEN it MUST intercept tool_call events for all tool types (bash, read, write, and any future tools)
 - AND it MUST normalize each event into a `ToolCallContext` discriminated union
-- AND it MUST delegate matching to `matchAndResolve()` from `@agent-guardrails/engine`
+- AND it MUST delegate matching to `matchAndResolve()` from engine (`src/engine/`)
 - AND it MUST NOT implement its own matching logic
 
 #### Scenario: Bash tool normalization
@@ -71,11 +71,11 @@ The system MUST block dangerous commands in `tool_call` (Tool Call hook).
 - THEN Adapter MUST NOT return block
 
 ### Requirement: Rule Pack Consumption
-The system MUST import and use ALL Rule Packs from `@agent-guardrails/secrets`.
+The system MUST import and use ALL Rule Packs from rule packs (`src/packs/`).
 
 #### Scenario: Import all Rule Packs
 - WHEN Adapter is loaded
-- THEN it MUST import `ALL_RULE_PACKS` from `@agent-guardrails/secrets`
+- THEN it MUST import `ALL_RULE_PACKS` from rule packs (`src/packs/`)
 - AND it MUST NOT curate or filter individual packs
 - AND it MUST pass ALL_RULE_PACKS to the engine
 

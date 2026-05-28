@@ -10,10 +10,10 @@ Pi (earendil-works/pi) needs native integration with Agent Guardrails. It suppor
 
 ## Solution
 
-Create `@agent-guardrails/engine` (the shared matching engine) and a Pi Adapter that uses it:
+Create engine (`src/engine/`) (the shared matching engine) and a Pi Adapter that uses it:
 1. Create the engine package with `matchAndResolve()` — the shared matching function consumed by all Adapters
 2. Create a Pi Adapter that hooks into `tool_call` (Tool Call) for before-tool Phase (block)
-3. Import secret Rule Packs from `@agent-guardrails/secrets`
+3. Import secret Rule Packs from rule packs (`src/packs/`)
 4. Block dangerous commands/files before execution
 5. Provide clear Messages when blocking
 
@@ -37,12 +37,13 @@ This change implements the `block` Behavior only. The Adapter will be updated in
 
 ## Approach
 
-1. Create `packages/pi/` directory
+1. Create `src/adapters/pi/` directory (single-package structure)
 2. Implement Adapter function using Pi API
 3. Register `tool_call` hook (Tool Call) for **all tools** (not just bash)
 4. Normalize Pi event into `ToolCallContext` (discriminated union on toolName)
-5. Call `matchAndResolve(ctx, ALL_RULE_PACKS, capabilities)` from `@agent-guardrails/engine`
+5. Call `matchAndResolve(ctx, ALL_RULE_PACKS, capabilities)` (engine layer)
 6. Return `{ block: true, reason: result.message }` when engine returns a block Action
+7. Log observability stats at session teardown (Tier 1)
 
 ## Harness Capabilities (Verified)
 
@@ -59,9 +60,9 @@ For this MVP, we only use `block`. `suggest`/`run`/`redact`/`confirm` come later
 
 ```typescript
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { ToolCallContext } from "@agent-guardrails/core";
-import { matchAndResolve } from "@agent-guardrails/engine";
-import { ALL_RULE_PACKS } from "@agent-guardrails/secrets";
+import type { ToolCallContext } from "../../../core";
+import { matchAndResolve, getStats, resetStats } from "../../../engine";
+import { ALL_RULE_PACKS } from "../packs";
 import { PI_CAPABILITIES } from "./capabilities";
 
 export default function (pi: ExtensionAPI) {
@@ -76,6 +77,15 @@ export default function (pi: ExtensionAPI) {
     if (result?.type === "block" || result?.type === "suggest") {
       return { block: true, reason: result.message };
     }
+  });
+
+  // Observability Tier 1: log summary at session teardown
+  pi.on("session_end", () => {
+    const stats = getStats();
+    if (stats.matches > 0) {
+      pi.log(`🛡️ Guardrails: ${stats.matches} interventions this session (${stats.blocks} blocked, ${stats.suggests} suggested)`);
+    }
+    resetStats();
   });
 }
 
@@ -92,7 +102,17 @@ function normalizeToContext(event): ToolCallContext {
 }
 ```
 
-The Adapter is a thin shim: normalize → engine → translate. All matching logic lives in `@agent-guardrails/engine`.
+The Adapter is a thin shim: normalize → engine → translate. All matching logic lives in the engine layer.
+
+## Observability Tier 1
+
+The adapter reads stats from the engine (`getStats()`) and uses Pi's native `pi.log()` to surface a one-line summary at session end:
+
+```
+🛡️ Guardrails: 7 interventions this session (5 blocked, 2 suggested)
+```
+
+Stats are accumulated by the engine during `matchAndResolve()` (see Change 1 Decision 17). The adapter is responsible only for reading and displaying them via the harness's native logging mechanism.
 
 ## Success Criteria
 
@@ -102,6 +122,8 @@ The Adapter is a thin shim: normalize → engine → translate. All matching log
 - [ ] Tool Call hook blocks private key reads
 - [ ] Messages are clear and actionable
 - [ ] No false blocking of safe commands
+- [ ] Hardening rules block eval/wrapper patterns
+- [ ] Observability: session-end log line shows intervention count when > 0
 
 ## Dependencies
 

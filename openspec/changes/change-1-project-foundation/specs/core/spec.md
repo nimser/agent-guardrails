@@ -141,7 +141,7 @@ The system MUST define a formalized fallback chain for resolving Actions when a 
 - AND the fallback `block` message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
 
 ### Requirement: Engine Package
-The system MUST provide a `@agent-guardrails/engine` package that centralizes matching and Action resolution.
+The system MUST provide a engine (`src/engine/`) package that centralizes matching and Action resolution.
 
 #### Scenario: Engine package structure
 - WHEN the engine package is created

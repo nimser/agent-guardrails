@@ -12,7 +12,7 @@ opencode (anomalyco/opencode) needs native integration with Agent Guardrails. It
 
 Create an opencode Adapter that:
 1. Hooks into `tool.execute.before` (Tool Call) for before-tool Phase (block)
-2. Imports secret Rule Packs from `@agent-guardrails/secrets`
+2. Imports secret Rule Packs from rule packs (`src/packs/`)
 3. Blocks dangerous commands/files before execution
 4. Provides clear Messages when blocking
 
@@ -35,12 +35,13 @@ This change implements the `block` Behavior only. The Adapter will be updated in
 
 ## Approach
 
-1. Create `packages/opencode/` directory
+1. Create `src/adapters/opencode/` directory (single-package structure)
 2. Implement Adapter function using opencode API
 3. Register `tool.execute.before` hook (Tool Call) for **all tools** (not just bash)
 4. Normalize opencode event into `ToolCallContext` (discriminated union on toolName)
-5. Call `matchAndResolve(ctx, ALL_RULE_PACKS, capabilities)` from `@agent-guardrails/engine`
+5. Call `matchAndResolve(ctx, ALL_RULE_PACKS, capabilities)` (engine layer)
 6. Throw Error with result.message when engine returns a block Action
+7. Log observability stats at session teardown (Tier 1)
 
 ## Harness Capabilities (Verified)
 
@@ -57,9 +58,9 @@ For this MVP, we only use `block`. `suggest`/`run`/`redact` come later.
 
 ```typescript
 import type { Plugin } from "@opencode-ai/plugin";
-import type { ToolCallContext } from "@agent-guardrails/core";
-import { matchAndResolve } from "@agent-guardrails/engine";
-import { ALL_RULE_PACKS } from "@agent-guardrails/secrets";
+import type { ToolCallContext } from "../../../core";
+import { matchAndResolve, getStats, resetStats } from "../../../engine";
+import { ALL_RULE_PACKS } from "../../../packs";
 import { OPENCODE_CAPABILITIES } from "./capabilities";
 
 export const GuardrailsPlugin: Plugin = async ({ $ }) => {
@@ -75,6 +76,15 @@ export const GuardrailsPlugin: Plugin = async ({ $ }) => {
       if (result?.type === "block" || result?.type === "suggest") {
         throw new Error(result.message);
       }
+    },
+
+    // Observability Tier 1: log summary at session teardown
+    "session.teardown": async () => {
+      const stats = getStats();
+      if (stats.matches > 0) {
+        console.log(`🛡️ Guardrails: ${stats.matches} interventions this session (${stats.blocks} blocked, ${stats.suggests} suggested)`);
+      }
+      resetStats();
     }
   };
 };
@@ -92,7 +102,17 @@ function normalizeToContext(input, output): ToolCallContext {
 }
 ```
 
-The Adapter is a thin shim: normalize → engine → translate. All matching logic lives in `@agent-guardrails/engine`.
+The Adapter is a thin shim: normalize → engine → translate. All matching logic lives in the engine layer.
+
+## Observability Tier 1
+
+The adapter reads stats from the engine (`getStats()`) and uses opencode's native `console.log()` to surface a one-line summary at session teardown:
+
+```
+🛡️ Guardrails: 7 interventions this session (5 blocked, 2 suggested)
+```
+
+Stats are accumulated by the engine during `matchAndResolve()` (see Change 1 Decision 17). The adapter is responsible only for reading and displaying them via the harness's native logging mechanism.
 
 ## Success Criteria
 
@@ -102,6 +122,8 @@ The Adapter is a thin shim: normalize → engine → translate. All matching log
 - [ ] Tool Call hook blocks private key reads
 - [ ] Messages are clear and actionable
 - [ ] No false blocking of safe commands
+- [ ] Hardening rules block eval/wrapper patterns
+- [ ] Observability: session-teardown log line shows intervention count when > 0
 
 ## Dependencies
 

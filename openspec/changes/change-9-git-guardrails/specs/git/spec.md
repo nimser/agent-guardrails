@@ -48,7 +48,7 @@ The system MUST allow safe git commands.
 The system MUST export git Rule Pack for Adapter consumption.
 
 #### Scenario: Import git Rule Pack
-- WHEN Adapter imports from `@agent-guardrails/git`
+- WHEN Adapter imports git rule packs from `src/packs/`
 - THEN it MUST receive the `gitRulePack` object
 
 ### Requirement: Unit Tests

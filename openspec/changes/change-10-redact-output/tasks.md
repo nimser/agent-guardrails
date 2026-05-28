@@ -6,7 +6,7 @@
 ## 2. Secret Detection
 
 - [ ] 2.1 Create `src/detect.ts` with output scanning
-- [ ] 2.2 Reuse patterns from `@agent-guardrails/secrets`
+- [ ] 2.2 Reuse patterns from rule packs (`src/packs/`)
 
 ## 3. Redaction Logic
 

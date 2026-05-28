@@ -5,7 +5,7 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 ## Goals / Non-Goals
 
 **Goals:**
-- Create `@agent-guardrails/engine` package with `matchAndResolve()` — the shared matching function consumed by all Adapters
+- Create engine (`src/engine/`) package with `matchAndResolve()` — the shared matching function consumed by all Adapters
 - Hook all tool calls (not just bash) and normalize into ToolCallContext
 - Delegate matching to the engine via `matchAndResolve()`
 - Import all Rule Packs via `ALL_RULE_PACKS` from secrets package
@@ -43,7 +43,7 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 
 ### Decision 3: Engine delegation and ALL_RULE_PACKS consumption
 
-**Choice**: Import `ALL_RULE_PACKS` from `@agent-guardrails/secrets`, delegate matching to `@agent-guardrails/engine`
+**Choice**: Import `ALL_RULE_PACKS` from rule packs (`src/packs/`), delegate matching to engine (`src/engine/`)
 
 **Rationale**:
 - Adapter is a thin shim (normalize → engine → translate)
@@ -92,6 +92,38 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 - Tools with neither field (unknown tools) skip all rules entirely — instant passthrough
 - This is the highest-impact, lowest-cost optimization: a few field checks before the rule loop
 
+### Decision 7: Observability Tier 1 (session-end logging)
+
+**Choice**: Adapter reads engine stats and logs one-line summary at session teardown via `pi.log()`
+
+**Rationale**:
+- Minimal implementation (~10 lines per adapter)
+- Uses harness-native logging (Pi's `pi.log()`)
+- Provides immediate value to users
+- No persistence overhead (in-memory stats)
+- Resets after each session
+
+**Implementation** (see proposal.md Adapter Structure section)
+
+Other adapters (opencode, Claude Code, Codex) will implement equivalent logging using their harness's native mechanisms (console.log, stderr, feedback hook).
+
+### Note: Input/Output Ports (Deferred)
+
+**Current (MVP)**: Adapters depend directly on engine implementation:
+```typescript
+import { matchAndResolve } from "../../../engine";
+```
+
+**Post-MVP (when adding Codex adapter)**: Introduce port interface in core:
+```typescript
+// src/core/ports.ts
+export interface GuardrailEngine {
+  evaluate(ctx: ToolCallContext): Promise<GuardrailAction | null>;
+}
+```
+
+See `openspec/future-architecture-decisions.md` for full port/interface specification.
+
 ### Risk: Performance degrades with many Rules
 **Mitigation**:
 - Tool-type early exit skips irrelevant rules before evaluation
@@ -107,3 +139,4 @@ No migration needed - this is a new feature.
 
 1. Should we hook into all tools or just bash/read/write?
 2. How to handle Pi's extension configuration?
+3. Should observability stats be configurable (opt-out)?

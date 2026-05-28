@@ -4,7 +4,7 @@ Agent Guardrails currently relies on regex matching against raw command strings.
 
 ## What Changes
 
-- Add a Level 1 shell tokenizer to `@agent-guardrails/engine` that parses command strings into structured representations (tokens, pipeline stages, operators, redirects)
+- Add a Level 1 shell tokenizer to engine (`src/engine/`) that parses command strings into structured representations (tokens, pipeline stages, operators, redirects)
 - Replace raw regex matching in the engine's `matches()` function with tokenizer-based matching — commands are tokenized first, then matchers evaluate against structured tokens
 - Add subshell marker detection (`$(...)`, backticks) — when detected, block with a clear rewrite message rather than attempting to parse inside
 - Heredocs (`<<`) are **not** blocked — agents use them legitimately for multi-line content, and subshell expansion inside heredocs is already caught by subshell detection
@@ -26,7 +26,7 @@ Agent Guardrails currently relies on regex matching against raw command strings.
 
 ## Impact
 
-- **Code**: `@agent-guardrails/engine` gains a tokenizer module (~100 lines). Engine's `matches()` function refactored to tokenize before matching. No changes to Adapters or `@agent-guardrails/core`
+- **Code**: engine (`src/engine/`) gains a tokenizer module (~100 lines). Engine's `matches()` function refactored to tokenize before matching. No changes to Adapters or core (`src/core/`)
 - **APIs**: `ParsedCommand` type added to engine's public API. `GuardrailMatcher` in core is unchanged — matchers still declare `type` and `pattern`, but the engine evaluates them against tokenized input
 - **Dependencies**: None — tokenizer is implemented from scratch
 - **Tests**: Existing regex-matching tests must pass with tokenizer. New tests for evasion cases, subshell detection, pipeline stage analysis, and Smart Piped Detection

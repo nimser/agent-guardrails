@@ -19,7 +19,7 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 ## Solution
 
 Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** from `change-2-secret-blocking`:
-1. Reuse all Rule Packs from `@agent-guardrails/secrets`
+1. Reuse all Rule Packs from rule packs (`src/packs/`)
 2. Update Rule Default Actions from `block` to `suggest` with single Replacement command
 3. Implement `findSaferCommand()` returning a single safer command (or null)
 4. Implement Format-aware SOPS Redaction via shell pipelines, format detected from file extension and `--output-type`/`--input-type` flags

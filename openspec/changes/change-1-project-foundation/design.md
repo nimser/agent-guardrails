@@ -75,7 +75,7 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 
 ### Decision 6: Shared engine package
 
-**Choice**: Create `@agent-guardrails/engine` with `matchAndResolve()` function
+**Choice**: Create engine (`src/engine/`) with `matchAndResolve()` function
 
 **Rationale**:
 - Adapters become thin shims (normalize event → call engine → translate result)
@@ -85,12 +85,14 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 
 ### Decision 7: GuardrailMatcher as discriminated union owned by core
 
-**Choice**: Core defines `bash-command`, `file-path`, and `predicate` matcher types
+**Choice**: Core defines `bash-command`, `file-path`, and `predicate` matcher types, registered via a matcher registry pattern
 
 **Rationale**:
-- Engine can exhaustively switch on matcher type (compiler-checked)
-- Adding a new matcher type forces engine updates
+- Matcher registry (OCP-compliant): new matcher types register without modifying core's switch statement
+- Engine iterates registry instead of hardcoded switch
+- Built-in handlers: `bash-command`, `file-path`, `predicate`
 - `predicate` type enables complex matching logic (e.g., SSH directory heuristic) without regex lookahead gymnastics
+- Registry pattern enables future extensibility (e.g., AST-based matchers post-MVP)
 
 ### Decision 8: ToolCallContext as discriminated union
 
@@ -101,7 +103,25 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 - Engine evaluates all matcher types against whatever fields are present
 - Adapters just normalize Harness events into this shape
 
-### Decision 9: Contextual message templates
+### Decision 9: Aggregate validation
+
+**Choice**: Validate Rule Packs and Rules on load with pure functions
+
+**Rationale**:
+- Catches invalid combinations early (duplicate rule IDs, phase-behavior mismatches)
+- Clear error messages for contributors
+- Prevents silent failures (rules that compile but don't work)
+- Pure functions: no side effects, easy to test
+
+**Implementation**:
+```typescript
+function validateRulePack(pack: RulePack): ValidationResult
+function validateRule(rule: GuardrailRule): ValidationResult
+```
+
+Validation runs when built-in packs load and when user YAML packs are parsed.
+
+### Decision 10: Contextual message templates
 
 **Choice**: Messages support `{matched}` placeholder interpolated by engine
 
@@ -111,7 +131,92 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 - Single placeholder covers 90% of cases
 - Available for all Action types
 
-### Decision 10: Regex is best-effort, document limitations
+### Decision 11: Multi-layer matching strategy
+
+**Choice**: Three-layer risk-escalation model (substring + regex + wrapper detection)
+
+**Rationale**:
+- Layer 1 (substring): Fast O(n) screening, catches wrapped commands
+- Layer 2 (regex): Precise structural matching, standard usage
+- Layer 3 (wrappers): Adversarial detection, forces block
+- Risk escalation: wrappers + risky keywords = force block ("guilty until proven innocent")
+- Implemented as `hardening` rule pack, no engine changes needed
+
+See `docs/matching-strategy.md` for full specification.
+
+### Decision 12: Multi-line command splitting
+
+**Choice**: Split commands on `;`, `&&`, `||`, `\n` before matching
+
+**Rationale**:
+- Catches composition via command chaining
+- Cheap string operation, no shell parsing required
+- Catches ~80% of composition cases
+- Limitations (variable tracking, command substitution) deferred to shell tokenizer (Change 8)
+
+### Decision 13: Domain events (internal only)
+
+**Choice**: Engine produces events internally but doesn't expose them in public API
+
+**Rationale**:
+- Enables future observability without breaking MVP API
+- Events: `RuleMatchedEvent`, `FallbackTriggeredEvent`, `ActionOverridden`
+- Internal `processMatch()` returns `{ action, events }`
+- Public `matchAndResolve()` returns only `action`
+- Post-MVP: expose events for telemetry, audit, debugging
+
+See `openspec/future-architecture-decision.md` for post-MVP event API.
+
+### Decision 14: Single package with clear internal structure
+
+**Choice**: Ship as one package with layered directories
+
+**Rationale**:
+- Reduces contributor mental overhead (one repo, one install, one test run)
+- Eliminates TypeScript project references complexity
+- Clear boundaries: `core/ → matcher/ → resolver/ → engine/`
+- Infrastructure layer: `infrastructure/config-loader.ts`, `infrastructure/yaml-pack-loader.ts`
+- Split trigger: 3+ adapters or independent versioning needs
+
+See `openspec/future-architecture-decision.md` for split criteria.
+
+### Decision 15: Infrastructure layer
+
+**Choice**: Concrete config/pack loaders in `infrastructure/` directory
+
+**Rationale**:
+- Keeps dependency direction correct: `adapters → engine → infrastructure → core`
+- Post-MVP: introduce port interfaces in `core/ports.ts`
+- MVP: concrete classes, no interfaces yet
+- Clean architecture without over-engineering
+
+### Decision 16: YAML rule packs in MVP
+
+**Choice**: Ship built-in rule packs as YAML, support user YAML packs from day 1
+
+**Rationale**:
+- Lowers contribution barrier (no TypeScript required)
+- Enables per-project custom rules via `.agent-guardrails/packs/`
+- Community rule pack ecosystem (awesome-agent-guardrails)
+- One dependency (`yaml` npm package) lives in infrastructure layer
+- Drives adoption: 3-step workflow in README
+
+See `docs/yaml-rule-packs.md` for user documentation.
+
+### Decision 17: Observability Tier 1 (in-memory stats)
+
+**Choice**: In-memory stats counter, log summary at session end
+
+**Rationale**:
+- ~20 lines of code
+- Engine increments counters during `matchAndResolve`
+- Adapters call `getStats()` and log to harness-native output
+- Pi: `pi.log()`, opencode: `console.log()`, Claude Code: stderr, Codex: feedback hook
+- Provides immediate value without persistence
+
+Post-MVP: Tier 2 (JSON file + CLI query) in `openspec/could-have-features.md`.
+
+### Decision 18: Contextual message templates
 
 **Choice**: Regex-only matching for MVP, document the gap
 
@@ -122,6 +227,12 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 - Shell tokenizer planned for post-MVP for more robust matching
 
 ## Risks / Trade-offs
+
+### Risk: Multi-layer matching complexity
+**Mitigation**: Layers are additive and optional. Core matching (Layer 2) works standalone. Layers 1 and 3 are hardening rules, not engine changes.
+
+### Risk: YAML dependency breaks "zero dependencies" goal
+**Mitigation**: `yaml` package lives in `infrastructure/`, not `core/`. Core directory remains zero-dep. Infrastructure is optional (adapters can use it or not).
 
 ### Risk: Harness Capabilities change
 **Mitigation**: Update Capability model, test with real Harnesses

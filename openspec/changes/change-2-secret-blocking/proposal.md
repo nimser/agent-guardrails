@@ -42,13 +42,15 @@ This change defines the **matching logic** and **Default Actions** for secret-re
 
 ## Approach
 
-1. Create `packages/secrets/` directory
+1. Create rule packs in `src/packs/` (single-package structure per Change 1 Decision 14)
 2. Implement `env` Rule Pack with dual Matchers (file-path + bash-command) — Defense in Depth
 3. Implement `sops` Rule Pack
 4. Implement `private-key` Rule Pack with SSH directory support
 5. Implement `encryption-tools` Rule Pack (age, gpg, openssl)
 6. Implement `secret-managers` Rule Pack (op, gopass, pass, bw)
-7. Export Rule Packs for Adapters to consume
+7. Implement `hardening` Rule Pack (multi-layer matching: wrapper detection, redirect-to-sensitive-path)
+8. Rule packs defined as YAML files, loaded via `infrastructure/yaml-pack-loader.ts`
+9. Export Rule Packs for Adapters to consume
 
 ## Rule Packs
 
@@ -188,6 +190,90 @@ const secretManagersRulePack: RulePack = {
 };
 ```
 
+## Hardening Rule Pack
+
+Implements multi-layer matching (see `docs/matching-strategy.md`). These rules integrate Layers 1 and 3 as `hardening` rule pack rules that complement the Layer 2 regex rules above.
+
+### Layer 1: Substring Pre-Filter
+
+Implemented as engine-level optimization in `src/matcher/multi-line.ts`. Before evaluating regex matchers, the engine splits commands on `;`, `&&`, `||`, `\n` and evaluates each segment independently against all rules. This catches composition via command chaining.
+
+### Layer 3: Hardening Rules
+
+```yaml
+id: hardening
+name: Adversarial Pattern Hardening
+description: Detects shell wrapping constructs that hide intent and redirects to sensitive paths
+rules:
+  - id: hardening.wrapper-eval
+    title: Eval wrapper detected
+    description: "Detects eval hiding a command"
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "\\beval\\b"
+    action:
+      type: block
+      message: "Blocked: `{matched}` — eval can hide dangerous commands."
+
+  - id: hardening.wrapper-bash-c
+    title: bash -c / sh -c wrapper detected
+    description: Detects subshell invocation hiding a command
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "\\b(bash|sh)\\s+-c\\b"
+    action:
+      type: block
+      message: "Blocked: `{matched}` — subshell invocation can hide dangerous commands."
+
+  - id: hardening.wrapper-subshell
+    title: Command substitution detected
+    description: Detects $() or backtick command substitution
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(\\$\\(|`)"
+    action:
+      type: block
+      message: "Blocked: `{matched}` — command substitution can hide dangerous commands."
+
+  - id: hardening.redirect-read-sensitive
+    title: Redirect reading from sensitive path
+    description: Detects < redirect from .env/.pem/.key files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "<\\s*[^\\s]*\\.(env|pem|key|p12|pfx|p8)"
+    action:
+      type: block
+      message: "Blocked: `{matched}` — redirecting from sensitive files may leak secrets."
+
+  - id: hardening.redirect-write-sensitive
+    title: Redirect writing to sensitive path
+    description: Detects > or >> redirect to .env/.pem/.key files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(>|>>)\\s*[^\\s]*\\.(env|pem|key)$"
+    action:
+      type: block
+      message: "Blocked: `{matched}` — writing to sensitive files via redirect."
+
+  - id: hardening.redirect-tee-sensitive
+    title: tee to sensitive path
+    description: Detects tee writing to .env/.pem/.key files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "\\btee\\b[^|]*\\.(env|pem|key)"
+    action:
+      type: block
+      message: "Blocked: `{matched}` — tee can write secrets to sensitive files."
+```
+
+**Risk escalation behavior:** When a hardening rule fires (Layer 3), the action is force-blocked regardless of user configuration — "guilty until proven innocent" for adversarial patterns. This is enforced by the engine: hardening pack rules cannot be overridden via `agent-guardrails.json`.
+
 ## Success Criteria
 
 - [ ] `env` Rule Pack blocks `.env` file reads via file-path AND bash commands
@@ -195,18 +281,24 @@ const secretManagersRulePack: RulePack = {
 - [ ] `private-key` Rule Pack blocks private key reads including SSH directory
 - [ ] `encryption-tools` Rule Pack blocks age, gpg, openssl decrypt
 - [ ] `secret-managers` Rule Pack blocks op, gopass, pass, bw commands
-- [ ] All Rules have unit tests
+- [ ] `hardening` Rule Pack blocks eval, bash-c, subshell, redirect wrappers
+- [ ] Multi-line splitting catches composition via `;`, `&&`, `||`, `\n`
+- [ ] All Rules have YAML definitions and unit tests
+- [ ] Rule packs loaded via infrastructure yaml-pack-loader
+- [ ] Force-block escalation: hardening rules cannot be overridden by user config
 - [ ] Rule Packs export cleanly for Adapter consumption
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, Rule Pack interface)
+- Depends on `change-1-project-foundation` (types, Rule Pack interface, matcher registry, infrastructure layer)
 
 ## Risks
 
 - **Risk**: False positives (legitimate file reads blocked)
   - **Mitigation**: Precise Guardrail Matchers, configurable per-project
+- **Risk**: Layer 3 wrapper detection false positives (legitimate eval usage)
+  - **Mitigation**: eval/bash-c rare in coding agent context; force-block default can be reconsidered post-MVP based on issue reports
 - **Risk**: Missing patterns
-  - **Mitigation**: Start with common patterns, extend as needed
+  - **Mitigation**: Start with common patterns, extend via YAML rule packs (contributor-friendly)
 - **Risk**: Scope creep
   - **Mitigation**: Defer AWS/GCP/Azure CLI, database CLIs to future changes

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: matchAndResolve Function
-The system MUST provide a `matchAndResolve()` function in `@agent-guardrails/engine` that evaluates a `ToolCallContext` against Rule Packs and returns the effective Guardrail Action.
+The system MUST provide a `matchAndResolve()` function in engine (`src/engine/`) that evaluates a `ToolCallContext` against Rule Packs and returns the effective Guardrail Action.
 
 #### Scenario: Function signature
 - **WHEN** `matchAndResolve(ctx, packs, capabilities)` is called
