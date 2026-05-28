@@ -32,6 +32,56 @@ The system MUST define a discriminated union type for Guardrail Matchers. Core o
 - AND adding a new matcher type MUST be a core change that forces updates to the engine
 - AND the engine MUST exhaustively handle all matcher variants (compiler-checked)
 
+### Requirement: Matcher Registry
+The system MUST provide a matcher registry that enables Open/Closed Principle (OCP) compliance for matcher types.
+
+#### Scenario: Registry structure
+- WHEN the matcher registry is implemented
+- THEN it MUST provide a `register(handler: MatcherHandler): void` method
+- AND it MUST provide a `matches(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean` method
+- AND it MUST provide a `clear(): void` method for test isolation
+- AND it MUST reject duplicate type registrations (error or override)
+
+#### Scenario: MatcherHandler interface
+- WHEN a matcher handler is defined
+- THEN it MUST implement:
+  ```typescript
+  interface MatcherHandler<T extends string = string> {
+    type: T;
+    matches(matcher: MatcherOf<T>, ctx: ToolCallContext): boolean;
+  }
+  ```
+- AND the `matches` method MUST evaluate the matcher against the context
+- AND TypeScript exhaustiveness checks MUST be enforced at compile time
+
+#### Scenario: Explicit initialization lifecycle
+- WHEN adapters bootstrap the system
+- THEN they MUST call `initializeMatcherRegistry()` exactly once before handling tool calls
+- AND the initialization function MUST register all built-in matchers:
+  - `bash-command` handler
+  - `file-path` handler
+  - `predicate` handler
+- AND the initialization MUST NOT use module-level side effects
+- AND the initialization function signature MUST be:
+  ```typescript
+  export function initializeMatcherRegistry(): void;
+  ```
+
+#### Scenario: Test isolation
+- WHEN tests require a subset of matchers
+- THEN they MUST create a fresh registry instance
+- AND they MUST register only the matchers needed for the test
+- AND they MUST NOT rely on global registry state between tests
+- AND test setup MUST call `registry.clear()` if reusing a shared instance
+
+#### Scenario: Adding new matcher types
+- WHEN a new matcher type is added (e.g., `shell-ast`)
+- THEN a new handler file MUST be created in `src/matchers/`
+- AND the handler MUST be imported into `src/matchers/registry-setup.ts`
+- AND the handler MUST be registered in `initializeMatcherRegistry()`
+- AND the matcher type MUST be added to the `GuardrailMatcher` discriminated union
+- AND TypeScript compiler MUST enforce exhaustiveness in all switch statements
+
 ### Requirement: ToolCallContext Type
 The system MUST define a discriminated union type for tool call context, used by the engine to evaluate Matchers.
 

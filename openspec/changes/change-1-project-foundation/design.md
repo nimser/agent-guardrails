@@ -83,16 +83,54 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 - Adding new Adapters is trivial
 - Centralizes fallback chain logic
 
-### Decision 7: GuardrailMatcher as discriminated union owned by core
+### Decision 7: Matcher Registry with Explicit Initialization
 
-**Choice**: Core defines `bash-command`, `file-path`, and `predicate` matcher types, registered via a matcher registry pattern
+**Choice**: Core defines `bash-command`, `file-path`, and `predicate` matcher types, registered via a `MatcherRegistry` class with explicit initialization through `initializeMatcherRegistry()` function (not module-level side effects).
 
-**Rationale**:
-- Matcher registry (OCP-compliant): new matcher types register without modifying core's switch statement
-- Engine iterates registry instead of hardcoded switch
-- Built-in handlers: `bash-command`, `file-path`, `predicate`
-- `predicate` type enables complex matching logic (e.g., SSH directory heuristic) without regex lookahead gymnastics
-- Registry pattern enables future extensibility (e.g., AST-based matchers post-MVP)
+**Problem statement**: We need a way to register matcher handlers that is:
+- **Testable**: Tests should be able to register only the matchers they need
+- **Predictable**: No hidden side effects on module import
+- **OCP-compliant**: New matchers added without modifying existing code
+
+**Solution**: Explicit initialization lifecycle
+```typescript
+// src/matcher/registry.ts
+export class MatcherRegistry {
+  private handlers = new Map<string, MatcherHandler>();
+  register(handler: MatcherHandler): void { /* ... */ }
+  evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean { /* ... */ }
+  clear(): void { /* ... */ }  // For test isolation
+}
+export const matcherRegistry = new MatcherRegistry();
+
+// src/matcher/handlers/bash-command.ts
+export const bashCommandHandler: MatcherHandler = { /* ... */ };
+
+// src/matcher/registry-setup.ts
+import { matcherRegistry } from './registry';
+import { bashCommandHandler } from './handlers/bash-command';
+import { filePathHandler } from './handlers/file-path';
+import { predicateHandler } from './handlers/predicate';
+
+export function initializeMatcherRegistry(): void {
+  matcherRegistry.register(bashCommandHandler);
+  matcherRegistry.register(filePathHandler);
+  matcherRegistry.register(predicateHandler);
+}
+
+// Adapter bootstrap
+initializeMatcherRegistry();  // Called once before handling tool calls
+```
+
+**Alternatives considered**:
+- **Module-level side effects** (auto-register on import): Rejected because tests become fragile (import order matters, global state leaks between tests)
+- **Constructor injection** (pass handlers to registry in adapter): Rejected because it duplicates registration logic across adapters
+
+**Why explicit initialization wins**:
+- Tests create fresh `MatcherRegistry` instances and register only needed handlers
+- No import order dependencies
+- Initialization call site is visible in adapter bootstrap code
+- Adding a new matcher = create handler file + add one line to `registry-setup.ts`
 
 ### Decision 8: ToolCallContext as discriminated union
 

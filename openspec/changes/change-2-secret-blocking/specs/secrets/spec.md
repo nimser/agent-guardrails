@@ -149,6 +149,103 @@ The system MUST export Rule Packs for Adapter consumption.
 - WHEN Adapter imports `ALL_RULE_PACKS` from rule packs (`src/packs/`)
 - THEN it MUST receive an array containing all Rule Packs
 
+### Requirement: hardening Rule Pack (Multi-Layer Matching)
+The system MUST provide a `hardening` Rule Pack that detects adversarial patterns and sensitive-path redirects, complementing the Layer 2 regex-based secret detection.
+
+See `docs/matching-strategy.md` for the full multi-layer matching strategy specification.
+
+#### Scenario: hardening pack structure
+- WHEN the hardening Rule Pack is defined
+- THEN it MUST have `id: "hardening"`
+- AND it MUST contain rules for wrapper detection and redirect detection
+- AND all hardening rules MUST use `phase: "before-tool"`
+- AND all hardening rules MUST produce `block` actions
+
+#### Scenario: Block eval wrapper
+- WHEN agent runs a command containing `eval` and Layer 1 substring detection also identifies a risky keyword pair
+- THEN the `hardening.wrapper-eval` rule MUST match
+- AND the action MUST be force-block with message identifying eval as the reason
+
+#### Scenario: Block bash -c / sh -c wrapper
+- WHEN agent runs `bash -c 'command'` or `sh -c 'command'`
+- THEN the `hardening.wrapper-bash-c` rule MUST match
+- AND the action MUST be force-block
+
+#### Scenario: Block command substitution
+- WHEN agent runs a command containing `$(...)` or backtick substitution
+- THEN the `hardening.wrapper-subshell` rule MUST match
+- AND the action MUST be force-block
+
+#### Scenario: Block read-redirect from sensitive path
+- WHEN agent runs `cat < .env` or `read < secret.pem`
+- THEN the `hardening.redirect-read-sensitive` rule MUST match
+- AND the action MUST be force-block
+
+#### Scenario: Block write-redirect to sensitive path
+- WHEN agent runs `echo x > .env` or `echo x >> secret.key`
+- THEN the `hardening.redirect-write-sensitive` rule MUST match
+- AND the action MUST be force-block
+
+#### Scenario: Block tee to sensitive path
+- WHEN agent runs `curl ... | tee .env`
+- THEN the `hardening.redirect-tee-sensitive` rule MUST match
+- AND the action MUST be force-block
+
+#### Scenario: Force-block escalation
+- WHEN any hardening rule matches
+- THEN the block action CANNOT be overridden by user configuration in `agent-guardrails.json`
+- AND the engine MUST mark hardening rule actions as non-overridable
+- AND the rationale is "guilty until proven innocent" for adversarial patterns
+
+#### Scenario: Allow safe commands without wrappers
+- WHEN agent runs `echo "hello"` or `ls -la`
+- THEN no hardening rules MUST match
+
+#### Scenario: Allow legitimate eval usage when no secret keywords present
+- WHEN agent runs `eval "echo hello"` (no secret keywords matched by Layer 1)
+- THEN the hardening rule MUST still match (eval is always flagged)
+- AND users who need legitimate eval MUST disable the entire hardening pack or use a predicate-based exception
+
+### Requirement: Multi-Layer Command Splitting
+The system MUST split multi-line and chained commands before matching.
+
+#### Scenario: Split on semicolons
+- WHEN agent runs `FILE=.env; cat "$FILE"`
+- THEN the engine MUST split on `;` and evaluate each segment independently
+- AND the second segment (`cat "$FILE"`) MUST be evaluated against all rules
+- NOTE: Variable expansion (`$FILE` → `.env`) is NOT performed — this is deferred to Change 8 (shell tokenizer)
+
+#### Scenario: Split on logical operators
+- WHEN agent runs `echo test && cat .env`
+- THEN the engine MUST split on `&&` and evaluate each segment independently
+- AND the second segment MUST match the env rule
+
+#### Scenario: Split on OR operator
+- WHEN agent runs `cat .env || true`
+- THEN the engine MUST split on `||` and evaluate the first segment
+- AND the first segment MUST match the env rule
+
+#### Scenario: Split on newlines
+- WHEN agent runs a multi-line command with `.env` access on one line
+- THEN the engine MUST split on `\n` and evaluate each line independently
+
+#### Scenario: Split does not catch variable indirection
+- WHEN agent runs `F=".env"; cat "$F"`
+- THEN the engine splits into `["F=\".env\"", "cat \"$F\""]`
+- AND neither segment matches the env regex (no `.env` literal in `cat "$F"`)
+- AND this limitation is documented and deferred to Change 8 (shell tokenizer)
+
+### Requirement: Rule Pack Export
+The system MUST export Rule Packs for Adapter consumption, including the hardening pack.
+
+#### Scenario: Import all Rule Packs
+- WHEN Adapter imports from rule packs (`src/packs/`)
+- THEN it MUST receive: envRulePack, sopsRulePack, privateKeyRulePack, encryptionToolsRulePack, secretManagersRulePack, hardeningRulePack
+
+#### Scenario: Import ALL_RULE_PACKS array
+- WHEN Adapter imports `ALL_RULE_PACKS` from rule packs (`src/packs/`)
+- THEN it MUST receive an array containing all Rule Packs including hardening
+
 ### Requirement: Unit Tests
 The system MUST have comprehensive unit tests for all Rule Packs.
 
@@ -175,3 +272,21 @@ The system MUST have comprehensive unit tests for all Rule Packs.
 - WHEN secret-managers Rules are tested
 - THEN all positive and negative cases MUST pass
 - AND op, gopass, pass, bw patterns MUST be tested
+
+#### Scenario: Test hardening Rules
+- WHEN hardening Rules are tested
+- THEN wrapper detection positives MUST pass: `eval "sops -d file"`, `bash -c 'cat .env'`, `$(cat .env)`
+- AND wrapper detection negatives MUST pass: `echo eval`, `cat script.sh`, `bash --help`
+- AND redirect detection positives MUST pass: `cat < .env`, `echo x > secret.key`, `tee output.pem`
+- AND redirect detection negatives MUST pass: `cat file.txt > output.log`, `echo hello`
+- AND force-block semantics MUST be tested: hardening rules cannot be overridden by config
+- AND these tests MUST use partial matcher lists (only `bash-command` and `file-path` handlers registered) for isolation
+
+#### Scenario: Test multi-line splitting
+- WHEN multi-line splitting is tested
+- THEN `cmd1; cmd2` MUST split into two segments
+- THEN `cmd1 && cmd2` MUST split into two segments
+- THEN `cmd1 || cmd2` MUST split into two segments
+- THEN `cmd1\ncmd2` MUST split into two segments
+- AND each segment MUST be evaluated independently against all rules
+- AND a match in any segment MUST trigger the rule action

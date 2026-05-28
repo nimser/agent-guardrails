@@ -49,12 +49,25 @@
 - [ ] 4.1 Create `src/matcher/registry.ts` with `MatcherRegistry` class
 - [ ] 4.2 Implement `register(handler: MatcherHandler): void`
 - [ ] 4.3 Implement `evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean`
-- [ ] 4.4 Create `src/matcher/handlers/bash-command.ts` implementing `MatcherHandler`
-- [ ] 4.5 Create `src/matcher/handlers/file-path.ts` implementing `MatcherHandler`
-- [ ] 4.6 Create `src/matcher/handlers/predicate.ts` implementing `MatcherHandler`
-- [ ] 4.7 Register all built-in handlers at module load time
-- [ ] 4.8 Add unit tests for each handler type
-- [ ] 4.9 Add unit tests for registry (register, evaluate, unknown type handling)
+- [ ] 4.4 Implement `clear(): void` for test isolation
+- [ ] 4.5 Create `src/matcher/handlers/bash-command.ts` implementing `MatcherHandler`
+- [ ] 4.6 Create `src/matcher/handlers/file-path.ts` implementing `MatcherHandler`
+- [ ] 4.7 Create `src/matcher/handlers/predicate.ts` implementing `MatcherHandler`
+- [ ] 4.8 Create `src/matcher/registry-setup.ts` with explicit initialization:
+  ```typescript
+  import { matcherRegistry } from './registry';
+  import { bashCommandHandler } from './handlers/bash-command';
+  import { filePathHandler } from './handlers/file-path';
+  import { predicateHandler } from './handlers/predicate';
+  
+  export function initializeMatcherRegistry(): void {
+    matcherRegistry.register(bashCommandHandler);
+    matcherRegistry.register(filePathHandler);
+    matcherRegistry.register(predicateHandler);
+  }
+  ```
+- [ ] 4.9 Add unit tests for each handler type
+- [ ] 4.10 Add unit tests for registry (register, evaluate, clear, duplicate handling)
 
 ## 5. Multi-Line Splitting (in `src/matcher/`)
 
