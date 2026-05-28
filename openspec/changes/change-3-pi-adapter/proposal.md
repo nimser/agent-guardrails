@@ -2,7 +2,7 @@
 
 ## Intent
 
-Create a Pi Adapter that uses `block` Behavior to prevent secret leaks. This is the first Adapter in the POC, proving the hook path works in Pi.
+Create a Pi Adapter that uses `block` Behavior to prevent secret leaks. This is the first Adapter in the MVP, proving the hook path works in Pi.
 
 ## Problem
 
@@ -53,7 +53,7 @@ Pi supports:
 - **redact**: Yes (can override `tool_result` content — Tool Result)
 - **confirm**: Yes (native `ctx.ui.confirm()`)
 
-For this POC, we only use `block`. `suggest`/`run`/`redact`/`confirm` come later.
+For this MVP, we only use `block`. `suggest`/`run`/`redact`/`confirm` come later.
 
 ## Adapter Structure
 

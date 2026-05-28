@@ -1,6 +1,6 @@
 ## Why
 
-Agent Guardrails currently relies on regex matching against raw command strings. This is trivially bypassable through shell composition techniques that preserve the original intent while evading the regex (e.g., `cat < .env`, `cat .e"nv"`, command chaining, subshells). A Level 1 shell tokenizer closes these evasion vectors and enables Smart Piped Command Detection — both deferred from the POC. This change also introduces subshell detection as a security backstop for constructs the tokenizer cannot fully parse.
+Agent Guardrails currently relies on regex matching against raw command strings. This is trivially bypassable through shell composition techniques that preserve the original intent while evading the regex (e.g., `cat < .env`, `cat .e"nv"`, command chaining, subshells). A Level 1 shell tokenizer closes these evasion vectors and enables Smart Piped Command Detection — both deferred from the MVP. This change also introduces subshell detection as a security backstop for constructs the tokenizer cannot fully parse.
 
 ## What Changes
 

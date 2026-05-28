@@ -113,13 +113,13 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 
 ### Decision 10: Regex is best-effort, document limitations
 
-**Choice**: Regex-only matching for POC, document the gap
+**Choice**: Regex-only matching for MVP, document the gap
 
 **Rationale**:
 - Regex is deterministic, fast, testable
 - Inherently bypassable via command composition (redirects, string concat, alternative tools)
 - `redact` Behavior (change-10) is the backstop for anything that slips through
-- Shell tokenizer planned for post-POC for more robust matching
+- Shell tokenizer planned for post-MVP for more robust matching
 
 ## Risks / Trade-offs
 
@@ -130,7 +130,7 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 **Mitigation**: Start simple, extend as needed
 
 ### Risk: Regex-based matchers are bypassable
-**Mitigation**: Regex is best-effort first layer. Shell tokenizer planned post-POC. `redact` Behavior (change-10) is backstop for anything that slips through.
+**Mitigation**: Regex is best-effort first layer. Shell tokenizer planned post-MVP. `redact` Behavior (change-10) is backstop for anything that slips through.
 
 ## Migration Plan
 

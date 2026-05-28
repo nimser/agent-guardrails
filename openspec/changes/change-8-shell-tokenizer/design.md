@@ -1,13 +1,13 @@
 ## Context
 
-Agent Guardrails currently uses regex matching against raw command strings. This was a deliberate POC decision — fast to implement, zero dependencies, and sufficient to prove the hook path works. However, regex matching is trivially bypassable through shell composition:
+Agent Guardrails currently uses regex matching against raw command strings. This was a deliberate MVP decision — fast to implement, zero dependencies, and sufficient to prove the hook path works. However, regex matching is trivially bypassable through shell composition:
 
 - `cat < .env` — redirect, `.env` doesn't appear after `cat`
 - `cat .e"nv"` — string concatenation, regex doesn't see `.env`
 - `$(cat .env)` — subshell, the inner command is invisible to the outer regex
 - `cat .env | base64` — the secret is still leaked, just encoded
 
-These are not hypothetical — LLMs naturally produce shell compositions like redirects and subshells. The POC deferred tokenizer work to keep scope tight; this change addresses that gap.
+These are not hypothetical — LLMs naturally produce shell compositions like redirects and subshells. The MVP deferred tokenizer work to keep scope tight; this change addresses that gap.
 
 The tokenizer also enables Smart Piped Command Detection (deferred from change-5-command-transforms), which requires analyzing each pipeline stage independently.
 
@@ -110,7 +110,7 @@ If the last stage is safe, `findSaferCommand()` returns null and the engine does
 
 **Rationale**:
 - The dangerous part is always the *last* stage — if it limits output, the pipeline is safe
-- This is a post-POC re-introduction of the feature deferred from change-5, now built on proper structural analysis instead of regex
+- This is a post-MVP re-introduction of the feature deferred from change-5, now built on proper structural analysis instead of regex
 - Conservative thresholds — better to block a safe command than allow an unsafe one
 - Thresholds are configurable constants, not magic numbers in regex
 

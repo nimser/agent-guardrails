@@ -2,7 +2,7 @@
 
 ## Intent
 
-Create an opencode Adapter that uses `block` Behavior to prevent secret leaks. This is the second Adapter in the POC, proving portability across Harnesses.
+Create an opencode Adapter that uses `block` Behavior to prevent secret leaks. This is the second Adapter in the MVP, proving portability across Harnesses.
 
 ## Problem
 
@@ -51,7 +51,7 @@ opencode supports:
 - **redact**: Yes (can mutate `output.result` in `tool.execute.after` — Tool Result)
 - **confirm**: No (no native UI)
 
-For this POC, we only use `block`. `suggest`/`run`/`redact` come later.
+For this MVP, we only use `block`. `suggest`/`run`/`redact` come later.
 
 ## Adapter Structure
 

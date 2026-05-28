@@ -109,7 +109,7 @@ Agent Guardrails needs to block secret leaks in the first vertical slice. This c
 - Regex is best-effort first layer (defense in depth)
 - Agent can evade via redirects (`cat < .env`), string concatenation (`cat .e"nv"`), or alternative tools (`python3 -c "print(open('.env').read())"`)
 - `redact` Behavior (change-10) is the backstop for anything that slips through
-- Shell tokenizer planned for post-POC for more robust matching
+- Shell tokenizer planned for post-MVP for more robust matching
 
 ## Migration Plan
 

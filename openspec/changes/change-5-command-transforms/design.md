@@ -25,8 +25,8 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 - `redact` Behavior (covered in `change-10-redact-output`)
 - `confirm` Behavior (covered in `change-11-interactive-confirmation`)
 - Git Transforms (covered in `change-9-git-guardrails`)
-- Smart Piped Command Detection (deferred to post-POC with shell tokenizer)
-- Multiple suggestions / confidence scoring (deferred to post-POC with intent analysis)
+- Smart Piped Command Detection (deferred to post-MVP with shell tokenizer)
+- Multiple suggestions / confidence scoring (deferred to post-MVP with intent analysis)
 
 ## Decisions
 
@@ -35,18 +35,18 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 **Choice**: `findSaferCommand()` returns one safer command string or null
 
 **Rationale**:
-- POC scope: each rule has one known best alternative
+- MVP scope: each rule has one known best alternative
 - Engine picks deterministically — no Harness-side selection needed
 - `run` Behavior (future) also needs engine to pick
-- Multiple suggestions with intent-based scoring deferred to post-POC
+- Multiple suggestions with intent-based scoring deferred to post-MVP
 
 ### Decision 2: Smart Piped Command Detection deferred
 
-**Choice**: Drop Smart Piped Detection from POC entirely
+**Choice**: Drop Smart Piped Detection from MVP entirely
 
 **Rationale**:
 - Current regex-based approach is inherently bypassable (`head -50` vs `head -5`, `grep -o '.*'`)
-- Needs shell tokenizer for proper analysis (post-POC dependency)
+- Needs shell tokenizer for proper analysis (post-MVP dependency)
 - Future design: `allowedSafePipeCommands` list + semantic similarity matching via tokenizer
 - Requires its own spec change with proper design discussion
 
@@ -61,7 +61,7 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 - If none available → `findSaferCommand()` returns null → falls back to block
 - No guessing — secure by default
 
-### Decision 4: Shell-based format-aware redaction for POC
+### Decision 4: Shell-based format-aware redaction for MVP
 
 **Choice**: Suggest shell sed/jq pipelines based on detected format
 
@@ -78,7 +78,7 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 - Rule IDs (`sops.decrypt`, `env.read`) remain stable
 - Only the Action changes (block → suggest)
 - kubernetes, gh-cli, direnv are high-frequency tools in dev workflows
-- vault dropped from POC (enterprise-focused, smallest audience, moved to future-secret-packs.md backlog)
+- vault dropped from MVP (enterprise-focused, smallest audience, moved to future-secret-packs.md backlog)
 
 ### Decision 6: Suggest as universal Behavior
 
@@ -115,7 +115,7 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 ### Risk: Shell-based redaction is imperfect
 **Mitigation**:
 - TypeScript format-aware redaction comes with `run` Behavior
-- For POC, shell pipelines are good enough for the `suggest` use case
+- For MVP, shell pipelines are good enough for the `suggest` use case
 - Agent decides whether to execute the suggestion
 
 ## Migration Plan

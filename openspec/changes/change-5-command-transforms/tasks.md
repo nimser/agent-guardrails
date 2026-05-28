@@ -104,4 +104,4 @@
 - [ ] 10.1 Document kubernetes, gh-cli, and direnv Rule Packs
 - [ ] 10.2 Document SOPS format detection (extension, --output-type, --input-type, fallback to block)
 - [ ] 10.3 Document suggest → block fallback behavior
-- [ ] 10.4 Note Smart Piped Command Detection is deferred to post-POC
+- [ ] 10.4 Note Smart Piped Command Detection is deferred to post-MVP

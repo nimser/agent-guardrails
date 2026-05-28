@@ -58,7 +58,7 @@ Implement confirmation that:
 
 **Rationale**:
 - Confirmation is UX enhancement, not core safety
-- Can be added after POC is proven
+- Can be added after MVP is proven
 - Different Harnesses have different Capabilities
 
 ## Success Criteria

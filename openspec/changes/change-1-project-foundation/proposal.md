@@ -173,4 +173,4 @@ None - this is the foundational change.
 - **Risk**: Harness Capabilities change over time
   - **Mitigation**: Model is easy to update, test with real Harnesses
 - **Risk**: Regex-based matchers are bypassable via command composition (redirects, string concatenation, alternative tools)
-  - **Mitigation**: Regex is best-effort first layer; `redact` Behavior (change-10) is the backstop. Shell tokenizer post-POC for more robust matching.
+  - **Mitigation**: Regex is best-effort first layer; `redact` Behavior (change-10) is the backstop. Shell tokenizer post-MVP for more robust matching.

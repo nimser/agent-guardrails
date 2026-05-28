@@ -108,12 +108,12 @@ The system MUST detect commands reading private key files.
 
 ### Requirement: Smart Piped Command Detection (Deferred)
 
-Smart Piped Command Detection is deferred to post-POC. All piped commands that match dangerous patterns WILL be blocked/suggested, even if they have precautions.
+Smart Piped Command Detection is deferred to post-MVP. All piped commands that match dangerous patterns WILL be blocked/suggested, even if they have precautions.
 
 #### Scenario: Deferred behavior
 - **WHEN** a piped command like `sops -d secrets.yaml | head -5` is encountered
 - **THEN** the system WILL treat it as a regular match and suggest/block accordingly
-- **AND** proper Smart Piped Detection will be added post-POC with shell tokenizer
+- **AND** proper Smart Piped Detection will be added post-MVP with shell tokenizer
 
 ### Requirement: Flag Preservation
 The system MUST preserve command flags in safer alternatives.
