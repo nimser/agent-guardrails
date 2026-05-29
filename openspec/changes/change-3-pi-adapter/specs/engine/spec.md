@@ -1,5 +1,32 @@
 ## ADDED Requirements
 
+### Requirement: Engine Decomposition into Pure Function Modules
+The engine MUST be decomposed into focused modules rather than implemented as a monolithic function.
+
+#### Scenario: Extracted modules
+- WHEN the engine is implemented
+- THEN it MUST compose the following extracted modules:
+  - `src/core/normalizer.ts` — pure function `normalizeToolCall(tool, args) → ToolCallContext`
+  - `src/matcher/command-splitter.ts` — pure function `splitCommands(command) → string[]`
+  - `src/resolver/action-resolver.ts` — pure function `resolveAction(action, caps, ctx?) → GuardrailAction`
+  - `src/engine/stats-tracker.ts` — `StatsTracker` class with `record()`, `getStats()`, `reset()` methods
+- AND `src/engine/engine.ts` MUST contain only orchestration logic (composing the above modules)
+- AND each extracted module MUST be independently testable without requiring the full engine
+
+#### Scenario: Module responsibilities
+- WHEN examining the engine implementation
+- THEN Normalization logic MUST live in `src/core/normalizer.ts` (not in adapters or engine)
+- AND command splitting logic MUST live in `src/matcher/command-splitter.ts` (not embedded in engine)
+- AND action resolution with fallback chains MUST live in `src/resolver/action-resolver.ts` (not duplicated across engine/adapters)
+- AND statistics tracking state MUST be encapsulated in `StatsTracker` class (not module-level globals)
+
+#### Scenario: Independent testability
+- WHEN testing individual modules
+- THEN `normalizeToolCall()` MUST be testable without instantiating the engine
+- AND `splitCommands()` MUST be testable without instantiating the engine
+- AND `resolveAction()` MUST be testable without instantiating the engine or loading rule packs
+- AND `StatsTracker` instances MUST be testable in isolation
+
 ### Requirement: matchAndResolve Function
 The system MUST provide a `matchAndResolve()` function in engine (`src/engine/`) that evaluates a `ToolCallContext` against Rule Packs and returns the effective Guardrail Action.
 

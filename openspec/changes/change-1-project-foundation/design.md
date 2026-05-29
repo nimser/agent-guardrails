@@ -184,13 +184,14 @@ See `docs/matching-strategy.md` for full specification.
 
 ### Decision 12: Multi-line command splitting
 
-**Choice**: Split commands on `;`, `&&`, `||`, `\n` before matching
+**Choice**: Split commands on `;`, `&&`, `||`, `\n` before matching. Implemented as the extracted `splitCommands()` pure function in `src/matcher/command-splitter.ts` (see Decision 19).
 
 **Rationale**:
 - Catches composition via command chaining
 - Cheap string operation, no shell parsing required
 - Catches ~80% of composition cases
 - Limitations (variable tracking, command substitution) deferred to shell tokenizer (Change 8)
+- Extracted as standalone pure function for independent testability and reuse
 
 ### Decision 13: Domain events (internal only)
 
@@ -263,6 +264,130 @@ Post-MVP: Tier 2 (JSON file + CLI query) in `openspec/could-have-features.md`.
 - Inherently bypassable via command composition (redirects, string concat, alternative tools)
 - `redact` Behavior (change-10) is the backstop for anything that slips through
 - Shell tokenizer planned for post-MVP for more robust matching
+
+### Decision 19: Engine Decomposition into Pure Function Modules
+
+**Choice**: Decompose the engine into focused modules from the start of 0.1.0, rather than building a monolithic `engine.ts` and refactoring later.
+
+**Problem**: The engine module would otherwise handle 8+ distinct responsibilities:
+1. Orchestration (coordinating matching and resolution flow)
+2. Normalization (adapters normalize, but engine could own this)
+3. Command splitting (multi-line matching logic)
+4. Rule matching (iterating rules and evaluating matchers)
+5. Action resolution (fallback chains and capability checks)
+6. Statistics tracking (incrementing counters)
+7. Event emission (domain events, discarded in MVP)
+8. Template interpolation (`{variable}` substitution in messages)
+
+**Solution**: Extract each concern into its own module as pure functions or small classes:
+
+```
+src/
+  core/
+    types.ts              # Type definitions
+    normalizer.ts         # Pure function: normalizeToolCall(tool, args) → ToolCallContext
+    validation.ts         # Validation functions
+  matcher/
+    registry.ts           # Matcher registry
+    command-splitter.ts   # Pure function: splitCommands(command) → string[]
+    handlers/             # Individual matchers
+  resolver/
+    action-resolver.ts    # Pure function: resolveAction(action, caps, ctx?) → GuardrailAction
+    fallback-chain.ts     # Fallback logic (part of action-resolver)
+  engine/
+    engine.ts             # Orchestration only — composes the above modules
+    stats-tracker.ts      # StatsTracker class (stateful, encapsulated)
+```
+
+**Extracted Modules**:
+
+1. **Normalizer** (`src/core/normalizer.ts`):
+   ```typescript
+   export function normalizeToolCall(tool: string, args: any): ToolCallContext {
+     if (tool === 'Bash' && typeof args.command === 'string') {
+       return { toolName: 'bash', command: args.command };
+     }
+     if (tool === 'Read' && typeof args.path === 'string') {
+       return { toolName: 'read', filePath: args.path };
+     }
+     // ... other tools
+     return { toolName: tool };
+   }
+   ```
+
+2. **Command Splitter** (`src/matcher/command-splitter.ts`):
+   ```typescript
+   export function splitCommands(command: string): string[] {
+     return command.split(/[;&
+]+|\|\|/).map(s => s.trim()).filter(Boolean);
+   }
+   ```
+
+3. **Action Resolver** (`src/resolver/action-resolver.ts`):
+   ```typescript
+   export function resolveAction(
+     action: GuardrailAction,
+     capabilities: HarnessCapabilities,
+     saferCommand?: string
+   ): GuardrailAction {
+     // Apply fallback chains
+     // Handle capability checks
+     // Interpolate templates
+   }
+   ```
+
+4. **Stats Tracker** (`src/engine/stats-tracker.ts`):
+   ```typescript
+   export class StatsTracker {
+     private stats = { checks: 0, blocks: 0, suggests: 0 };
+     record(action: GuardrailAction | null): void { /* ... */ }
+     getStats(): Stats { return { ...this.stats }; }
+     reset(): void { this.stats = { checks: 0, blocks: 0, suggests: 0 }; }
+   }
+   ```
+
+**Engine after decomposition:**
+```typescript
+// src/engine/engine.ts — orchestration only
+import { splitCommands } from '../matcher/command-splitter';
+import { StatsTracker } from './stats-tracker';
+
+const statsTracker = new StatsTracker();
+
+export function matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: HarnessCapabilities): GuardrailAction | null {
+  const commands = splitCommands(ctx.command || '');
+
+  for (const cmd of commands) {
+    const matchCtx = { ...ctx, command: cmd };
+    const matches = matchRules(matchCtx, packs, registry);
+
+    if (matches.length > 0) {
+      const action = resolveAction(matches[0].rule.defaultAction, caps);
+      statsTracker.record(action);
+      return action;
+    }
+  }
+
+  statsTracker.record(null);
+  return null;
+}
+
+export function getStats() { return statsTracker.getStats(); }
+export function resetStats() { statsTracker.reset(); }
+```
+
+**Rationale**:
+- **Test isolation**: Test `resolveAction` without full engine setup, test `splitCommands` independently
+- **Reusability**: Adapters can call `normalizeToolCall` directly if needed
+- **Clarity**: Each module has one clear responsibility
+- **Growth path**: Adding caching, audit trails, or new features means adding modules, not growing a monolith
+- **No extra cost**: These are simple extractions (move function to file, export/import) — no architectural overhead
+
+**Relation to post-0.1.0 pipeline**: This decomposition is the prerequisite for the Pipeline/Chain of Responsibility Pattern (see `openspec/future-architecture-decisions.md`). Once functions are in separate modules, wrapping them in pipeline stages is straightforward.
+
+**Alternatives considered**:
+- **Build monolithic first, refactor later**: Rejected — the refactor cost is higher than doing it right the first time, and the extractions are trivial
+- **Full pipeline pattern in MVP**: Rejected — over-engineering for 2-3 adapters; decomposition gives 80% of the benefit at 20% of the cost
 
 ## Risks / Trade-offs
 

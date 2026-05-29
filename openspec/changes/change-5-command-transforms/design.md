@@ -100,6 +100,45 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 - Generic message includes `{matched}` so agent knows what was caught
 - No guessing or partial suggestions
 
+### Decision 8: Placement in the decomposed resolver layer
+
+**Choice**: `findSaferCommand()` and `detectSopsFormat()` live in the `src/resolver/` directory, not as standalone root modules.
+
+**Rationale**:
+- Consistent with Change 1 Decision 19 (Engine Decomposition): the resolver layer owns action resolution logic
+- `findSaferCommand()` is a helper to `resolveAction()` — when action type is `suggest`, resolver calls `findSaferCommand` to look up the replacement
+- Keeps the dependency direction clean: `engine/ → resolver/ → core/`
+- `safer-commands.ts` and `sops-format.ts` are pure functions with the same testability characteristics as `action-resolver.ts`
+- Exported from resolver layer index, so `engine.ts` imports them via the resolver layer
+
+**File structure after this change:**
+```
+src/resolver/
+  action-resolver.ts     # Pure function: resolveAction() — already from Change 1
+  fallback-chain.ts      # Fallback logic (part of action-resolver)
+  safer-commands.ts      # Pure function: findSaferCommand()
+  sops-format.ts         # Pure function: detectSopsFormat()
+```
+
+**Resolver layer after this change:**
+```typescript
+// src/resolver/action-resolver.ts
+import { findSaferCommand } from './safer-commands';
+
+export function resolveAction(action, caps, ctx?) {
+  // ... existing fallback chain logic ...
+  if (action.type === 'suggest') {
+    const saferCmd = findSaferCommand(ctx?.command);
+    if (saferCmd === null) {
+      // suggest → block fallback
+      return { type: 'block', message: `Blocked: \`${ctx?.matched}\` — no safer alternative available.` };
+    }
+    return { ...action, replacement: saferCmd };
+  }
+  // ...
+}
+```
+
 ## Risks / Trade-offs
 
 ### Risk: Suggested command doesn't accomplish same goal

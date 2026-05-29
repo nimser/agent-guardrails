@@ -14,14 +14,12 @@
 - [ ] 2.5 Import or define `OPENCODE_CAPABILITIES` from core (`src/core/`)
 - [ ] 2.6 Register `tool.execute.before` hook for ALL tools
 
-## 3. ToolCallContext Normalization
+## 3. ToolCallContext Normalization (Using Extracted Normalizer)
 
-- [ ] 3.1 Create `src/normalize.ts` with `normalizeToContext(input, output): ToolCallContext` function
-- [ ] 3.2 Handle bash tool: `{ toolName: "bash", command: output.args.command }`
-- [ ] 3.3 Handle read tool: `{ toolName: "read", filePath: output.args.path }`
-- [ ] 3.4 Handle write tool: `{ toolName: "write", filePath: output.args.path }`
-- [ ] 3.5 Handle unknown tools: `{ toolName: input.tool }` (catch-all, passes through)
-- [ ] 3.6 Export normalizeToContext for testing
+- [ ] 3.1 Adapter's `normalizeToContext(input, output)` delegates to `normalizeToolCall()` from `src/core/normalizer.ts` (Change 1 task 5.0a) for type dispatch
+- [ ] 3.2 Adapter extracts opencode-specific event fields (e.g., `output.args.command`, `output.args.path`) and passes them to `normalizeToolCall`
+- [ ] 3.3 Handle unknown tools: `{ toolName: input.tool }` (catch-all, passes through)
+- [ ] 3.4 Export adapter-specific normalizeToContext for testing
 
 ## 4. Hook Logic
 

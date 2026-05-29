@@ -1,10 +1,13 @@
-## 1. Engine Package
+## 1. Engine Package (Orchestrates Decomposed Modules from Change 1)
 
-- [ ] 1.1 Create `src/engine/` directory with `package.json`, `tsconfig.json`, `vitest.config.ts`
-- [ ] 1.2 Implement `ToolCallContext` discriminated union type (or import from core if defined there)
-- [ ] 1.3 Implement `matchAndResolve(ctx, packs, capabilities)` — iterates rules, evaluates matchers, resolves fallback chain, interpolates `{matched}` templates
-- [ ] 1.4 Implement tool-type early exit — when `ctx` has no `command` and no `filePath`, return `null` without iterating rules. When only one field is present, skip rules whose matcher type requires the other
-- [ ] 1.5 Implement fallback chain resolution — `run → suggest → block`, `confirm → suggest`, `suggest` (no safer cmd) → `block` with generic message
+- [ ] 1.1 Create `src/engine/` directory
+- [ ] 1.2 `src/engine/engine.ts` implements `matchAndResolve(ctx, packs, capabilities)` as a thin orchestrator that composes:
+  - `splitCommands()` from `src/matcher/command-splitter.ts`
+  - `resolveAction()` from `src/resolver/action-resolver.ts`
+  - `StatsTracker` from `src/engine/stats-tracker.ts`
+- [ ] 1.3 `matchAndResolve` uses `splitCommands` to split commands, iterates rules, evaluates matchers via registry, calls `resolveAction` for fallback chain resolution, and records via `StatsTracker`
+- [ ] 1.4 Implement tool-type early exit — when `ctx` has no `command` and no `filePath`, return `null` without iterating rules
+- [ ] 1.5 Expose `getStats()` and `resetStats()` as module-level convenience wrappers around `StatsTracker`
 - [ ] 1.6 Unit tests for `matchAndResolve`: no match → null, match with supported action → action returned, match with unsupported action → fallback, suggest with null safer cmd → block
 - [ ] 1.7 Unit tests for early exit: tool with no fields → null, tool with only filePath → file rules only, tool with only command → bash rules only, tool with both → all rules
 
@@ -24,14 +27,12 @@
 - [ ] 3.5 Import or define `PI_CAPABILITIES` from core (`src/core/`)
 - [ ] 3.6 Register `tool_call` hook via `pi.on("tool_call", handler)` for ALL tools
 
-## 4. ToolCallContext Normalization
+## 4. ToolCallContext Normalization (Using Extracted Normalizer)
 
-- [ ] 4.1 Create `src/normalize.ts` with `normalizeToContext(event): ToolCallContext` function
-- [ ] 4.2 Handle bash tool: `{ toolName: "bash", command: event.input.command }`
-- [ ] 4.3 Handle read tool: `{ toolName: "read", filePath: event.input.path }`
-- [ ] 4.4 Handle write tool: `{ toolName: "write", filePath: event.input.path }`
-- [ ] 4.5 Handle unknown tools: `{ toolName: event.toolName }` (catch-all, passes through)
-- [ ] 4.6 Export normalizeToContext for testing
+- [ ] 4.1 Adapter's `normalizeToContext(event)` delegates to `normalizeToolCall()` from `src/core/normalizer.ts` (Change 1 task 5.0a) for type dispatch
+- [ ] 4.2 Adapter extracts Pi-specific event fields (e.g., `event.input.command`, `event.input.path`) and passes them to `normalizeToolCall`
+- [ ] 4.3 Handle unknown tools: `{ toolName: event.toolName }` (catch-all, passes through)
+- [ ] 4.4 Export adapter-specific normalizeToContext for testing
 
 ## 5. Hook Logic
 

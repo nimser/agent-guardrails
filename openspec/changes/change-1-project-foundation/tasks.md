@@ -69,58 +69,72 @@
 - [ ] 4.9 Add unit tests for each handler type
 - [ ] 4.10 Add unit tests for registry (register, evaluate, clear, duplicate handling)
 
-## 5. Multi-Line Splitting (in `src/matcher/`)
+## 5. Engine Module Extractions (Engine Decomposition)
 
-- [ ] 5.1 Implement `splitCommands(cmd: string): string[]` splitting on `;`, `&&`, `||`, `\n`
-- [ ] 5.2 Evaluate matchers against each segment independently
-- [ ] 5.3 Add unit tests for splitting (chained commands, multi-line)
-- [ ] 5.4 Add unit tests: matches fire on individual segments
+- [ ] 5.0a Create `src/core/normalizer.ts` with `normalizeToolCall(tool: string, args: any): ToolCallContext` pure function
+- [ ] 5.0b Add unit tests for normalizer: bash, read, write, unknown tools
+- [ ] 5.0c Create `src/matcher/command-splitter.ts` with `splitCommands(cmd: string): string[]` pure function splitting on `;`, `&&`, `||`, `\n`
+- [ ] 5.0d Add unit tests for command splitter (chained commands, multi-line, edge cases)
+- [ ] 5.0e Create `src/engine/stats-tracker.ts` with `StatsTracker` class encapsulating stats state
+- [ ] 5.0f Implement `StatsTracker.record(action)`, `getStats()`, `reset()` methods
+- [ ] 5.0g Add unit tests for StatsTracker (record, getStats, reset isolation)
 
-## 6. Resolver Layer (in `src/resolver/`)
+## 6. Multi-Line Splitting (in `src/matcher/`)
 
-- [ ] 6.1 Implement `resolveAction(action: GuardrailAction, caps: HarnessCapabilities, matchContext): GuardrailAction`
-- [ ] 6.2 Implement Action Fallback Chain: `run → suggest → block`, `confirm → suggest`, `suggest (no cmd) → block`
-- [ ] 6.3 Implement `{matched}` message template interpolation
-- [ ] 6.4 Implement generic fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
-- [ ] 6.5 Add unit tests for fallback chain (run→suggest→block, confirm→suggest, suggest→block)
-- [ ] 6.6 Add unit tests for message template interpolation
+- [ ] 6.1 Engine imports and uses `splitCommands()` from `src/matcher/command-splitter.ts`
+- [ ] 6.2 Evaluate matchers against each segment independently
+- [ ] 6.3 Add unit tests: matches fire on individual segments
+- [ ] 6.4 (splitting logic itself tested in task 5.0d)
 
-## 7. Engine Layer (in `src/engine/`)
+## 7. Resolver Layer (in `src/resolver/`) — Action Resolver Extraction
 
-- [ ] 7.1 Implement `matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: HarnessCapabilities): GuardrailAction | null`
-- [ ] 7.2 Implement internal `processMatch()` that returns `{ action, events }` with domain events
-- [ ] 7.3 `matchAndResolve` calls `processMatch` and returns only the action (events discarded in MVP)
-- [ ] 7.4 Add unit tests for engine orchestration
-- [ ] 7.5 Test Behavior enum values compile correctly
-- [ ] 7.6 Test rule type compilation with sample rules
-- [ ] 7.7 Test GuardrailMatcher discriminated union compiles
-- [ ] 7.8 Test ToolCallContext discriminated union enforces required fields
-- [ ] 7.9 Test Harness Capabilities match spec (pi: all true, opencode: confirm false, etc.)
-- [ ] 7.10 Test hasCapability helper returns correct booleans
-- [ ] 7.11 Verify zero dependencies in `src/core/` (yaml dep lives in infrastructure)
+- [ ] 7.1 Create `src/resolver/action-resolver.ts` with `resolveAction(action: GuardrailAction, caps: HarnessCapabilities, matchContext): GuardrailAction` pure function
+- [ ] 7.2 Implement Action Fallback Chain: `run → suggest → block`, `confirm → suggest`, `suggest (no cmd) → block`
+- [ ] 7.3 Implement `{matched}` message template interpolation
+- [ ] 7.4 Implement generic fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
+- [ ] 7.5 Add unit tests for fallback chain (run→suggest→block, confirm→suggest, suggest→block)
+- [ ] 7.6 Add unit tests for message template interpolation
+- [ ] 7.7 Add unit tests: resolveAction is testable without full engine setup
 
-## 8. Observability Tier 1 (in `src/engine/`)
+## 8. Engine Layer (in `src/engine/`) — Orchestration Only
 
-- [ ] 8.1 Create `src/engine/stats.ts` with `GuardrailStats` interface and counters
-- [ ] 8.2 Implement `getStats(): GuardrailStats` and `resetStats(): void`
-- [ ] 8.3 Engine increments counters (totalChecks, matches, blocks, suggests) during `matchAndResolve`
-- [ ] 8.4 Track top rule IDs (map of ruleId → count)
-- [ ] 8.5 Add unit tests: stats increment correctly
-- [ ] 8.6 Add unit tests: stats reset to zero
+- [ ] 8.1 Implement `matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: HarnessCapabilities): GuardrailAction | null` — orchestrates `splitCommands`, `matchRules`, `resolveAction`, `StatsTracker`
+- [ ] 8.2 Import and compose extracted modules: `splitCommands` from `matcher/command-splitter`, `resolveAction` from `resolver/action-resolver`, `StatsTracker` from `engine/stats-tracker`
+- [ ] 8.3 Implement internal `processMatch()` that returns `{ action, events }` with domain events
+- [ ] 8.4 `matchAndResolve` calls `processMatch` and returns only the action (events discarded in MVP)
+- [ ] 8.5 Add unit tests for engine orchestration (engine is thin: only composes imported modules)
+- [ ] 8.6 Test Behavior enum values compile correctly
+- [ ] 8.7 Test rule type compilation with sample rules
+- [ ] 8.8 Test GuardrailMatcher discriminated union compiles
+- [ ] 8.9 Test ToolCallContext discriminated union enforces required fields
+- [ ] 8.10 Test Harness Capabilities match spec (pi: all true, opencode: confirm false, etc.)
+- [ ] 8.11 Test hasCapability helper returns correct booleans
+- [ ] 8.12 Verify zero dependencies in `src/core/` (yaml dep lives in infrastructure)
 
-## 9. Module Exports
+## 9. Observability Tier 1 (in `src/engine/`)
 
-- [ ] 9.1 Create `src/index.ts` exporting all types from core
-- [ ] 9.2 Export matcher registry from matcher layer
-- [ ] 9.3 Export resolver functions from resolver layer
-- [ ] 9.4 Export `matchAndResolve` and `getStats` from engine layer
+- [ ] 9.1 Engine wraps `StatsTracker` instance (from task 5.0e) and exposes `getStats()` / `resetStats()` as module-level conveniences
+- [ ] 9.2 Engine increments counters (totalChecks, matches, blocks, suggests) during `matchAndResolve`
+- [ ] 9.3 Track top rule IDs (map of ruleId → count)
+- [ ] 9.4 Add unit tests: stats increment correctly
+- [ ] 9.5 Add unit tests: stats reset to zero
 
-## 10. Documentation
+## 10. Module Exports
 
-- [ ] 10.1 Create top-level `README.md` with usage examples
-- [ ] 10.2 Document Behavior model, Rule Pack interface, and Fallback Chain
-- [ ] 10.3 Document GuardrailMatcher types and ToolCallContext structure
-- [ ] 10.4 Document multi-layer matching strategy (reference `docs/matching-strategy.md`)
-- [ ] 10.5 Document YAML rule pack format (reference `docs/yaml-rule-packs.md`)
-- [ ] 10.6 Create `SECURITY.md` with regex bypassability disclaimer
-- [ ] 10.7 Create `CONTRIBUTING.md` with 5-minute YAML rule pack path
+- [ ] 10.1 Create `src/index.ts` exporting all types from core
+- [ ] 10.2 Export matcher registry from matcher layer
+- [ ] 10.3 Export `resolveAction` from resolver layer (`src/resolver/action-resolver.ts`)
+- [ ] 10.4 Export `normalizeToolCall` from core (`src/core/normalizer.ts`)
+- [ ] 10.5 Export `splitCommands` from matcher layer (`src/matcher/command-splitter.ts`)
+- [ ] 10.6 Export `matchAndResolve`, `getStats`, `resetStats` from engine layer
+
+## 11. Documentation
+
+- [ ] 11.1 Create top-level `README.md` with usage examples
+- [ ] 11.2 Document Behavior model, Rule Pack interface, and Fallback Chain
+- [ ] 11.3 Document GuardrailMatcher types and ToolCallContext structure
+- [ ] 11.4 Document multi-layer matching strategy (reference `docs/matching-strategy.md`)
+- [ ] 11.5 Document YAML rule pack format (reference `docs/yaml-rule-packs.md`)
+- [ ] 11.6 Create `SECURITY.md` with regex bypassability disclaimer
+- [ ] 11.7 Create `CONTRIBUTING.md` with 5-minute YAML rule pack path
+- [ ] 11.8 Document engine decomposition: which module owns which responsibility, where to add new features

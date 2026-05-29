@@ -26,9 +26,9 @@
 - [ ] 2.8 Set `direnv.exec` defaultAction to block (no safer alternative for exec)
 - [ ] 2.9 Set `direnv.source-env` defaultAction to suggest (`sed` redaction)
 
-## 3. findSaferCommand Implementation
+## 3. findSaferCommand Implementation (in resolver layer)
 
-- [ ] 3.1 Create `src/safer-commands.ts` with `findSaferCommand(command: string): string | null` function
+- [ ] 3.1 Create `src/resolver/safer-commands.ts` with `findSaferCommand(command: string): string | null` pure function (part of the decomposed resolver layer from Change 1 Decision 19)
 - [ ] 3.2 Implement env read detection and suggestion: `sed 's/=.*/=[REDACTED]/' {matched}`
 - [ ] 3.3 Implement sops detection with format-aware suggestion (see section 5)
 - [ ] 3.4 Implement kubectl detection and suggestion
@@ -38,18 +38,20 @@
 - [ ] 3.8 Return `null` when no known safer alternative exists
 - [ ] 3.9 Add unit tests: findSaferCommand returns correct suggestion per command type
 - [ ] 3.10 Add unit tests: findSaferCommand returns null for unknown commands
+- [ ] 3.11 Add unit tests: findSaferCommand is testable without full engine setup (pure function)
 
-## 4. Suggest → Block Fallback
+## 4. Suggest → Block Fallback (Integration with extracted action-resolver)
 
-- [ ] 4.1 Integrate findSaferCommand with engine's `resolveAction` function
+- [ ] 4.1 Integrate findSaferCommand with the extracted `resolveAction()` function in `src/resolver/action-resolver.ts` (Change 1 task 7.1) — import and call `findSaferCommand` internally
 - [ ] 4.2 When suggest Action and findSaferCommand returns null, fall back to block
 - [ ] 4.3 Fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
-- [ ] 4.4 Add unit tests: suggest falls back to block when no safer command found
-- [ ] 4.5 Add unit tests: fallback message includes `{matched}` interpolation
+- [ ] 4.4 Add unit tests: resolveAction delegates to findSaferCommand for suggest actions
+- [ ] 4.5 Add unit tests: suggest falls back to block when no safer command found
+- [ ] 4.6 Add unit tests: fallback message includes `{matched}` interpolation
 
-## 5. SOPS Format-Aware Redaction (Shell-Based)
+## 5. SOPS Format-Aware Redaction (Shell-Based, in resolver layer)
 
-- [ ] 5.1 Create `src/sops-format.ts` with format detection function
+- [ ] 5.1 Create `src/resolver/sops-format.ts` with format detection pure function (part of decomposed resolver layer)
 - [ ] 5.2 Implement `detectSopsFormat(command: string): 'yaml' | 'json' | 'env' | null` function
 - [ ] 5.3 Parse `--output-type` flag (highest priority)
 - [ ] 5.4 Parse `--input-type` flag (second priority)
@@ -81,9 +83,10 @@
 ## 8. Module Exports
 
 - [ ] 8.1 Export kubernetesRulePack, ghCliRulePack, direnvRulePack from index
-- [ ] 8.2 Export `findSaferCommand` from safer-commands.ts
-- [ ] 8.3 Export `detectSopsFormat` from sops-format.ts
+- [ ] 8.2 Export `findSaferCommand` from `src/resolver/safer-commands.ts` (via resolver layer index)
+- [ ] 8.3 Export `detectSupsFormat` from `src/resolver/sops-format.ts` (via resolver layer index)
 - [ ] 8.4 Update `ALL_RULE_PACKS` to include new packs
+- [ ] 8.5 Ensure resolver layer index (`src/resolver/index.ts`) exports `resolveAction`, `findSaferCommand`, and `detectSupsFormat`
 
 ## 9. Integration Tests
 

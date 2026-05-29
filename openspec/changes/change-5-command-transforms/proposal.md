@@ -21,16 +21,18 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** from `change-2-secret-blocking`:
 1. Reuse all Rule Packs from rule packs (`src/packs/`)
 2. Update Rule Default Actions from `block` to `suggest` with single Replacement command
-3. Implement `findSaferCommand()` returning a single safer command (or null)
+3. Implement `findSaferCommand()` returning a single safer command (or null), placed in `src/resolver/safer-commands.ts` as part of the decomposed resolver layer (see Change 1 Decision 19)
 4. Implement Format-aware SOPS Redaction via shell pipelines, format detected from file extension and `--output-type`/`--input-type` flags
-5. When `findSaferCommand()` returns null, fall back to `block` via the Action Fallback Chain
+5. Integrate `findSaferCommand()` with the existing `resolveAction()` function in `src/resolver/action-resolver.ts` — the engine already calls `resolveAction` for fallback chain resolution
+6. When `findSaferCommand()` returns null, fall back to `block` via the Action Fallback Chain
 
 ## Scope
 
 ### In Scope
 - Update Rule Pack Default Actions to `suggest` with single Replacement command
-- `findSaferCommand()` function returning a single safer command or null
+- `findSaferCommand()` function in `src/resolver/safer-commands.ts` (within the decomposed resolver layer)
 - Format-aware SOPS redaction via shell pipelines (format from extension and `--output-type`/`--input-type` flags)
+- Integration of `findSaferCommand()` with the existing `resolveAction()` in `src/resolver/action-resolver.ts`
 - New Rule Packs: `kubernetes`, `gh-cli`, `direnv`
 - Adapter updates to support `suggest` Behavior
 - Suggest → block fallback when no safer command found
@@ -138,7 +140,7 @@ Format-aware redaction uses shell pipelines. Format detection priority:
 
 ## Dependencies
 
-- Depends on `change-1-project-foundation` (types, Behavior model)
+- Depends on `change-1-project-foundation` (types, Behavior model, decomposed engine modules including `src/resolver/action-resolver.ts`)
 - Depends on `change-2-secret-blocking` (Rule Packs)
 - Depends on `change-3-pi-adapter` (Pi Adapter to update)
 - Depends on `change-4-opencode-adapter` (opencode Adapter to update)
