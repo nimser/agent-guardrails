@@ -1,9 +1,10 @@
 # Tasks: Secret Blocking
 
 > **TDD MANDATE**: Every task below follows Test-Driven Development. For each
-> rule pack: write failing tests for ALL positive and negative cases first
-> (RED), then create the rule pack until tests pass (GREEN), then refactor
-> (REFACTOR). **Never create rules before tests.** See `.agents/skills/tdd/SKILL.md`.
+> rule pack: write failing tests for the positive and negative cases (RED),
+> then create the rule pack until they pass (GREEN), then refactor (REFACTOR).
+> Related scenarios within a section may share one refactoring pass.
+> **Never create rules before tests.** See `.agents/skills/tdd/SKILL.md`.
 
 ## 1. Setup
 

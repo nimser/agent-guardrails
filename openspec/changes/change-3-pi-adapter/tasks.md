@@ -1,9 +1,10 @@
 # Tasks: Pi Adapter
 
 > **TDD MANDATE**: Every task below follows Test-Driven Development. For each
-> implementation item: write the failing test first (RED), then write the
-> minimal code to pass (GREEN), then refactor (REFACTOR). **Never write
-> implementation before the test.** See `.agents/skills/tdd/SKILL.md`.
+> implementation section: write failing tests for the related scenarios (RED),
+> then write the minimal code to make them pass (GREEN), then refactor
+> (REFACTOR). Related scenarios within a section may share one refactoring pass.
+> **Never write implementation before the tests.** See `.agents/skills/tdd/SKILL.md`.
 >
 > **Important**: This change does NOT create or modify `src/engine/`. The engine
 > (`matchAndResolve`, `getStats`, `resetStats`) was created in Change 1 and is

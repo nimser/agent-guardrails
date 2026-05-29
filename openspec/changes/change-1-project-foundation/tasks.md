@@ -1,9 +1,11 @@
 # Tasks: Project Foundation
 
 > **TDD MANDATE**: Every implementation task below MUST follow Test-Driven
-> Development via RED→GREEN→REFACTOR vertical slices. Write ONE failing test,
-> then write minimal code to pass, then refactor. Never write all tests first
-> then all implementation. See `.agents/skills/tdd/SKILL.md` for full workflow.
+> Development via RED→GREEN→REFACTOR. For each related group of scenarios,
+> write failing tests (RED), then implement until they pass (GREEN), then
+> refactor (REFACTOR). See `.agents/skills/tdd/SKILL.md`. Note: related
+> scenarios within a section may be batched before refactoring — do not
+> refactor after every individual test assertion.
 
 ## 1. Project Setup
 

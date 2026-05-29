@@ -1,9 +1,10 @@
 # Tasks: Command Transforms
 
 > **TDD MANDATE**: Every task below follows Test-Driven Development. For each
-> implementation item: write the failing test first (RED), then write the
-> minimal code to pass (GREEN), then refactor (REFACTOR). **Never write
-> implementation before the test.** See `.agents/skills/tdd/SKILL.md`.
+> implementation section: write failing tests for the related scenarios (RED),
+> then write the minimal code to make them pass (GREEN), then refactor
+> (REFACTOR). Related scenarios within a section may share one refactoring pass.
+> **Never write implementation before the tests.** See `.agents/skills/tdd/SKILL.md`.
 >
 > **Dependency**: This change depends on Changes 1–4. The engine, rule packs,
 > and both adapters already exist. We modify existing YAML rule packs and add
