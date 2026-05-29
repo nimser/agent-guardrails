@@ -42,7 +42,7 @@
 | **Run Action** | An action that stops the tool call, executes the `replacement`, and optionally shows a `message` | |
 | **Redact Action** | An action that allows the tool call and replaces output with `replacement` | |
 | **Confirm Action** | An action that prompts the user with a `message`, with an optional `fallback` action if confirmation UI is unavailable | |
-| **Replacement** | A string or array of strings representing safer alternative commands; when array, first element is primary recommendation | alternative, substitute, safer command |
+| **Replacement** | A string or array of strings representing the **Safer Alternative**; when array, first element is primary recommendation | substitute, safer command (field) |
 | **Fallback** | An action to use when the primary action cannot be performed (e.g., confirm falls back to suggest when native UI unavailable) | default action, degradation |
 | **Message** | Human-readable explanation attached to block, suggest, run, or confirm actions | reason, explanation |
 
@@ -84,9 +84,10 @@
 
 | Term | Definition | Aliases to avoid |
 |------|------------|------------------|
-| **Transform** | The process of converting a dangerous command into one or more safer alternatives | conversion, translation, rewrite |
-| **Safer Command** | An alternative command that accomplishes the same goal without exposing secrets, carrying `command`, `description`, and `confidence` fields | safe alternative, redacted command |
-| **Confidence** | A 0-1 score indicating how likely a safer command matches the user's intent; when multiple alternatives exist, first element in array is highest confidence | score, priority, weight |
+| **Transform** | The process of converting a dangerous command into one or more **Safer Alternatives** | conversion, translation, rewrite |
+| **Safer Alternative** | What the system provides to accomplish the same goal without exposing secrets; can be a command, flag change, pipeline addition, or output redaction | safer command (when not a full command), replacement, alternative |
+| **Safer Command** | The internal rich object type with `command`, `description`, and `confidence` fields used by transforms; the `command` field is extracted into the **Replacement** field on Actions | safer alternative (when referring to the type) |
+| **Confidence** | A 0-1 score indicating how likely a **Safer Alternative** matches the user's intent; when multiple alternatives exist, first element in array is highest confidence | score, priority, weight |
 | **Smart Piped Command Detection** | Logic that identifies piped commands already containing output-limiting precautions (`grep -o` with bounded context, `head`, `tail`, `wc`) and allows them through without blocking | pipe detection, safe pipe check |
 | **Flag Preservation** | Constraint that transforms must retain command flags (e.g., `--output-type`, `--age`) from the original command in all alternatives | flag retention, option preservation |
 | **Format-aware Redaction** | Redaction logic that adapts to the output format (YAML, JSON, ENV) rather than applying a single pattern. Triggered by SOPS `--output-type` flag. | format-aware scrubbing |

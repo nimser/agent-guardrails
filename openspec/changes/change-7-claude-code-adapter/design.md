@@ -6,7 +6,7 @@ Claude Code uses shell hooks with exit code protocol. Exit code 2 signals a bloc
 
 **Goals:**
 - Block dangerous commands via PreToolUse hook (Tool Call)
-- Suggest safer alternatives when available
+- Suggest **Safer Alternative**s when available
 - Detect secrets in PostToolUse Output (Tool Result)
 - Provide clear Messages in JSON
 

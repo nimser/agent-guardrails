@@ -272,7 +272,7 @@ rules:
       message: "Blocked: `{matched}` — tee can write secrets to sensitive files."
 ```
 
-**Risk escalation behavior:** When a hardening rule fires (Layer 3), the action is force-blocked regardless of user configuration — "guilty until proven innocent" for adversarial patterns. This is enforced by the engine: hardening pack rules cannot be overridden via `agent-guardrails.json`.
+**Risk escalation behavior:** When a hardening rule fires (Layer 3), the action is blocked with a nonOverridable **Block Action** regardless of user configuration — "guilty until proven innocent" for adversarial patterns. This is enforced by the engine: hardening pack rules cannot be overridden via `agent-guardrails.json`.
 
 ## Success Criteria
 
@@ -285,7 +285,7 @@ rules:
 - [ ] Multi-line splitting catches composition via `;`, `&&`, `||`, `\n`
 - [ ] All Rules have YAML definitions and unit tests
 - [ ] Rule packs loaded via infrastructure yaml-pack-loader
-- [ ] Force-block escalation: hardening rules cannot be overridden by user config
+- [ ] NonOverridable Block Action: hardening rules cannot be overridden by user config
 - [ ] Rule Packs export cleanly for Adapter consumption
 
 ## Dependencies
@@ -297,7 +297,7 @@ rules:
 - **Risk**: False positives (legitimate file reads blocked)
   - **Mitigation**: Precise Guardrail Matchers, configurable per-project
 - **Risk**: Layer 3 wrapper detection false positives (legitimate eval usage)
-  - **Mitigation**: eval/bash-c rare in coding agent context; force-block default can be reconsidered post-MVP based on issue reports
+  - **Mitigation**: eval/bash-c rare in coding agent context; nonOverridable Block Action default can be reconsidered post-MVP based on issue reports
 - **Risk**: Missing patterns
   - **Mitigation**: Start with common patterns, extend via YAML rule packs (contributor-friendly)
 - **Risk**: Scope creep

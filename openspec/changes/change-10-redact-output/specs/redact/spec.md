@@ -43,7 +43,7 @@ The system MUST redact high-entropy strings near secret-related keywords.
 - THEN the content MUST NOT be redacted (low entropy)
 
 ### Requirement: Command Suggestion
-The system MUST suggest safer alternatives for dangerous commands.
+The system MUST provide **Replacements** for dangerous commands.
 
 #### Scenario: Suggest safer sops command
 - WHEN `redactCommand("sops -d secrets.yaml")` is called

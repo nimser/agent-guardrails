@@ -123,7 +123,7 @@ export function resolveAction(
 **4. Safer Commands** (`src/resolver/safer-commands.ts`):
 ```typescript
 export function findSaferCommand(command: string): string | null {
-  // Lookup safer alternative for known dangerous commands
+  // Lookup **Safer Alternative** for known dangerous commands
   // Delegates to src/resolver/sops-format.ts for SOPS format detection
 }
 ```
@@ -164,7 +164,7 @@ export function matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: H
     const matches = matchRules(matchCtx, packs, registry);
     
     if (matches.length > 0) {
-      // 3. Look up safer command if suggest behavior
+      // 3. Look up **Safer Alternative** if suggest behavior
       const rule = matches[0].rule;
       const saferCmd = rule.defaultAction.type === 'suggest'
         ? findSaferCommand(cmd)
@@ -244,7 +244,7 @@ class StatsStage implements Stage<GuardrailAction[], GuardrailAction | null> { /
 src/
   core/        ← types only
   matcher/     ← GuardrailMatcher evaluation
-  resolver/    ← Action resolution + fallback + safer commands
+  resolver/    ← Action resolution + fallback + **Safer Alternative**s
   engine/      ← orchestrator + stats
   packs/       ← built-in rule packs
   adapters/

@@ -37,7 +37,7 @@ The system MUST block dangerous commands via PreToolUse hook (Tool Call).
 - THEN hook MUST exit with code 0
 
 ### Requirement: PreToolUse Suggest
-The system MUST suggest safer alternatives for dangerous commands.
+The system MUST suggest **Safer Alternative**s for dangerous commands.
 
 #### Scenario: Suggest safer sops command
 - WHEN agent runs `sops -d secrets.yaml`

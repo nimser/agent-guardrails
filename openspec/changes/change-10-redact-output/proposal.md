@@ -17,7 +17,7 @@ Even with PreToolUse hooks blocking dangerous commands, agents can still encount
 Implement PostToolUse (Tool Result) redaction that:
 1. Scans Tool Output for secret patterns
 2. Replaces secrets with descriptive redaction markers
-3. Returns sanitized content to the agent
+3. Returns redacted content to the agent
 
 ## Harness Capabilities
 

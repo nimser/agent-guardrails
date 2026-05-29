@@ -23,7 +23,7 @@
 
 ## 4. SOPS Format Detection via Tokenizer
 
-- [ ] 4.1 Update SOPS safer command logic to extract `--output-type` and `--input-type` flag values from parsed tokens instead of regex
+- [ ] 4.1 Update SOPS **Safer Alternative** logic to extract `--output-type` and `--input-type` flag values from parsed tokens instead of regex
 - [ ] 4.2 Implement format detection priority: `--output-type` flag → `--input-type` flag → file extension → return `null` (fallback to block)
 - [ ] 4.3 Unit test: stdin SOPS (`echo ... | sops -d` with no flags, no file) returns `null` and falls back to block
 

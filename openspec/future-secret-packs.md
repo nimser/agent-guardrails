@@ -59,5 +59,5 @@ Pick these up as post-MVP changes. Reference `change-2-secret-blocking` and `cha
 When picking these up, prioritize by:
 1. **Likelihood of agent encountering it** — Terraform and AWS SSM top the list
 2. **Pattern clarity** — can you match without excessive false positives?
-3. **Block vs suggest feasibility** — is there a meaningful safer alternative?
+3. **Block vs suggest feasibility** — is there a meaningful **Safer Alternative**?
 4. **User demand** — check issues/discussions for requests

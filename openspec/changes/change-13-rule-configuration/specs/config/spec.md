@@ -41,7 +41,7 @@ The system MUST support different rule actions.
 - **WHEN** a Rule Action is specified as a Configured Action
 - **THEN** it MUST be one of:
   - `block` - Hard block, no alternative suggested
-  - `suggest` - Block + suggest safer alternative (Replacement)
+  - `suggest` - Block + provide **Replacement**
   - `warn` - Allow but warn
   - `off` - Rule disabled
 - **AND** it MUST override the Default Action for that Rule ID

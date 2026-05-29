@@ -64,7 +64,7 @@
   - `kubectl get secrets` → redacted kubectl alternative
   - `gh secret view MY_SECRET` → `gh secret list`
   - `source .env` → `sed 's/=.*/=[REDACTED]/' .env`
-  - `ls -la` → `null` (no safer command)
+  - `ls -la` → `null` (no **Safer Alternative**)
   - `echo "..." | sops -d` → `null` (stdin, no format)
 - [ ] 3.1 GREEN: Create `src/resolver/safer-commands.ts`:
   ```typescript
@@ -79,7 +79,7 @@
 - [ ] 4.0 RED: Write tests:
   - `resolveAction` with `suggest` action + `findSaferCommand` returns string → returns suggest with replacement
   - `resolveAction` with `suggest` action + `findSaferCommand` returns null → returns block with generic message
-  - Fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
+  - Fallback block message: `"Blocked: \`{matched}\` — no Replacement available."`
 - [ ] 4.1 GREEN: Update `src/resolver/action-resolver.ts`:
   - Import `findSaferCommand` from `./safer-commands`
   - When action type is `suggest`: call `findSaferCommand`, populate replacement
@@ -141,7 +141,7 @@
   - `cat .env` → suggest redacted version
   - `kubectl get secrets` → suggest redacted kubectl
   - `gh secret view MY_SECRET` → suggest `gh secret list`
-  - `direnv exec . cat .env` → block (no safer alternative)
+  - `direnv exec . cat .env` → block (no **Safer Alternative**)
   - `source .env` → suggest `sed` redaction
 - [ ] 8.1 GREEN: Verify all integration tests pass
 - [ ] 8.2 REFACTOR: Clean up

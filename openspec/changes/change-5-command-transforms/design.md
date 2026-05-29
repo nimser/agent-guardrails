@@ -1,6 +1,6 @@
 ## Context
 
-Agent Guardrails needs to suggest safer alternatives when dangerous commands are detected. This makes guardrails a productivity feature rather than just a restriction.
+Agent Guardrails needs to suggest **Safer Alternative**s when dangerous commands are detected. This makes guardrails a productivity feature rather than just a restriction.
 
 ## Clarification: suggest vs run
 
@@ -13,10 +13,10 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 ## Goals / Non-Goals
 
 **Goals:**
-- Suggest safer alternatives for env, sops, kubectl, gh-cli, direnv, private key commands
-- Implement `findSaferCommand()` returning single safer command or null
+- Suggest **Safer Alternative**s for env, sops, kubectl, gh-cli, direnv, private key commands
+- Implement `findSaferCommand()` returning single **Safer Alternative** or null
 - Implement Format-aware SOPS Redaction via shell pipelines (extension + --output-type/--input-type)
-- Implement suggest → block fallback when no safer command found
+- Implement suggest → block fallback when no **Safer Alternative** found
 - Implement `suggest` Behavior for all Harnesses
 
 **Non-Goals:**
@@ -30,9 +30,9 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 
 ## Decisions
 
-### Decision 1: Single safer command
+### Decision 1: Single **Safer Alternative**
 
-**Choice**: `findSaferCommand()` returns one safer command string or null
+**Choice**: `findSaferCommand()` returns one **Safer Alternative** string or null
 
 **Rationale**:
 - MVP scope: each rule has one known best alternative
@@ -132,7 +132,7 @@ export function resolveAction(action, caps, ctx?) {
     const saferCmd = findSaferCommand(ctx?.command);
     if (saferCmd === null) {
       // suggest → block fallback
-      return { type: 'block', message: `Blocked: \`${ctx?.matched}\` — no safer alternative available.` };
+      return { type: 'block', message: `Blocked: \`${ctx?.matched}\` — no Replacement available.` };
     }
     return { ...action, replacement: saferCmd };
   }

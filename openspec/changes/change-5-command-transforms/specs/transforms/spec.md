@@ -69,11 +69,11 @@ The system MUST implement format-aware SOPS redaction using shell pipelines, wit
 - AND engine MUST fall back to `block` via Action Fallback Chain
 
 ### Requirement: Single Safer Command
-The system MUST return a single safer command alternative.
+The system MUST return a single **Safer Alternative**.
 
 #### Scenario: findSaferCommand returns string or null
 - WHEN `findSaferCommand(command)` is called
-- THEN it MUST return a `string` (the safer command) or `null` (no known alternative)
+- THEN it MUST return a `string` (the **Safer Alternative**) or `null` (no known alternative)
 
 #### Scenario: Single suggestion for env read
 - WHEN command is `cat .env`
@@ -82,7 +82,7 @@ The system MUST return a single safer command alternative.
 #### Scenario: Suggest → block fallback
 - WHEN `findSaferCommand()` returns `null`
 - THEN engine MUST fall back to `block`
-- AND block message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
+- AND block message MUST be: `"Blocked: \`{matched}\` — no Replacement available."`
 
 ### Requirement: Suggest Behavior
 The system MUST implement `suggest` Behavior for all Harnesses via the shared engine.
@@ -93,7 +93,7 @@ The system MUST implement `suggest` Behavior for all Harnesses via the shared en
 
 #### Scenario: Suggest in Codex
 - WHEN Codex Adapter encounters suggest Action
-- THEN it MUST return deny with suggestion Message
+- THEN it MUST return deny with suggestion Message (block Behavior)
 
 #### Scenario: Suggest in opencode
 - WHEN opencode Adapter encounters suggest Action

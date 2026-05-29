@@ -70,7 +70,7 @@ Agent Guardrails needs a foundation that defines the Behavior model, Rule Pack i
 **Rationale**:
 - Deterministic behavior when Harness lacks Capability
 - Adapters don't reinvent fallback logic
-- `suggest` gracefully degrades to `block` when no safer command exists
+- `suggest` gracefully degrades to `block` when no **Safer Alternative** exists
 - Testable as a pure function in the engine
 
 ### Decision 6: Shared engine package
@@ -177,7 +177,7 @@ Validation runs when built-in packs load and when user YAML packs are parsed.
 - Layer 1 (substring): Fast O(n) screening, catches wrapped commands
 - Layer 2 (regex): Precise structural matching, standard usage
 - Layer 3 (wrappers): Adversarial detection, forces block
-- Risk escalation: wrappers + risky keywords = force block ("guilty until proven innocent")
+- Risk escalation: wrappers + risky keywords = nonOverridable Block Action ("guilty until proven innocent")
 - Implemented as `hardening` rule pack, no engine changes needed
 
 See `docs/matching-strategy.md` for full specification.

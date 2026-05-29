@@ -2,7 +2,7 @@
 
 ## Intent
 
-Implement `suggest` Behavior for dangerous commands. This adds safer alternatives that the LLM can retry. `run` Behavior (executing the alternative directly) is deferred to a later change.
+Implement `suggest` Behavior for dangerous commands. This adds **Safer Alternative**s that the LLM can retry. `run` Behavior (executing the alternative directly) is deferred to a later change.
 
 ## Problem
 
@@ -21,7 +21,7 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** from `change-2-secret-blocking`:
 1. Reuse all Rule Packs from rule packs (`src/packs/`)
 2. Update Rule Default Actions from `block` to `suggest` with single Replacement command
-3. Implement `findSaferCommand()` returning a single safer command (or null), placed in `src/resolver/safer-commands.ts` as part of the decomposed resolver layer (see Change 1 Decision 19)
+3. Implement `findSaferCommand()` returning a single **Safer Alternative** (or null), placed in `src/resolver/safer-commands.ts` as part of the decomposed resolver layer (see Change 1 Decision 19)
 4. Implement Format-aware SOPS Redaction via shell pipelines, format detected from file extension and `--output-type`/`--input-type` flags
 5. Integrate `findSaferCommand()` with the existing `resolveAction()` function in `src/resolver/action-resolver.ts` — the engine already calls `resolveAction` for fallback chain resolution
 6. When `findSaferCommand()` returns null, fall back to `block` via the Action Fallback Chain
@@ -35,7 +35,7 @@ Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** fro
 - Integration of `findSaferCommand()` with the existing `resolveAction()` in `src/resolver/action-resolver.ts`
 - New Rule Packs: `kubernetes`, `gh-cli`, `direnv`
 - Adapter updates to support `suggest` Behavior
-- Suggest → block fallback when no safer command found
+- Suggest → block fallback when no **Safer Alternative** found
 
 ### Out of Scope
 - `run` Behavior (deferred to later change - requires shell execution in hooks)
@@ -49,16 +49,16 @@ Enhance Adapters to support `suggest` Behavior using the **same Rule Packs** fro
 
 ### Single Safer Command
 
-`findSaferCommand()` returns a single safer command string or null:
+`findSaferCommand()` returns a single **Safer Alternative** string or null:
 
 ```typescript
 function findSaferCommand(originalCmd: string): string | null {
-  // Returns one safer alternative, or null if none known
+  // Returns one **Safer Alternative**, or null if none known
   // e.g., for "cat .env":
   //   → "sed 's/=.*/=[REDACTED]/' .env"
   // For "sops -d secrets.json":
   //   → "sops -d secrets.json | jq 'walk(if type == \"string\" then \"[REDACTED]\" else . end)'"
-  // For unknown command with no known safer alternative:
+  // For unknown command with no known **Safer Alternative**:
   //   → null (engine falls back to block)
 }
 ```
@@ -67,9 +67,9 @@ function findSaferCommand(originalCmd: string): string | null {
 
 When `findSaferCommand()` returns null, the engine steps down the Action Fallback Chain:
 ```
-suggest (no safer command found) → block
+suggest (no **Safer Alternative** found) → block
 ```
-The block message uses the generic contextual template: `"Blocked: \`{matched}\` — no safer alternative available."`
+The block message uses the generic contextual template: `"Blocked: \`{matched}\` — no Replacement available."`
 
 ### SOPS Format Detection
 
@@ -135,7 +135,7 @@ Format-aware redaction uses shell pipelines. Format detection priority:
 - [ ] direnv/dotenv transform suggests redacted alternatives
 - [ ] SOPS redaction falls back to block when format cannot be determined (stdin, no extension)
 - [ ] `suggest` works in all Harnesses
-- [ ] `suggest` falls back to `block` when no safer command found
+- [ ] `suggest` falls back to `block` when no **Safer Alternative** found
 - [ ] All transforms have unit tests
 
 ## Dependencies

@@ -62,9 +62,9 @@ type GuardrailBehavior = "block" | "suggest" | "run" | "redact" | "confirm";
 ```
 
 - **block**: Stop Tool Call, no alternative. Works in all Harnesses, all Phases.
-- **suggest**: Stop Tool Call, suggest safer alternative to LLM. Works in all Harnesses, before-tool Phase only.
-- **run**: Stop Tool Call, execute safer alternative in hook, return sanitized Output. Requires shell execution Capability.
-- **redact**: Allow Tool Call, sanitize Output before LLM sees it. Works in after-tool Phase only.
+- **suggest**: Stop Tool Call, provide **Replacement** to LLM. Works in all Harnesses, before-tool Phase only.
+- **run**: Stop Tool Call, execute **Replacement** in hook, return redacted Output. Requires shell execution Capability.
+- **redact**: Allow Tool Call, redact Output before LLM sees it. Works in after-tool Phase only.
 - **confirm**: Ask user (native UI or Fallback to suggest).
 
 ### Guardrail Action Types
@@ -86,10 +86,10 @@ The engine resolves Actions via a formalized fallback chain:
 ```
 run → suggest → block
 confirm → suggest
-suggest (no safer command found) → block (generic contextual message)
+suggest (no **Replacement** found) → **Block Action** (generic contextual message)
 ```
 
-When a Harness lacks the required Capability, the engine walks the chain. When `suggest` cannot find a safer command, it falls back to `block` with the generic message: `"Blocked: \`{matched}\` — no safer alternative available."`
+When a Harness lacks the required Capability, the engine walks the chain. When `suggest` cannot find a **Replacement**, it falls back to `block` with the generic message: `"Blocked: \`{matched}\` — no Replacement available."`
 
 ### GuardrailMatcher Type and Matcher Registry
 
@@ -237,7 +237,7 @@ The engine uses a risk-escalation model with three matching layers. See [docs/ma
 | 2 | Structural regex | Precise command structure matching |
 | 3 | Adversarial wrapper detection | Detects eval, bash -c, $(), subshells |
 
-**Risk escalation:** When Layer 3 detects wrappers AND Layer 1 detects risky keywords, the command is force-blocked regardless of configuration. Standard matches (Layer 1+2, no wrappers) use the configured behavior.
+**Risk escalation:** When Layer 3 detects wrappers AND Layer 1 detects risky keywords, the command is blocked with a nonOverridable **Block Action** regardless of configuration. Standard matches (Layer 1+2, no wrappers) use the configured behavior.
 
 This replaces the previous "regex-only" approach documented in earlier spec versions. The three-layer model is implemented as additional `hardening` rule pack rules, requiring no engine changes beyond the matcher registry.
 
@@ -250,4 +250,4 @@ This replaces the previous "regex-only" approach documented in earlier spec vers
 - **Risk**: Regex-based matchers are bypassable via command composition (redirects, string concatenation, alternative tools)
   - **Mitigation**: Three-layer matching strategy (substring + regex + wrapper detection) catches most evasion. `redact` Behavior (change-10) is the backstop. Shell tokenizer post-MVP for comprehensive structural analysis.
 - **Risk**: Layer 3 wrapper detection causes false positives on legitimate eval usage
-  - **Mitigation**: eval/bash-c in a coding agent context is rare; users can configure the hardening pack per-rule. Force-block is a safe default.
+  - **Mitigation**: eval/bash-c in a coding agent context is rare; users can configure the hardening pack per-rule. A nonOverridable **Block Action** is a safe default.

@@ -158,8 +158,8 @@
 - [ ] 7.0 RED: Write tests for `resolveAction()`:
   - `run` with `run: true` capability → returns run action
   - `run` with `run: false` capability → falls back to suggest
-  - `suggest` with safer command → returns suggest action with replacement
-  - `suggest` with no safer command → falls back to block
+  - `suggest` with **Safer Alternative** → returns suggest action with replacement
+  - `suggest` with no **Safer Alternative** → falls back to block
   - `confirm` with `confirm: false` capability → falls back to suggest
   - `block` → always returns block (no fallback needed)
   - `{matched}` interpolation in messages
@@ -174,7 +174,7 @@
 - [ ] 7.2 RED: Write tests for action fallback chain:
   - `run` → `suggest` → `block`
   - `confirm` → `suggest`
-  - `suggest` (no safer command) → `block`
+  - `suggest` (no **Safer Alternative**) → `block`
 - [ ] 7.3 GREEN: Implement fallback chain logic
 - [ ] 7.4 REFACTOR: Verify all resolver tests pass
 

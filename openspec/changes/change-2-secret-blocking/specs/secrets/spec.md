@@ -180,34 +180,34 @@ See `docs/matching-strategy.md` for the full multi-layer matching strategy speci
 #### Scenario: Block eval wrapper
 - WHEN agent runs a command containing `eval`
 - THEN the `hardening.wrapper-eval` Rule MUST match
-- AND the action MUST be force-block
+- AND the action MUST be a nonOverridable **Block Action**
 
 #### Scenario: Block bash -c / sh -c wrapper
 - WHEN agent runs `bash -c 'command'` or `sh -c 'command'`
 - THEN the `hardening.wrapper-bash-c` Rule MUST match
-- AND the action MUST be force-block
+- AND the action MUST be a nonOverridable **Block Action**
 
 #### Scenario: Block command substitution
 - WHEN agent runs a command containing `$(...)` or backtick substitution
 - THEN the `hardening.wrapper-subshell` Rule MUST match
-- AND the action MUST be force-block
+- AND the action MUST be a nonOverridable **Block Action**
 
 #### Scenario: Block read-redirect from sensitive path
 - WHEN agent runs `cat < .env` or `read < secret.pem`
 - THEN the `hardening.redirect-read-sensitive` Rule MUST match
-- AND the action MUST be force-block
+- AND the action MUST be a nonOverridable **Block Action**
 
 #### Scenario: Block write-redirect to sensitive path
 - WHEN agent runs `echo x > .env` or `echo x >> secret.key`
 - THEN the `hardening.redirect-write-sensitive` Rule MUST match
-- AND the action MUST be force-block
+- AND the action MUST be a nonOverridable **Block Action**
 
 #### Scenario: Block tee to sensitive path
 - WHEN agent runs `curl ... | tee .env`
 - THEN the `hardening.redirect-tee-sensitive` Rule MUST match
-- AND the action MUST be force-block
+- AND the action MUST be a nonOverridable **Block Action**
 
-#### Scenario: Force-block escalation
+#### Scenario: NonOverridable Block Action escalation
 - WHEN any hardening Rule matches
 - THEN the block action CANNOT be overridden by user configuration
 - AND the engine MUST mark hardening rule actions as non-overridable
@@ -267,7 +267,7 @@ The system MUST have comprehensive unit tests for all Rule Packs.
 - WHEN hardening Rules are tested
 - THEN wrapper detection positives MUST pass
 - AND wrapper detection negatives MUST pass
-- AND force-block semantics MUST be tested
+- AND nonOverridable Block Action semantics MUST be tested
 - AND tests MUST use isolated MatcherRegistry instances
 
 #### Scenario: Test YAML loading

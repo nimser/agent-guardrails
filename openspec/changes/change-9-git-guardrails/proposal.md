@@ -6,22 +6,22 @@ Implement git-specific safety Rules with configurable Behavior (block or suggest
 
 ## Problem
 
-Agents can run destructive git commands like `git reset --hard`, `rm -rf`, `git push --force` without user consent. Some users want to block these outright, others want to suggest safer alternatives via Configured Action.
+Agents can run destructive git commands like `git reset --hard`, `rm -rf`, `git push --force` without user consent. Some users want to block these outright, others want to provide **Replacements** via **Configured Action**.
 
 ## Solution
 
 Implement git Rule Pack with:
 1. Rules for destructive git operations
 2. Configurable Behavior: `block` or `suggest` per Rule via Configured Action
-3. Safer alternatives for `git push --force` → `--force-with-lease`
-4. Safer alternatives for `git reset --hard` → `git stash`
+3. **Replacements** for `git push --force` → `--force-with-lease`
+4. **Replacements** for `git reset --hard` → `git stash`
 
 ## Scope
 
 ### In Scope
 - `git` Rule Pack with configurable Behavior
 - Rules for: `rm -rf`, `git reset --hard`, `git clean -f`, `git branch -D`, `git checkout .`, `git restore .`, `git push --force`
-- Safer alternatives: `--force-with-lease`, `git stash`
+- **Replacements:** `--force-with-lease`, `git stash`
 - Unit tests for all Rules
 
 ### Out of Scope
@@ -33,7 +33,7 @@ Implement git Rule Pack with:
 
 1. Create `packages/git/` directory
 2. Implement git Rule Pack
-3. Implement safer alternatives
+3. Implement **Safer Alternatives**
 4. Export Rule Pack for Adapter consumption
 
 ## Git Rule Pack
@@ -94,9 +94,9 @@ const gitRulePack: RulePack = {
 - Users may want git Rules without secret Transforms
 - Clear separation of concerns
 
-### Decision 3: Safer alternatives as suggestions
+### Decision 3: **Safer Alternatives** as suggestions
 
-**Choice**: Provide safer alternatives as suggestions, not Replacements
+**Choice**: Provide **Safer Alternatives** as suggestions, not Replacements
 
 **Rationale**:
 - Git operations are context-dependent
@@ -107,7 +107,7 @@ const gitRulePack: RulePack = {
 ## Success Criteria
 
 - [ ] Git Rule Pack blocks destructive operations
-- [ ] Git Rule Pack suggests safer alternatives
+- [ ] Git Rule Pack suggests **Safer Alternatives**
 - [ ] Users can configure block vs suggest per Rule via Configured Action
 - [ ] All Rules have unit tests
 - [ ] Rule Pack exports cleanly for Adapter consumption
@@ -118,7 +118,7 @@ const gitRulePack: RulePack = {
 
 ## Risks
 
-- **Risk**: Safer alternatives don't accomplish same goal
+- **Risk**: **Safer Alternatives** don't accomplish same goal
   - **Mitigation**: Test each alternative with real git operations
 - **Risk**: False positives
   - **Mitigation**: Precise Guardrail Matchers, configurable per-project

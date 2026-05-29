@@ -18,9 +18,9 @@ Implement integration tests that:
 ## Scope
 
 ### In Scope
-- SOPS workflow: block → suggest → agent retries with Safer Command
+- SOPS workflow: block → suggest → agent retries with **Safer Alternative**
 - .env workflow: block → suggest redacted version
-- Git workflow: block → suggest safer alternative
+- Git workflow: block → suggest **Replacement**
 - Performance benchmarking
 
 ### Out of Scope

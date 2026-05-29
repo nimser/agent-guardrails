@@ -14,7 +14,7 @@ Create a Codex CLI Adapter that:
 1. Implements `guard.sh` shell script for PreToolUse/PostToolUse
 2. Creates `hooks.json` for hook registration
 3. Blocks dangerous commands with JSON permission decision
-4. Suggests safer alternatives when available
+4. Suggests **Safer Alternative**s when available
 
 ## Scope
 
@@ -104,7 +104,7 @@ Output (stdout):
 - [ ] `guard.sh` is executable and outputs valid JSON
 - [ ] PreToolUse blocks .env file reads
 - [ ] PreToolUse blocks sops -d commands with suggestion
-- [ ] PreToolUse suggests safer alternatives for dangerous commands
+- [ ] PreToolUse suggests **Safer Alternative**s for dangerous commands
 - [ ] PostToolUse detects secrets in output
 - [ ] Installation via `npx ag setup codex` works
 

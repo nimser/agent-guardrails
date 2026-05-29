@@ -14,7 +14,7 @@ Create a Claude Code Adapter that:
 1. Implements `guard.sh` shell script for PreToolUse/PostToolUse
 2. Creates `settings.json` snippet for hook configuration
 3. Blocks dangerous commands with exit code 2 and JSON message
-4. Suggests safer alternatives when available
+4. Suggests **Safer Alternative**s when available
 
 ## Scope
 
@@ -103,7 +103,7 @@ Exit code: 2
 - [ ] `guard.sh` is executable and outputs valid JSON
 - [ ] PreToolUse blocks .env file reads with exit code 2
 - [ ] PreToolUse blocks sops -d commands with suggestion
-- [ ] PreToolUse suggests safer alternatives for dangerous commands
+- [ ] PreToolUse suggests **Safer Alternative**s for dangerous commands
 - [ ] PostToolUse detects secrets in output with warning
 - [ ] Installation via `npx ag setup claude-code` works
 

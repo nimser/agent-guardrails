@@ -238,6 +238,6 @@
 - [ ] 10.1 Create `docs/rule-packs.md` documenting each Rule Pack
 - [ ] 10.2 Document pattern syntax and match types (bash-command, file-path, predicate)
 - [ ] 10.3 Document which tools/commands are blocked by each pack
-- [ ] 10.4 Document hardening pack behavior and force-block semantics
+- [ ] 10.4 Document hardening pack behavior and nonOverridable Block Action semantics
 - [ ] 10.5 Document the documented limitation: variable indirection is not caught (deferred to shell tokenizer)
 - [ ] 10.6 Add troubleshooting guide for false positives

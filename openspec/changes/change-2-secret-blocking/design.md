@@ -128,12 +128,12 @@ export function registerBuiltInPredicates(registry: PredicateRegistry): void {
 
 ### Decision 8: Risk escalation for hardening rules
 
-**Choice**: Hardening rules force-block and cannot be overridden by user configuration
+**Choice**: Hardening rules produce nonOverridable **Block Actions** and cannot be overridden by user configuration
 
 **Rationale**:
 - Adversarial patterns (eval, bash -c) are inherently suspicious in coding agent context
 - "Guilty until proven innocent" principle from matching strategy
-- Force-block prevents users from accidentally disabling critical security layer
+- NonOverridable Block Action prevents users from accidentally disabling critical security layer
 - Post-MVP: could add escape hatch for legitimate use cases
 
 **Implementation**:
@@ -152,7 +152,7 @@ export function registerBuiltInPredicates(registry: PredicateRegistry): void {
 ### Risk: Layer 3 hardening rules cause false positives
 **Mitigation**:
 - eval/bash-c are rare in legitimate coding agent workflows
-- Force-block is acceptable default
+- A nonOverridable Block Action is acceptable default
 - Document known false positive scenarios in troubleshooting guide
 
 ### Risk: Missing patterns

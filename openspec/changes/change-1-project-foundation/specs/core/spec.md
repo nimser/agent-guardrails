@@ -13,9 +13,9 @@ The system MUST define a TypeScript type for guardrail Behaviors.
 - WHEN the Behavior type is defined
 - THEN it MUST contain:
   - `block` - Stop Tool Call, no alternative. Works in all Harnesses, all Phases.
-  - `suggest` - Stop Tool Call, suggest safer alternative to LLM. Works in all Harnesses, before-tool Phase only.
-  - `run` - Stop Tool Call, execute safer alternative in hook, return sanitized Output. Requires shell execution Capability.
-  - `redact` - Allow Tool Call, sanitize Output before LLM sees it. Works in after-tool Phase only.
+  - `suggest` - Stop Tool Call, provide **Safer Alternative** to LLM. Works in all Harnesses, before-tool Phase only.
+  - `run` - Stop Tool Call, execute **Replacement** in hook, return redacted Output. Requires shell execution Capability.
+  - `redact` - Allow Tool Call, redact Output before LLM sees it. Works in after-tool Phase only.
   - `confirm` - Ask user (native UI or Fallback to suggest).
 
 #### Scenario: Phase-Behavior Matrix
@@ -223,8 +223,8 @@ The system MUST define a formalized fallback chain for resolving Actions.
 #### Scenario: resolveAction function
 - WHEN the engine calls `resolveAction(action, capabilities, matchContext)`
 - THEN it MUST walk the fallback chain if the Harness lacks the required Capability
-- AND if `suggest` cannot find a safer command, it MUST fall back to `block`
-- AND the fallback message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
+- AND if `suggest` cannot find a **Safer Alternative**, it MUST fall back to `block`
+- AND the fallback message MUST be: `"Blocked: \`{matched}\` — no Replacement available."`
 
 ### Requirement: Engine Package
 The system MUST provide an engine (`src/engine/`) package that centralizes matching and Action resolution.

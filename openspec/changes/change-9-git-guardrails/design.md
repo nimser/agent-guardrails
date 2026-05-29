@@ -6,7 +6,7 @@ Agent Guardrails needs git-specific safety rules to prevent destructive git oper
 
 **Goals:**
 - Block destructive git operations
-- Suggest safer alternatives
+- Suggest **Safer Alternatives**
 - Allow safe git commands
 - Export Rule Pack for Adapter consumption
 

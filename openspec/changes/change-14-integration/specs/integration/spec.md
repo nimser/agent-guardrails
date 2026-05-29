@@ -12,10 +12,10 @@ The system MUST handle the SOPS decrypt workflow end-to-end.
 
 #### Scenario: SOPS decrypt blocked
 - **WHEN** agent runs `sops -d secrets.yaml`
-- **THEN** system MUST block and suggest safer alternative
+- **THEN** system MUST block and suggest **Replacement**
 
 #### Scenario: Agent retries with safe command
-- **WHEN** agent retries with Safer Command
+- **WHEN** agent retries with **Safer Alternative**
 - **THEN** command MUST execute successfully
 
 ### Requirement: .env Workflow

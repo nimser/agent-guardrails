@@ -243,7 +243,7 @@ rules:
 ```
 
 **Behavior:**
-- Force-block: action cannot be overridden to 'allow'
+- NonOverridable Block Action: action cannot be overridden to 'allow'
 - Logged separately for security audit
 - Configurable: entire pack can be disabled (not individual rules)
 

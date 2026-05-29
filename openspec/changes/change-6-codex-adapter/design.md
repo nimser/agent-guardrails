@@ -6,7 +6,7 @@ Codex CLI uses shell hooks that communicate via JSON protocol. Hooks receive JSO
 
 **Goals:**
 - Block dangerous commands via PreToolUse hook (Tool Call)
-- Suggest safer alternatives when available
+- Suggest **Safer Alternative**s when available
 - Detect secrets in PostToolUse Output (Tool Result)
 - Provide clear Messages in JSON
 

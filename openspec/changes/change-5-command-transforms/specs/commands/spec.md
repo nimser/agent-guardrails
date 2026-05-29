@@ -8,28 +8,28 @@
 
 ## ADDED Requirements
 
-### Requirement: Safer Command Registry
-The system MUST maintain a registry of safer command alternatives.
+### Requirement: **Safer Alternative** Registry
+The system MUST maintain a registry of **Safer Alternatives**.
 
 #### Scenario: Registry structure
 - **WHEN** the SAFER_COMMANDS registry is loaded
 - **THEN** it MUST contain entries with:
   - `name: string` - Unique identifier
   - `detect: RegExp` - Command detection pattern
-  - `saferCmd: (originalCmd: string) => string | null` - Transformation function returning a single safer command or null
+  - `saferCmd: (originalCmd: string) => string | null` - Transformation function returning a single **Safer Alternative** or null
   - `description: string` - Human-readable description
 
 ### Requirement: findSaferCommand Function
-The system MUST provide a function to find a single safer alternative.
+The system MUST provide a function to find a single **Safer Alternative**.
 
-#### Scenario: Find safer command
+#### Scenario: Find **Safer Alternative**
 - **WHEN** `findSaferCommand(command)` is called with a dangerous command
-- **THEN** it MUST return a `string` (the safer command) or `null` (no known alternative)
+- **THEN** it MUST return a `string` (the **Safer Alternative**) or `null` (no known alternative)
 
-#### Scenario: No safer command found
+#### Scenario: No **Safer Alternative** found
 - **WHEN** `findSaferCommand(command)` returns `null`
 - **THEN** the engine MUST fall back to `block` via the Action Fallback Chain
-- **AND** the block message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
+- **AND** the block message MUST be: `"Blocked: \`{matched}\` — no Replacement available."`
 
 ### Requirement: Env Read Detection
 The system MUST detect commands that read .env files and suggest redacted alternatives.
@@ -82,7 +82,7 @@ The system MUST detect `kubectl get secrets` commands and suggest redacted alter
 - **THEN** system MUST suggest adding `-o jsonpath='{.data}' | jq 'map_values(@base64d | "[REDACTED]")'`
 
 ### Requirement: GitHub CLI Secret Detection
-The system MUST detect `gh secret view` commands and suggest safer alternatives.
+The system MUST detect `gh secret view` commands and suggest **Safer Alternatives**.
 
 #### Scenario: gh secret view detected
 - **WHEN** command matches `\bgh\s+secret\s+view\b`
@@ -124,17 +124,17 @@ Smart Piped Command Detection is deferred to post-MVP. All piped commands that m
 - **AND** proper Smart Piped Detection will be added post-MVP with shell tokenizer
 
 ### Requirement: Flag Preservation
-The system MUST preserve command flags in safer alternatives.
+The system MUST preserve command flags in **Safer Alternative**s.
 
 #### Scenario: SOPS with --output-type
 - **WHEN** command is `sops -d --output-type json secrets.yaml`
-- **THEN** safer alternative MUST use JSON redaction format based on the flag
+- **THEN** **Safer Alternative** MUST use JSON redaction format based on the flag
 - **AND** the replacement MUST include the `--output-type json` flag
 
 #### Scenario: SOPS with --input-type
 - **WHEN** command is `sops -d --input-type json` (with stdin)
-- **THEN** safer alternative MUST use JSON redaction format based on the flag
+- **THEN** **Safer Alternative** MUST use JSON redaction format based on the flag
 
 #### Scenario: SOPS with age key
 - **WHEN** command is `sops -d --age age1... secrets.yaml`
-- **THEN** safer alternative MUST preserve the `--age` flag
+- **THEN** **Safer Alternative** MUST preserve the `--age` flag

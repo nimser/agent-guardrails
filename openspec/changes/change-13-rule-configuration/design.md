@@ -49,7 +49,7 @@ Agent Guardrails needs a configuration system to allow users to customize guardr
 
 **Rationale**:
 - `block`: Hard block, no alternative
-- `suggest`: Block + suggest safer alternative (Replacement)
+- `suggest`: Block + provide **Replacement**
 - `warn`: Allow but warn (PostToolUse redaction still applies)
 - `off`: Rule disabled
 - These are Configured Action values that override Default Action
