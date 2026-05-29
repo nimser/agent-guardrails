@@ -65,7 +65,20 @@
 |------|------------|------------------|
 | **File-path Matcher** | A `GuardrailMatcher` with `type: "file-path"` that tests against the path argument of file-reading tools | path matcher, file matcher |
 | **Bash-command Matcher** | A `GuardrailMatcher` with `type: "bash-command"` that tests against the command string in bash tool calls | command matcher, shell matcher |
+| **Predicate Matcher** | A `GuardrailMatcher` with `type: "predicate"` that executes a JavaScript function for complex conditions; cannot be defined in YAML, requires TypeScript rule packs | predicate, predicate function |
 | **Defense in Depth** | Design principle of applying multiple matchers to the same concern (e.g., file-path AND bash-command for .env files) | dual matching, layered detection |
+| **Matcher Handler (Handler)** | The registered implementation class that evaluates a specific `GuardrailMatcher` type against a `ToolCallContext`; e.g., `BashCommandHandler` handles `type: "bash-command"` matchers | match handler, handler implementation |
+| **Matcher Registry** | The registry that maps `GuardrailMatcher` types to their `MatcherHandler` implementations, initialized via `initializeMatcherRegistry()` | matcher lookup, handler registry |
+
+## Matching Layers
+
+| Term | Definition | Aliases to avoid |
+|------|------------|------------------|
+| **Layer 1 (Pre-Filter)** | Substring-based fast screening for risky keyword pairs (e.g., `sops` + `-d`); O(n) string scan with no false negatives | substring pre-filter, keyword filter |
+| **Layer 2 (Structural Regex)** | Precise regex pattern matching on command structure; catches standard usage but misses adversarial wrapping | regex matching, structural matching |
+| **Layer 3 (Wrapper Detection)** | Detection of adversarial shell constructs (`eval`, `bash -c`, `sh -c`, `$()`) that trigger force-block regardless of Layer 2 result | wrapper detection, adversarial detection |
+| **Command Splitter** | Function that splits multi-command strings on `;`, `&&`, `||`, `\n` before matching to catch composition via chaining | command parser, multi-command splitter |
+| **Shell Tokenizer** | Planned future feature that parses shell syntax to track variable expansion and command substitution | shell parser |
 
 ## Transforms
 

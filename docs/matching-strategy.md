@@ -54,8 +54,8 @@ function hasAdversarialWrappers(cmd: string): boolean {
 
 ## Behavior Matrix
 
-| Substring (L1) | Regex (L2) | Wrappers (L3) | Interpretation | Action |
-|----------------|------------|---------------|----------------|--------|
+| Substring (L1) | Regex (L2) | Wrappers (L3) | Interpretation | Behavior |
+|----------------|------------|---------------|----------------|----------|
 | ❌ | ❌ | ❌ | Safe | Allow |
 | ✅ | ✅ | ❌ | Standard dangerous command | Configured behavior (suggest/run/etc.) |
 | ✅ | ❌ | ❌ | Substring false positive | Allow (regex didn't match) |
