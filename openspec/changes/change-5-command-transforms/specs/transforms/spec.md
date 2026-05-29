@@ -1,5 +1,14 @@
 # Delta for Command Transforms
 
+> **TDD MANDATE**: All requirements below MUST be implemented via RED→GREEN→REFACTOR
+> vertical slices. Write one failing test, implement minimal code to pass, refactor.
+> See `.agents/skills/tdd/SKILL.md`.
+>
+> **FORMAT**: New rule packs (kubernetes, gh-cli, direnv) MUST be YAML files
+> in `src/packs/`. Existing rule packs are modified in-place (YAML). TypeScript
+> is used for resolver logic only (`src/resolver/safer-commands.ts`,
+> `src/resolver/sops-format.ts`). See Change 1 Decision 16.
+
 ## ADDED Requirements
 
 ### Requirement: kubernetes Rule Pack

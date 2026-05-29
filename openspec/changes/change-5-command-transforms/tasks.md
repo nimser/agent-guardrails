@@ -1,110 +1,153 @@
-## 1. New Rule Packs
+# Tasks: Command Transforms
 
-- [ ] 1.1 Create `src/packs/kubernetes.ts` with kubernetesRulePack
-- [ ] 1.2 Add rule `kubernetes.secrets` with bash-command matcher `/\bkubectl\s+(get|describe)\s+secrets?\b/`
-- [ ] 1.3 Create `src/packs/gh-cli.ts` with ghCliRulePack
-- [ ] 1.4 Add rule `gh-cli.secret-view` with bash-command matcher `/\bgh\s+secret\s+view\b/`
-- [ ] 1.5 Add rule `gh-cli.variable-get` with bash-command matcher `/\bgh\s+variable\s+get\b/`
-- [ ] 1.6 Create `src/packs/direnv.ts` with direnvRulePack
-- [ ] 1.7 Add rule `direnv.exec` with bash-command matcher `/\bdirenv\s+exec\b/`
-- [ ] 1.8 Add rule `direnv.source-env` with bash-command matcher `/\b(source|\.)\s+\.env\b/`
-- [ ] 1.9 Add unit tests for kubernetes rules (positive + negative)
-- [ ] 1.10 Add unit tests for gh-cli rules (positive + negative)
-- [ ] 1.11 Add unit tests for direnv rules (positive + negative)
-- [ ] 1.12 Export new packs from rule packs (`src/packs/`) index
-- [ ] 1.13 Update `ALL_RULE_PACKS` to include kubernetes, gh-cli, direnv
+> **TDD MANDATE**: Every task below follows Test-Driven Development. For each
+> implementation item: write the failing test first (RED), then write the
+> minimal code to pass (GREEN), then refactor (REFACTOR). **Never write
+> implementation before the test.** See `.agents/skills/tdd/SKILL.md`.
+>
+> **Dependency**: This change depends on Changes 1–4. The engine, rule packs,
+> and both adapters already exist. We modify existing YAML rule packs and add
+> new resolver functions.
 
-## 2. Update Rule Pack DefaultActions to Suggest
+## 1. New Rule Packs (YAML)
 
-- [ ] 2.1 Update `env.read` defaultAction to suggest with single replacement and `{matched}` template
-- [ ] 2.2 Update `env.read-bash` defaultAction to suggest with single replacement
-- [ ] 2.3 Update `sops.decrypt` defaultAction to suggest with format-aware replacement
-- [ ] 2.4 Update `private-key.read` defaultAction to suggest with single replacement
-- [ ] 2.5 Set `kubernetes.secrets` defaultAction to suggest
-- [ ] 2.6 Set `gh-cli.secret-view` defaultAction to suggest (`gh secret list`)
-- [ ] 2.7 Set `gh-cli.variable-get` defaultAction to suggest (`gh variable list`)
-- [ ] 2.8 Set `direnv.exec` defaultAction to block (no safer alternative for exec)
-- [ ] 2.9 Set `direnv.source-env` defaultAction to suggest (`sed` redaction)
+> **TDD cycle**: Write failing tests that load each YAML pack and verify
+> matching behavior before creating the YAML files.
 
-## 3. findSaferCommand Implementation (in resolver layer)
+- [ ] 1.0 RED: Write tests for kubernetes pack — `kubectl get secrets`, `kubectl describe secrets` match; `kubectl get pods`, `kubectl get configmap` do not
+- [ ] 1.1 GREEN: Create `src/packs/kubernetes.yaml`:
+  - Rule `kubernetes.secrets`: bash-command matcher for `kubectl get/describe secrets`
+  - `defaultAction: { type: suggest, replacement: "...", message: "..." }`
+- [ ] 1.2 REFACTOR: Verify tests pass
+- [ ] 1.3 RED: Write tests for gh-cli pack — `gh secret view`, `gh variable get` match; `gh secret list`, `gh pr list` do not
+- [ ] 1.4 GREEN: Create `src/packs/gh-cli.yaml`:
+  - Rule `gh-cli.secret-view`: bash-command matcher for `gh secret view`
+  - Rule `gh-cli.variable-get`: bash-command matcher for `gh variable get`
+  - Both with `defaultAction: suggest`
+- [ ] 1.5 REFACTOR: Verify tests pass
+- [ ] 1.6 RED: Write tests for direnv pack — `direnv exec`, `source .env`, `. .env` match; `direnv allow`, `direnv status` do not
+- [ ] 1.7 GREEN: Create `src/packs/direnv.yaml`:
+  - Rule `direnv.exec`: bash-command matcher for `direnv exec`, action: block
+  - Rule `direnv.source-env`: bash-command matcher for `source .env` / `. .env`, action: suggest
+- [ ] 1.8 REFACTOR: Verify tests pass
+- [ ] 1.9 Re-export new packs from `src/packs/index.ts` (loaded from YAML)
+- [ ] 1.10 Update `ALL_RULE_PACKS` loader to include kubernetes, gh-cli, direnv
 
-- [ ] 3.1 Create `src/resolver/safer-commands.ts` with `findSaferCommand(command: string): string | null` pure function (part of the decomposed resolver layer from Change 1 Decision 19)
-- [ ] 3.2 Implement env read detection and suggestion: `sed 's/=.*/=[REDACTED]/' {matched}`
-- [ ] 3.3 Implement sops detection with format-aware suggestion (see section 5)
-- [ ] 3.4 Implement kubectl detection and suggestion
-- [ ] 3.5 Implement gh-cli detection and suggestion (`gh secret list` / `gh variable list`)
-- [ ] 3.6 Implement direnv detection and suggestion
-- [ ] 3.7 Implement private key detection and suggestion
-- [ ] 3.8 Return `null` when no known safer alternative exists
-- [ ] 3.9 Add unit tests: findSaferCommand returns correct suggestion per command type
-- [ ] 3.10 Add unit tests: findSaferCommand returns null for unknown commands
-- [ ] 3.11 Add unit tests: findSaferCommand is testable without full engine setup (pure function)
+## 2. Update Existing YAML Rule Pack Default Actions to Suggest
 
-## 4. Suggest → Block Fallback (Integration with extracted action-resolver)
+> **TDD cycle**: For each rule pack, update the test expectations first
+> (expect `suggest` instead of `block`), watch tests fail on the action type,
+> then update the YAML.
 
-- [ ] 4.1 Integrate findSaferCommand with the extracted `resolveAction()` function in `src/resolver/action-resolver.ts` (Change 1 task 7.1) — import and call `findSaferCommand` internally
-- [ ] 4.2 When suggest Action and findSaferCommand returns null, fall back to block
-- [ ] 4.3 Fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
-- [ ] 4.4 Add unit tests: resolveAction delegates to findSaferCommand for suggest actions
-- [ ] 4.5 Add unit tests: suggest falls back to block when no safer command found
-- [ ] 4.6 Add unit tests: fallback message includes `{matched}` interpolation
+- [ ] 2.0 RED: Update test expectations for `env` pack to expect `suggest` actions
+- [ ] 2.1 GREEN: Update `src/packs/env.yaml`:
+  - `env.read` → `defaultAction: { type: suggest, replacement: "sed 's/=.*/=[REDACTED]/' {matched}", message: "..." }`
+  - `env.read-bash` → `defaultAction: { type: suggest, replacement: "sed 's/=.*/=[REDACTED]/' {matched}", message: "..." }`
+- [ ] 2.2 RED: Update test expectations for `sops` pack
+- [ ] 2.3 GREEN: Update `src/packs/sops.yaml`:
+  - `sops.decrypt` → `defaultAction: { type: suggest, replacement: "<format-aware>", message: "..." }`
+  - Note: actual replacement is resolved at runtime by `findSaferCommand()` using format detection
+- [ ] 2.4 RED: Update test expectations for `private-key` pack
+- [ ] 2.5 GREEN: Update `src/packs/private-key.yaml`:
+  - `private-key.read-ext`, `private-key.read-ssh-key`, `private-key.read-ssh-dir` → `suggest` with `head -5` truncation
+- [ ] 2.6 Verify all existing rule pack tests pass with new action types
 
-## 5. SOPS Format-Aware Redaction (Shell-Based, in resolver layer)
+## 3. findSaferCommand Implementation (resolver layer)
 
-- [ ] 5.1 Create `src/resolver/sops-format.ts` with format detection pure function (part of decomposed resolver layer)
-- [ ] 5.2 Implement `detectSopsFormat(command: string): 'yaml' | 'json' | 'env' | null` function
-- [ ] 5.3 Parse `--output-type` flag (highest priority)
-- [ ] 5.4 Parse `--input-type` flag (second priority)
-- [ ] 5.5 Extract file extension from last non-flag argument (third priority)
-- [ ] 5.6 Return `null` if no format detected (triggers suggest → block fallback)
-- [ ] 5.7 Implement YAML shell redaction: `| sed 's/:.*/: [REDACTED]/'`
-- [ ] 5.8 Implement JSON shell redaction: `| jq 'walk(if type == "string" then "[REDACTED]" else . end)'`
-- [ ] 5.9 Implement ENV shell redaction: `| sed 's/=.*/=[REDACTED]/'`
-- [ ] 5.10 Add unit tests: format detection from --output-type
-- [ ] 5.11 Add unit tests: format detection from --input-type
-- [ ] 5.12 Add unit tests: format detection from file extension
-- [ ] 5.13 Add unit tests: format detection returns null for stdin/no-extension
-- [ ] 5.14 Add unit tests: correct shell pipeline per format
+> **TDD cycle**: `findSaferCommand()` is a pure function — ideal for RED→GREEN.
 
-## 6. Pi Adapter Updates
+- [ ] 3.0 RED: Write tests for `findSaferCommand()`:
+  - `cat .env` → `sed 's/=.*/=[REDACTED]/' .env`
+  - `sops -d secrets.yaml` → format-aware YAML redaction
+  - `sops -d secrets.json` → format-aware JSON redaction
+  - `kubectl get secrets` → redacted kubectl alternative
+  - `gh secret view MY_SECRET` → `gh secret list`
+  - `source .env` → `sed 's/=.*/=[REDACTED]/' .env`
+  - `ls -la` → `null` (no safer command)
+  - `echo "..." | sops -d` → `null` (stdin, no format)
+- [ ] 3.1 GREEN: Create `src/resolver/safer-commands.ts`:
+  ```typescript
+  export function findSaferCommand(command: string, matchContext?: { matched?: string }): string | null
+  ```
+- [ ] 3.2 REFACTOR: Verify all tests pass
 
-- [ ] 6.1 Update Pi Adapter to check `defaultAction.type` for suggest Behavior (via engine)
-- [ ] 6.2 For suggest: engine resolves Action, Adapter returns `{ block: true, reason: result.message }`
-- [ ] 6.3 For suggest → block fallback: Adapter returns `{ block: true, reason: fallbackMessage }`
-- [ ] 6.4 Add unit tests for suggest Behavior in Pi Adapter
+## 4. Suggest → Block Fallback (Integration with action-resolver)
 
-## 7. opencode Adapter Updates
+> **TDD cycle**: Test the fallback integration, not action-resolver internals.
 
-- [ ] 7.1 Update opencode Adapter to check `defaultAction.type` for suggest Behavior (via engine)
-- [ ] 7.2 For suggest: engine resolves Action, Adapter throws `Error(result.message)`
-- [ ] 7.3 For suggest → block fallback: Adapter throws `Error(fallbackMessage)`
-- [ ] 7.4 Add unit tests for suggest Behavior in opencode Adapter
+- [ ] 4.0 RED: Write tests:
+  - `resolveAction` with `suggest` action + `findSaferCommand` returns string → returns suggest with replacement
+  - `resolveAction` with `suggest` action + `findSaferCommand` returns null → returns block with generic message
+  - Fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
+- [ ] 4.1 GREEN: Update `src/resolver/action-resolver.ts`:
+  - Import `findSaferCommand` from `./safer-commands`
+  - When action type is `suggest`: call `findSaferCommand`, populate replacement
+  - If null: fall back to `block`
+- [ ] 4.2 REFACTOR: Verify all resolver tests pass
 
-## 8. Module Exports
+## 5. SOPS Format-Aware Redaction (resolver layer)
 
-- [ ] 8.1 Export kubernetesRulePack, ghCliRulePack, direnvRulePack from index
-- [ ] 8.2 Export `findSaferCommand` from `src/resolver/safer-commands.ts` (via resolver layer index)
-- [ ] 8.3 Export `detectSupsFormat` from `src/resolver/sops-format.ts` (via resolver layer index)
-- [ ] 8.4 Update `ALL_RULE_PACKS` to include new packs
-- [ ] 8.5 Ensure resolver layer index (`src/resolver/index.ts`) exports `resolveAction`, `findSaferCommand`, and `detectSupsFormat`
+> **TDD cycle**: `detectSopsFormat()` is a pure function — test all format
+> detection scenarios before implementing.
 
-## 9. Integration Tests
+- [ ] 5.0 RED: Write tests for `detectSopsFormat()`:
+  - `sops -d secrets.yaml` → `yaml`
+  - `sops -d secrets.json` → `json`
+  - `sops -d secrets.env` → `env`
+  - `sops -d --output-type json secrets.yaml` → `json` (flag overrides extension)
+  - `sops -d --input-type yaml` → `yaml` (no extension, no output-type)
+  - `echo "..." | sops -d` → `null` (stdin, no format)
+- [ ] 5.1 GREEN: Create `src/resolver/sops-format.ts`:
+  ```typescript
+  export function detectSopsFormat(command: string): 'yaml' | 'json' | 'env' | null
+  export function sopsFormatPipeline(format: 'yaml' | 'json' | 'env'): string
+  ```
+- [ ] 5.2 GREEN: Implement `sopsFormatPipeline()`:
+  - `yaml` → `| sed 's/:.*/: [REDACTED]/'`
+  - `json` → `| jq 'walk(if type == "string" then "[REDACTED]" else . end)'`
+  - `env` → `| sed 's/=.*/=[REDACTED]/'`
+- [ ] 5.3 REFACTOR: Verify all format detection tests pass
+- [ ] 5.4 Integrate `detectSopsFormat()` + `sopsFormatPipeline()` into `findSaferCommand()` — verify end-to-end SOPS tests pass
 
-- [ ] 9.1 Test SOPS transform suggests format-aware redacted decrypt command
-- [ ] 9.2 Test env transform suggests redacted read command
-- [ ] 9.3 Test kubernetes transform suggests redacted secrets command
-- [ ] 9.4 Test gh-cli transform suggests list instead of view
-- [ ] 9.5 Test direnv transform blocks/suggests appropriately
-- [ ] 9.6 Test SOPS redaction uses correct format based on extension
-- [ ] 9.7 Test SOPS redaction respects --output-type flag
-- [ ] 9.8 Test SOPS redaction respects --input-type flag
-- [ ] 9.9 Test SOPS with no detectable format falls back to block
-- [ ] 9.10 Test suggest works in all Harnesses
-- [ ] 9.11 Test suggest → block fallback with generic contextual message
+## 6. Adapter Updates (Pi + opencode)
 
-## 10. Documentation
+> **TDD cycle**: The adapters already handle `suggest` actions correctly from
+> Changes 3/4 (they check `result?.type === "block" || result?.type === "suggest"`).
+> Verify with tests; no code changes needed unless tests fail.
 
-- [ ] 10.1 Document kubernetes, gh-cli, and direnv Rule Packs
-- [ ] 10.2 Document SOPS format detection (extension, --output-type, --input-type, fallback to block)
-- [ ] 10.3 Document suggest → block fallback behavior
-- [ ] 10.4 Note Smart Piped Command Detection is deferred to post-MVP
+- [ ] 6.0 RED: Write/update adapter tests to verify suggest Behavior:
+  - Pi adapter: `suggest` action → returns `{ block: true, reason: "..." }`
+  - opencode adapter: `suggest` action → throws `Error(result.message)`
+- [ ] 6.1 GREEN: Verify existing adapter code handles suggest (it should from Changes 3/4)
+- [ ] 6.2 If tests fail, update adapter code
+- [ ] 6.3 REFACTOR: Verify all adapter tests pass
+
+## 7. Module Exports
+
+- [ ] 7.1 Export `findSaferCommand` from `src/resolver/index.ts`
+- [ ] 7.2 Export `detectSopsFormat` from `src/resolver/index.ts`
+- [ ] 7.3 Verify `ALL_RULE_PACKS` includes all packs (existing + new)
+
+## 8. Integration Tests
+
+> **TDD cycle**: Write end-to-end tests for the full pipeline.
+
+- [ ] 8.0 RED: Write integration tests:
+  - `sops -d secrets.yaml` → suggest with YAML redaction pipeline
+  - `sops -d secrets.json` → suggest with JSON redaction pipeline
+  - `sops -d --output-type json secrets.yaml` → suggest with JSON (flag wins)
+  - `echo "..." | sops -d` → block (no format detected → null → fallback)
+  - `cat .env` → suggest redacted version
+  - `kubectl get secrets` → suggest redacted kubectl
+  - `gh secret view MY_SECRET` → suggest `gh secret list`
+  - `direnv exec . cat .env` → block (no safer alternative)
+  - `source .env` → suggest `sed` redaction
+- [ ] 8.1 GREEN: Verify all integration tests pass
+- [ ] 8.2 REFACTOR: Clean up
+
+## 9. Documentation
+
+- [ ] 9.1 Document kubernetes, gh-cli, and direnv Rule Packs
+- [ ] 9.2 Document SOPS format detection (extension, --output-type, --input-type, fallback to block)
+- [ ] 9.3 Document suggest → block fallback behavior
+- [ ] 9.4 Note Smart Piped Command Detection is deferred to post-MVP

@@ -1,140 +1,262 @@
-## 1. Workspace Setup
+# Tasks: Project Foundation
 
-- [ ] 1.1 Create root `package.json` (single package, not workspace yet)
+> **TDD MANDATE**: Every implementation task below MUST follow Test-Driven
+> Development via RED→GREEN→REFACTOR vertical slices. Write ONE failing test,
+> then write minimal code to pass, then refactor. Never write all tests first
+> then all implementation. See `.agents/skills/tdd/SKILL.md` for full workflow.
+
+## 1. Project Setup
+
+- [ ] 1.1 Create `package.json` with vitest, typescript, yaml dev dependencies
 - [ ] 1.2 Create `tsconfig.json`
 - [ ] 1.3 Create `vitest.config.ts`
-- [ ] 1.4 Create internal directory structure:
-  - `src/core/`
-  - `src/matcher/`
-  - `src/resolver/`
-  - `src/engine/`
-  - `src/infrastructure/`
-  - `src/packs/`
+- [ ] 1.4 Create directory structure:
+  - `src/core/` (types, validator, predicate-registry)
+  - `src/matcher/handlers/` (bash-command, file-path, predicate)
+  - `src/matcher/` (registry, command-splitter)
+  - `src/resolver/` (action-resolver)
+  - `src/engine/` (engine, stats-tracker)
+  - `src/infrastructure/` (yaml-pack-loader)
+  - `src/packs/` (YAML rule packs + predicates.ts)
   - `src/adapters/`
 
-## 2. Behavior Model (in `src/core/`)
+## 2. Core Types (`src/core/`)
 
-- [ ] 2.1 Create `src/core/types.ts` with `GuardrailBehavior` type: `"block" | "suggest" | "run" | "redact" | "confirm"`
-- [ ] 2.2 Define `GuardrailMatcher` discriminated union:
+### 2.1 Behavior and Action types
+
+> **TDD**: Write failing type tests first, then implement types.
+
+- [ ] 2.1.0 RED: Write compile-time tests for `GuardrailBehavior` (must be union of 5 strings)
+- [ ] 2.1.1 GREEN: Define `GuardrailBehavior` type in `src/core/types.ts`
+- [ ] 2.1.2 RED: Write compile-time tests for `GuardrailAction` discriminated union
+- [ ] 2.1.3 GREEN: Define `GuardrailAction` discriminated union in `src/core/types.ts`
+- [ ] 2.1.4 REFACTOR: Verify both pass
+
+### 2.2 Matcher and Context types
+
+> **TDD**: Write failing tests for ToolCallContext and GuardrailMatcher.
+
+- [ ] 2.2.0 RED: Write tests for `ToolCallContext` discriminated union (toolName="bash" requires command, toolName="read" requires filePath, catch-all variant)
+- [ ] 2.2.1 GREEN: Define `ToolCallContext` in `src/core/types.ts`
+- [ ] 2.2.2 RED: Write tests for `GuardrailMatcher` discriminated union (bash-command with pattern, file-path with pattern, predicate with predicateName)
+- [ ] 2.2.3 GREEN: Define `GuardrailMatcher` in `src/core/types.ts`
   - `{ type: "bash-command"; pattern: RegExp }`
   - `{ type: "file-path"; pattern: RegExp }`
-  - `{ type: "predicate"; test: (ctx: ToolCallContext) => boolean }`
-- [ ] 2.3 Define `ToolCallContext` discriminated union on `toolName`:
-  - `{ toolName: "bash"; command: string; filePath?: string }`
-  - `{ toolName: "read"; filePath: string }`
-  - `{ toolName: "write"; filePath: string }`
-  - `{ toolName: string; command?: string; filePath?: string }` (catch-all)
-- [ ] 2.4 Define `GuardrailAction` discriminated union:
-  - `{ type: "allow" }`
-  - `{ type: "block"; message: string }`
-  - `{ type: "suggest"; replacement: string; message?: string }`
-  - `{ type: "run"; replacement: string; message?: string }`
-  - `{ type: "redact"; replacement: string }`
-  - `{ type: "confirm"; message: string; fallback?: GuardrailAction }`
-- [ ] 2.5 Define `GuardrailRule` interface with id, title, description, phase, match, defaultAction
-- [ ] 2.6 Define `RulePack` interface with id, name, description, rules
-- [ ] 2.7 Add JSDoc documentation for all types
-- [ ] 2.8 Create `src/core/validation.ts` with `validateRulePack(pack): ValidationResult` and `validateRule(rule): ValidationResult`
-- [ ] 2.9 Add unit tests for validation (duplicate rule IDs, phase-behavior matrix violations)
+  - `{ type: "predicate"; predicateName: string }`
+- [ ] 2.2.4 REFACTOR: Verify both pass
 
-## 3. Harness Capabilities (in `src/core/`)
+### 2.3 Rule and RulePack interfaces
 
-- [ ] 3.1 Create `src/core/harness.ts` with `HarnessCapabilities` interface
-- [ ] 3.2 Implement `HARNESSES` constant with Capabilities for pi, opencode, codex, claude-code
-- [ ] 3.3 Implement `hasCapability(harness, Behavior)` helper function
-- [ ] 3.4 Add unit tests for Capability lookups per Harness
+> **TDD**: Write tests for GuardrailRule and RulePack structure.
 
-## 4. Matcher Layer (in `src/matcher/`)
+- [ ] 2.3.0 RED: Write tests for `GuardrailRule` (must have id, title, description, phase, match, defaultAction)
+- [ ] 2.3.1 GREEN: Define `GuardrailRule` interface
+- [ ] 2.3.2 RED: Write tests for `RulePack` (must have id, name, description, rules)
+- [ ] 2.3.3 GREEN: Define `RulePack` interface
+- [ ] 2.3.4 REFACTOR: Verify both pass
 
-- [ ] 4.1 Create `src/matcher/registry.ts` with `MatcherRegistry` class
-- [ ] 4.2 Implement `register(handler: MatcherHandler): void`
-- [ ] 4.3 Implement `evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean`
-- [ ] 4.4 Implement `clear(): void` for test isolation
-- [ ] 4.5 Create `src/matcher/handlers/bash-command.ts` implementing `MatcherHandler`
-- [ ] 4.6 Create `src/matcher/handlers/file-path.ts` implementing `MatcherHandler`
-- [ ] 4.7 Create `src/matcher/handlers/predicate.ts` implementing `MatcherHandler`
-- [ ] 4.8 Create `src/matcher/registry-setup.ts` with explicit initialization:
+## 3. Predicate Registry (`src/core/predicate-registry.ts`)
+
+> **TDD**: Test predicate registration and resolution before using it.
+
+- [ ] 3.0 RED: Write tests for `PredicateRegistry`:
+  - Register a predicate by name, resolve returns the function
+  - Resolve unknown name returns undefined
+  - Clear removes all registered predicates
+  - Duplicate registration throws or overwrites (document behavior)
+- [ ] 3.1 GREEN: Implement `PredicateRegistry` class:
   ```typescript
-  import { matcherRegistry } from './registry';
-  import { bashCommandHandler } from './handlers/bash-command';
-  import { filePathHandler } from './handlers/file-path';
-  import { predicateHandler } from './handlers/predicate';
-  
+  export class PredicateRegistry {
+    register(name: string, fn: (ctx: ToolCallContext) => boolean): void
+    resolve(name: string): ((ctx: ToolCallContext) => boolean) | undefined
+    clear(): void
+  }
+  ```
+- [ ] 3.2 REFACTOR: Verify all tests pass
+
+## 4. Validation (`src/core/validator.ts`)
+
+> **TDD**: Write failing tests for validation before implementing.
+
+- [ ] 4.0 RED: Write tests for `validateRule()`:
+  - Valid rule passes
+  - Missing required field fails
+  - phase="after-tool" with action.type="block" fails (invalid phase-behavior combination)
+- [ ] 4.1 GREEN: Implement `validateRule()`
+- [ ] 4.2 RED: Write tests for `validateRulePack()`:
+  - Valid pack passes
+  - Duplicate rule IDs fail
+  - Invalid rule fails
+- [ ] 4.3 GREEN: Implement `validateRulePack()`
+- [ ] 4.4 REFACTOR: Verify all validation tests pass
+
+## 5. Matcher Layer (`src/matcher/`)
+
+### 5.1 Matcher Registry
+
+> **TDD**: Test the registry with isolated handlers before implementing handlers.
+
+- [ ] 5.1.0 RED: Write tests for `MatcherRegistry`:
+  - Register handler, evaluate calls it
+  - Unknown matcher type throws
+  - Clear removes all handlers
+  - Duplicate type registration behavior (throw or overwrite)
+- [ ] 5.1.1 GREEN: Implement `MatcherRegistry` class:
+  ```typescript
+  export class MatcherRegistry {
+    register(handler: MatcherHandler): void
+    evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean
+    clear(): void
+  }
+  ```
+- [ ] 5.1.2 REFACTOR: Verify all registry tests pass
+
+### 5.2 Matchers
+
+> **TDD**: Write failing tests for each matcher type individually.
+
+- [ ] 5.2.0 RED: Write tests for `bash-command` matcher (pattern matches/doesn't match command)
+- [ ] 5.2.1 GREEN: Implement `bash-command.ts` handler
+- [ ] 5.2.2 RED: Write tests for `file-path` matcher (pattern matches/doesn't match filePath)
+- [ ] 5.2.3 GREEN: Implement `file-path.ts` handler
+- [ ] 5.2.4 RED: Write tests for `predicate` matcher (resolves predicateName, calls function)
+- [ ] 5.2.5 GREEN: Implement `predicate.ts` handler
+  - Must accept matcher with `predicateName: string` and a resolved `test` function
+  - Must call `test(ctx)` and return the result
+- [ ] 5.2.6 REFACTOR: Verify all matcher tests pass
+
+### 5.3 Registry Setup
+
+- [ ] 5.3.1 Implement `initializeMatcherRegistry()` in `src/matcher/setup.ts`:
+  ```typescript
   export function initializeMatcherRegistry(): void {
     matcherRegistry.register(bashCommandHandler);
     matcherRegistry.register(filePathHandler);
     matcherRegistry.register(predicateHandler);
   }
   ```
-- [ ] 4.9 Add unit tests for each handler type
-- [ ] 4.10 Add unit tests for registry (register, evaluate, clear, duplicate handling)
+- [ ] 5.3.2 Add test: calling `initializeMatcherRegistry()` registers all 3 handlers
 
-## 5. Engine Module Extractions (Engine Decomposition)
+## 6. Command Splitter (`src/matcher/command-splitter.ts`)
 
-- [ ] 5.0a Create `src/core/normalizer.ts` with `normalizeToolCall(tool: string, args: any): ToolCallContext` pure function
-- [ ] 5.0b Add unit tests for normalizer: bash, read, write, unknown tools
-- [ ] 5.0c Create `src/matcher/command-splitter.ts` with `splitCommands(cmd: string): string[]` pure function splitting on `;`, `&&`, `||`, `\n`
-- [ ] 5.0d Add unit tests for command splitter (chained commands, multi-line, edge cases)
-- [ ] 5.0e Create `src/engine/stats-tracker.ts` with `StatsTracker` class encapsulating stats state
-- [ ] 5.0f Implement `StatsTracker.record(action)`, `getStats()`, `reset()` methods
-- [ ] 5.0g Add unit tests for StatsTracker (record, getStats, reset isolation)
+> **TDD**: Write failing tests for command splitting before implementing.
 
-## 6. Multi-Line Splitting (in `src/matcher/`)
+- [ ] 6.0 RED: Write tests for `splitCommands()`:
+  - Split on `;`, `&&`, `||`, `\n`
+  - Trim whitespace
+  - Filter empty segments
+  - Handle nested quotes correctly (don't split inside quotes)
+- [ ] 6.1 GREEN: Implement `splitCommands(command: string): string[]`
+- [ ] 6.2 REFACTOR: Verify all splitting tests pass
 
-- [ ] 6.1 Engine imports and uses `splitCommands()` from `src/matcher/command-splitter.ts`
-- [ ] 6.2 Evaluate matchers against each segment independently
-- [ ] 6.3 Add unit tests: matches fire on individual segments
-- [ ] 6.4 (splitting logic itself tested in task 5.0d)
+## 7. Resolver (`src/resolver/action-resolver.ts`)
 
-## 7. Resolver Layer (in `src/resolver/`) — Action Resolver Extraction
+> **TDD**: Write failing tests for resolution logic before implementing.
 
-- [ ] 7.1 Create `src/resolver/action-resolver.ts` with `resolveAction(action: GuardrailAction, caps: HarnessCapabilities, matchContext): GuardrailAction` pure function
-- [ ] 7.2 Implement Action Fallback Chain: `run → suggest → block`, `confirm → suggest`, `suggest (no cmd) → block`
-- [ ] 7.3 Implement `{matched}` message template interpolation
-- [ ] 7.4 Implement generic fallback block message: `"Blocked: \`{matched}\` — no safer alternative available."`
-- [ ] 7.5 Add unit tests for fallback chain (run→suggest→block, confirm→suggest, suggest→block)
-- [ ] 7.6 Add unit tests for message template interpolation
-- [ ] 7.7 Add unit tests: resolveAction is testable without full engine setup
+- [ ] 7.0 RED: Write tests for `resolveAction()`:
+  - `run` with `run: true` capability → returns run action
+  - `run` with `run: false` capability → falls back to suggest
+  - `suggest` with safer command → returns suggest action with replacement
+  - `suggest` with no safer command → falls back to block
+  - `confirm` with `confirm: false` capability → falls back to suggest
+  - `block` → always returns block (no fallback needed)
+  - `{matched}` interpolation in messages
+- [ ] 7.1 GREEN: Implement `resolveAction()`:
+  ```typescript
+  export function resolveAction(
+    action: GuardrailAction,
+    capabilities: HarnessCapabilities,
+    matchContext?: { matched?: string; saferCommand?: string }
+  ): GuardrailAction
+  ```
+- [ ] 7.2 RED: Write tests for action fallback chain:
+  - `run` → `suggest` → `block`
+  - `confirm` → `suggest`
+  - `suggest` (no safer command) → `block`
+- [ ] 7.3 GREEN: Implement fallback chain logic
+- [ ] 7.4 REFACTOR: Verify all resolver tests pass
 
-## 8. Engine Layer (in `src/engine/`) — Orchestration Only
+## 8. Engine (`src/engine/`)
 
-- [ ] 8.1 Implement `matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: HarnessCapabilities): GuardrailAction | null` — orchestrates `splitCommands`, `matchRules`, `resolveAction`, `StatsTracker`
-- [ ] 8.2 Import and compose extracted modules: `splitCommands` from `matcher/command-splitter`, `resolveAction` from `resolver/action-resolver`, `StatsTracker` from `engine/stats-tracker`
-- [ ] 8.3 Implement internal `processMatch()` that returns `{ action, events }` with domain events
-- [ ] 8.4 `matchAndResolve` calls `processMatch` and returns only the action (events discarded in MVP)
-- [ ] 8.5 Add unit tests for engine orchestration (engine is thin: only composes imported modules)
-- [ ] 8.6 Test Behavior enum values compile correctly
-- [ ] 8.7 Test rule type compilation with sample rules
-- [ ] 8.8 Test GuardrailMatcher discriminated union compiles
-- [ ] 8.9 Test ToolCallContext discriminated union enforces required fields
-- [ ] 8.10 Test Harness Capabilities match spec (pi: all true, opencode: confirm false, etc.)
-- [ ] 8.11 Test hasCapability helper returns correct booleans
-- [ ] 8.12 Verify zero dependencies in `src/core/` (yaml dep lives in infrastructure)
+### 8.1 Stats Tracker
 
-## 9. Observability Tier 1 (in `src/engine/`)
+> **TDD**: Write failing tests for stats tracking before implementing.
 
-- [ ] 9.1 Engine wraps `StatsTracker` instance (from task 5.0e) and exposes `getStats()` / `resetStats()` as module-level conveniences
-- [ ] 9.2 Engine increments counters (totalChecks, matches, blocks, suggests) during `matchAndResolve`
-- [ ] 9.3 Track top rule IDs (map of ruleId → count)
-- [ ] 9.4 Add unit tests: stats increment correctly
-- [ ] 9.5 Add unit tests: stats reset to zero
+- [ ] 8.1.0 RED: Write tests for `StatsTracker`:
+  - Initial stats are zero
+  - Incrementing a counter works
+  - `getStats()` returns current state
+  - `resetStats()` zeroes everything
+- [ ] 8.1.1 GREEN: Implement `StatsTracker` class
+- [ ] 8.1.2 REFACTOR: Verify all stats tests pass
 
-## 10. Module Exports
+### 8.2 Engine Logic
 
-- [ ] 10.1 Create `src/index.ts` exporting all types from core
-- [ ] 10.2 Export matcher registry from matcher layer
-- [ ] 10.3 Export `resolveAction` from resolver layer (`src/resolver/action-resolver.ts`)
-- [ ] 10.4 Export `normalizeToolCall` from core (`src/core/normalizer.ts`)
-- [ ] 10.5 Export `splitCommands` from matcher layer (`src/matcher/command-splitter.ts`)
-- [ ] 10.6 Export `matchAndResolve`, `getStats`, `resetStats` from engine layer
+> **TDD**: Write failing tests for `matchAndResolve()` before implementing.
 
-## 11. Documentation
+- [ ] 8.2.0 RED: Write tests for `matchAndResolve()`:
+  - Tool call with no matching rules → returns `undefined`
+  - Tool call matching a rule → returns resolved action
+  - Multiple rules match → returns first match (priority order)
+  - Tool call with no `command` or `filePath` → returns `undefined` (early exit)
+  - Stats are incremented on each call
+- [ ] 8.2.1 GREEN: Implement `matchAndResolve()`:
+  ```typescript
+  export function matchAndResolve(
+    ctx: ToolCallContext,
+    packs: RulePack[],
+    caps: HarnessCapabilities
+  ): GuardrailAction | undefined
+  ```
+  - Early exit if no command and no filePath
+  - Split command (if present)
+  - Iterate packs → rules → evaluate matcher
+  - On first match, resolve action
+  - Increment stats
+- [ ] 8.2.2 RED: Write tests for `getStats()` and `resetStats()`
+- [ ] 8.2.3 GREEN: Implement stats accessors
+- [ ] 8.2.4 REFACTOR: Verify all engine tests pass
 
-- [ ] 11.1 Create top-level `README.md` with usage examples
-- [ ] 11.2 Document Behavior model, Rule Pack interface, and Fallback Chain
-- [ ] 11.3 Document GuardrailMatcher types and ToolCallContext structure
-- [ ] 11.4 Document multi-layer matching strategy (reference `docs/matching-strategy.md`)
-- [ ] 11.5 Document YAML rule pack format (reference `docs/yaml-rule-packs.md`)
-- [ ] 11.6 Create `SECURITY.md` with regex bypassability disclaimer
-- [ ] 11.7 Create `CONTRIBUTING.md` with 5-minute YAML rule pack path
-- [ ] 11.8 Document engine decomposition: which module owns which responsibility, where to add new features
+## 9. Infrastructure (`src/infrastructure/`)
+
+### 9.1 YAML Rule Pack Loader
+
+> **TDD**: Write failing tests for YAML loading before implementing.
+
+- [ ] 9.1.0 RED: Write tests for `loadYamlRulePack()`:
+  - Valid YAML file → returns parsed RulePack
+  - Invalid schema → throws validation error
+  - Predicate matcher with registered name → resolves to function
+  - Predicate matcher with unknown name → throws clear error
+- [ ] 9.1.1 GREEN: Implement `loadYamlRulePack()`:
+  ```typescript
+  export async function loadYamlRulePack(
+    filePath: string,
+    predicateRegistry: PredicateRegistry
+  ): Promise<RulePack>
+  ```
+- [ ] 9.1.2 RED: Write tests for `loadAllRulePacks()`:
+  - Loads all `.yaml` files from directory
+  - Registers built-in predicates before loading
+  - Returns array of RulePack objects
+  - Validates each pack before returning
+- [ ] 9.1.3 GREEN: Implement `loadAllRulePacks()`:
+  ```typescript
+  export async function loadAllRulePacks(
+    packDir: string,
+    predicateRegistry: PredicateRegistry
+  ): Promise<RulePack[]>
+  ```
+- [ ] 9.1.4 REFACTOR: Verify all loader tests pass
+
+## 10. Export Layer (`src/index.ts`)
+
+- [ ] 10.1 Create `src/index.ts` that re-exports:
+  - All types from `src/core/types.ts`
+  - `PredicateRegistry` from `src/core/predicate-registry.ts`
+  - `validateRule`, `validateRulePack` from `src/core/validator.ts`
+  - `MatcherRegistry`, `initializeMatcherRegistry` from `src/matcher/`
+  - `splitCommands` from `src/matcher/command-splitter.ts`
+  - `resolveAction` from `src/resolver/action-resolver.ts`
+  - `matchAndResolve`, `getStats`, `resetStats` from `src/engine/`
+  - `loadYamlRulePack`, `loadAllRulePacks`, `registerBuiltInPredicates` from `src/infrastructure/`

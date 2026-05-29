@@ -5,7 +5,6 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 ## Goals / Non-Goals
 
 **Goals:**
-- Create engine (`src/engine/`) package with `matchAndResolve()` — the shared matching function consumed by all Adapters
 - Hook all tool calls (not just bash) and normalize into ToolCallContext
 - Delegate matching to the engine via `matchAndResolve()`
 - Import all Rule Packs via `ALL_RULE_PACKS` from secrets package
@@ -51,7 +50,7 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 - `ALL_RULE_PACKS` ensures all packs are loaded without Adapters curating the list
 - Adding new packs requires zero Adapter changes
 
-### Decision 5: ToolCallContext normalization
+### Decision 4: ToolCallContext normalization
 
 **Choice**: Adapter normalizes Pi events into `ToolCallContext` discriminated union
 
@@ -60,7 +59,7 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 - Engine evaluates all matcher types against whatever fields are present
 - Unknown tools get catch-all variant (no fields, no matchers fire, passes through)
 
-### Decision 4: Performance benchmarking
+### Decision 5: Performance benchmarking
 
 **Choice**: Include performance test suite with configurable rule counts
 
@@ -70,18 +69,7 @@ Pi is a popular AI coding agent with an extension system that supports `tool_cal
 - Measure min, max, mean, p95, p99 latencies
 - Catch performance regressions early
 
-## Risks / Trade-offs
-
-### Risk: Pi API changes
-**Mitigation**: Pin Adapter version, test with multiple versions
-
-### Risk: False blocking
-**Mitigation**: Precise Guardrail Matchers, test with edge cases
-
-### Risk: Unknown tool types
-**Mitigation**: Catch-all ToolCallContext variant. No matchers fire for unknown tools, so they pass through safely.
-
-### Decision 6: Tool-type early exit in matchAndResolve
+### Decision 6: Tool-type early exit in matchAndResolve (consumed, not implemented here)
 
 **Choice**: `matchAndResolve()` inspects the `ToolCallContext` fields before iterating rules and skips rules whose matcher type requires fields not present in the context.
 

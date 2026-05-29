@@ -1,5 +1,9 @@
 # Delta for Pi Adapter
 
+> **TDD**: See `.agents/skills/tdd/SKILL.md`. Write failing tests before
+> each implementation. Use vertical slices: one RED test → one GREEN
+> implementation → repeat. Never write all tests first then all code.
+
 ## ADDED Requirements
 
 ### Requirement: Pi Adapter Structure
@@ -89,6 +93,7 @@ The system MUST provide clear Messages when blocking.
 #### Scenario: Message content
 - WHEN a command is blocked
 - THEN the reason field MUST carry a Message that includes the `{matched}` template interpolated by the engine
+- AND the message MUST be produced by the engine (not constructed in the adapter)
 
 ### Requirement: Performance
 The system MUST add minimal overhead to tool execution.

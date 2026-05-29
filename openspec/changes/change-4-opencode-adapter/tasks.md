@@ -1,78 +1,126 @@
+# Tasks: opencode Adapter
+
+> **TDD MANDATE**: Every task below follows Test-Driven Development. For each
+> implementation item: write the failing test first (RED), then write the
+> minimal code to pass (GREEN), then refactor (REFACTOR). **Never write
+> implementation before the test.** See `.agents/skills/tdd/SKILL.md`.
+>
+> **Important**: This change does NOT create or modify `src/engine/`. The engine
+> (`matchAndResolve`, `getStats`, `resetStats`) was created in Change 1 and is
+> consumed here as a dependency. If any engine changes are needed, they belong
+> in a new change, not in this adapter work.
+
 ## 1. Setup
 
 - [ ] 1.1 Create `src/adapters/opencode/` directory structure
-- [ ] 1.2 Create `src/adapters/opencode/package.json` with dependencies on core, engine, and secrets
-- [ ] 1.3 Create `src/adapters/opencode/tsconfig.json`
-- [ ] 1.4 Create `src/adapters/opencode/vitest.config.ts`
+- [ ] 1.2 Create `src/adapters/opencode/tsconfig.json`
+- [ ] 1.3 Create `src/adapters/opencode/vitest.config.ts`
 
-## 2. Plugin Implementation
+## 2. Plugin Scaffold
 
-- [ ] 2.1 Create `src/index.ts` with plugin function signature
-- [ ] 2.2 Import `Plugin` type or define minimal interface
-- [ ] 2.3 Import `matchAndResolve` from engine (`src/engine/`)
-- [ ] 2.4 Import `ALL_RULE_PACKS` from rule packs (`src/packs/`)
-- [ ] 2.5 Import or define `OPENCODE_CAPABILITIES` from core (`src/core/`)
-- [ ] 2.6 Register `tool.execute.before` hook for ALL tools
+> **TDD**: Write a smoke test that imports the plugin and verifies
+> it exports a function that returns hooks before implementing.
 
-## 3. ToolCallContext Normalization (Using Extracted Normalizer)
+- [ ] 2.0 RED: Write test `src/adapters/opencode/plugin.test.ts` that:
+  - Calls `GuardrailsPlugin({ $: mockShell })` and asserts it returns an object
+  - Asserts the returned object has `tool.execute.before` handler
+  - Asserts the returned object has `session.teardown` handler
+- [ ] 2.1 GREEN: Create `src/adapters/opencode/index.ts` with minimal plugin:
+  ```typescript
+  export const GuardrailsPlugin: Plugin = async ({ $ }) => {
+    return {
+      "tool.execute.before": async (input, output) => { /* stub */ },
+      "session.teardown": async () => { /* stub */ }
+    };
+  };
+  ```
+- [ ] 2.2 Define minimal `Plugin` type interface (or import from opencode types if available)
 
-- [ ] 3.1 Adapter's `normalizeToContext(input, output)` delegates to `normalizeToolCall()` from `src/core/normalizer.ts` (Change 1 task 5.0a) for type dispatch
-- [ ] 3.2 Adapter extracts opencode-specific event fields (e.g., `output.args.command`, `output.args.path`) and passes them to `normalizeToolCall`
-- [ ] 3.3 Handle unknown tools: `{ toolName: input.tool }` (catch-all, passes through)
-- [ ] 3.4 Export adapter-specific normalizeToContext for testing
+## 3. ToolCallContext Normalization
 
-## 4. Hook Logic
+> **TDD**: Test the adapter-specific `normalizeToContext` helper independently.
+> Note: `normalizeToolCall()` from change-1 (`src/core/normalizer.ts`) handles
+> generic tool dispatch. The adapter's job is to extract opencode-specific
+> event fields and delegate.
 
-- [ ] 4.1 In `tool.execute.before` handler: normalize event → ToolCallContext
-- [ ] 4.2 Call `matchAndResolve(toolCtx, ALL_RULE_PACKS, OPENCODE_CAPABILITIES)`
-- [ ] 4.3 If result is block/suggest: throw `Error(result.message)`
-- [ ] 4.4 If result is null or allow: return normally (pass through)
+- [ ] 3.0 RED: Write tests for `normalizeToContext`:
+  - bash event (`input.tool === "bash"`) → `{ toolName: "bash", command: output.args.command }`
+  - read event → `{ toolName: "read", filePath: output.args.path }`
+  - write event → `{ toolName: "write", filePath: output.args.path }`
+  - unknown event → `{ toolName: input.tool }` (catch-all)
+- [ ] 3.1 GREEN: Implement `normalizeToContext(input, output)` in `src/adapters/opencode/normalize.ts`:
+  ```typescript
+  export function normalizeToContext(input: any, output: any): ToolCallContext {
+    return normalizeToolCall(input.tool, output.args || {});
+  }
+  ```
+- [ ] 3.2 REFACTOR: Verify all normalization tests pass
 
-## 5. Module Exports
+## 4. Hook Logic (Block Behavior)
 
-- [ ] 5.1 Export plugin as named export `GuardrailsPlugin`
-- [ ] 5.2 Add JSDoc documentation
+> **TDD**: Test hook behavior with mock opencode API. Write mock tool.execute.before
+> events and verify adapter throws Error or passes through.
 
-## 6. Unit Tests
+- [ ] 4.0 RED: Write tests:
+  - `cat .env` → throws `Error` with message containing `.env`
+  - `sops -d secrets.yaml` → throws `Error`
+  - `ls -la` → does not throw
+  - `cat README.md` → does not throw
+  - Unknown tool → does not throw
+  - Error message contains interpolated `{matched}` value
+- [ ] 4.1 GREEN: Implement `tool.execute.before` hook:
+  ```typescript
+  "tool.execute.before": async (input, output) => {
+    const toolCtx = normalizeToContext(input, output);
+    const result = matchAndResolve(toolCtx, ALL_RULE_PACKS, OPENCODE_CAPABILITIES);
+    if (result?.type === "block" || result?.type === "suggest") {
+      throw new Error(result.message);
+    }
+  }
+  ```
+- [ ] 4.2 REFACTOR: Verify all hook tests pass
 
-- [ ] 6.1 Test `.env` file read via bash is blocked with correct error message
-- [ ] 6.2 Test `.env` file read via read tool is blocked (file-path matcher)
-- [ ] 6.3 Test `cat .env` bash command is blocked
-- [ ] 6.4 Test `sops -d secrets.yaml` command is blocked
-- [ ] 6.5 Test `age -d file.age` command is blocked
-- [ ] 6.6 Test `gpg --decrypt file.gpg` command is blocked
-- [ ] 6.7 Test `openssl enc -d -aes-256-cbc -in file.enc` command is blocked
-- [ ] 6.8 Test `op read op://vault/item` command is blocked
-- [ ] 6.9 Test `pass show secret/path` command is blocked
-- [ ] 6.10 Test `gopass show secret/path` command is blocked
-- [ ] 6.11 Test private key read via read tool (`id_rsa`, `~/.ssh/my_key`) is blocked (predicate matcher)
-- [ ] 6.12 Test private key read via file extension (`.pem`, `.key`) is blocked
-- [ ] 6.13 Test safe commands pass through (`ls`, `cat README.md`, `git status`)
-- [ ] 6.14 Test safe file reads pass through (`config.yaml`, `src/index.ts`)
-- [ ] 6.15 Test unknown tool types pass through without blocking
-- [ ] 6.16 Test error messages include `{matched}` interpolation
+## 5. Session-Teardown Observability
 
-## 7. Integration Tests
+> **TDD**: Test that stats are logged at session teardown when interventions > 0.
 
-- [ ] 7.1 Create mock plugin context with `$` shell function
-- [ ] 7.2 Test plugin returns object with `tool.execute.before` handler
-- [ ] 7.3 Test blocking throws Error with message to opencode
-- [ ] 7.4 Test passthrough does not throw
-- [ ] 7.5 Test ALL_RULE_PACKS are loaded (not curated by Adapter)
-- [ ] 7.6 Test all Rule Packs are exercised (env, sops, private-key, encryption-tools, secret-managers)
-- [ ] 7.7 Test read tool triggers file-path and predicate matchers
-- [ ] 7.8 Test unknown tool types pass through safely
+- [ ] 5.0 RED: Write test: when `getStats()` returns `{ matches: 3, blocks: 2, suggests: 1 }`, session.teardown handler writes summary to `console.log`
+- [ ] 5.1 GREEN: Register `session.teardown` handler:
+  ```typescript
+  "session.teardown": async () => {
+    const stats = getStats();
+    if (stats.matches > 0) {
+      console.log(`🛡️ Guardrails: ${stats.matches} interventions this session (${stats.blocks} blocked, ${stats.suggests} suggested)`);
+    }
+    resetStats();
+  }
+  ```
+- [ ] 5.2 REFACTOR: Verify test passes
 
-## 8. Performance Tests
+## 6. Adapter-Specific Integration Tests
 
-- [ ] 8.1 Create `tests/performance/opencode.perf.ts` benchmark suite
-- [ ] 8.2 Measure baseline: tool.execute.before with no rules loaded
-- [ ] 8.3 Measure with rules: tool.execute.before with all rules loaded
-- [ ] 8.4 Test with varying rule counts: 0, 10, 50, 100 rules
-- [ ] 8.5 Assert overhead < 50% and absolute time < 10ms
-- [ ] 8.6 Report min, max, mean, p95, p99 latencies
+> **TDD**: These are higher-level tests that exercise the full adapter
+> with a mock opencode Plugin context, verifying the hook-pipeline end-to-end.
 
-## 9. Documentation
+- [ ] 6.0 RED: Write integration tests with mock plugin context:
+  - `.env` read via bash throws Error
+  - `.env` read via read tool throws Error (file-path matcher)
+  - Private key read via read tool throws Error (predicate matcher)
+  - All rule packs are exercised (env, sops, private-key, encryption-tools, secret-managers, hardening)
+  - ALL_RULE_PACKS are loaded (not curated by adapter)
+  - Unknown tool passes through
+- [ ] 6.1 GREEN: Create mock plugin context with `$` shell function, verify tests pass
+- [ ] 6.2 REFACTOR: Clean up
 
-- [ ] 9.1 Create `src/adapters/opencode/README.md` with installation instructions
-- [ ] 9.2 Document Adapter hooks and expected Behavior
+## 7. Performance Tests
+
+- [ ] 7.1 Create `src/adapters/opencode/plugin.perf.ts` benchmark suite
+- [ ] 7.2 Measure baseline: tool.execute.before with no rules loaded
+- [ ] 7.3 Measure with all rules loaded
+- [ ] 7.4 Assert absolute time < 10ms per hook invocation
+- [ ] 7.5 Report min, max, mean, p95, p99 latencies
+
+## 8. Documentation
+
+- [ ] 8.1 Create `src/adapters/opencode/README.md` with installation instructions
+- [ ] 8.2 Document adapter hooks and expected behavior

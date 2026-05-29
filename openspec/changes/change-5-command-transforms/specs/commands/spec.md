@@ -1,3 +1,11 @@
+> **TDD MANDATE**: All requirements below MUST be implemented via RED→GREEN→REFACTOR
+> vertical slices. Write one failing test, implement minimal code to pass, refactor.
+> See `.agents/skills/tdd/SKILL.md`.
+>
+> **FORMAT**: Rule packs remain in YAML format (`src/packs/*.yaml`). TypeScript
+> is used only for resolver logic (`src/resolver/safer-commands.ts`,
+> `src/resolver/sops-format.ts`). See Change 1 Decision 16.
+
 ## ADDED Requirements
 
 ### Requirement: Safer Command Registry

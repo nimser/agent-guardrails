@@ -1,91 +1,122 @@
-## 1. Engine Package (Orchestrates Decomposed Modules from Change 1)
+# Tasks: Pi Adapter
 
-- [ ] 1.1 Create `src/engine/` directory
-- [ ] 1.2 `src/engine/engine.ts` implements `matchAndResolve(ctx, packs, capabilities)` as a thin orchestrator that composes:
-  - `splitCommands()` from `src/matcher/command-splitter.ts`
-  - `resolveAction()` from `src/resolver/action-resolver.ts`
-  - `StatsTracker` from `src/engine/stats-tracker.ts`
-- [ ] 1.3 `matchAndResolve` uses `splitCommands` to split commands, iterates rules, evaluates matchers via registry, calls `resolveAction` for fallback chain resolution, and records via `StatsTracker`
-- [ ] 1.4 Implement tool-type early exit — when `ctx` has no `command` and no `filePath`, return `null` without iterating rules
-- [ ] 1.5 Expose `getStats()` and `resetStats()` as module-level convenience wrappers around `StatsTracker`
-- [ ] 1.6 Unit tests for `matchAndResolve`: no match → null, match with supported action → action returned, match with unsupported action → fallback, suggest with null safer cmd → block
-- [ ] 1.7 Unit tests for early exit: tool with no fields → null, tool with only filePath → file rules only, tool with only command → bash rules only, tool with both → all rules
+> **TDD MANDATE**: Every task below follows Test-Driven Development. For each
+> implementation item: write the failing test first (RED), then write the
+> minimal code to pass (GREEN), then refactor (REFACTOR). **Never write
+> implementation before the test.** See `.agents/skills/tdd/SKILL.md`.
+>
+> **Important**: This change does NOT create or modify `src/engine/`. The engine
+> (`matchAndResolve`, `getStats`, `resetStats`) was created in Change 1 and is
+> consumed here as a dependency. If any engine changes are needed, they belong
+> in a new change, not in this adapter work.
 
-## 2. Pi Package Setup
+## 1. Setup
 
-- [ ] 2.1 Create `src/adapters/pi/` directory structure
-- [ ] 2.2 Create `src/adapters/pi/package.json` with dependencies on core, engine, and secrets
-- [ ] 2.3 Create `src/adapters/pi/tsconfig.json`
-- [ ] 2.4 Create `src/adapters/pi/vitest.config.ts`
+- [ ] 1.1 Create `src/adapters/pi/` directory structure
+- [ ] 1.2 Create `src/adapters/pi/tsconfig.json`
+- [ ] 1.3 Create `src/adapters/pi/vitest.config.ts`
 
-## 3. Extension Implementation
+## 2. Extension Scaffold
 
-- [ ] 3.1 Create `src/index.ts` with extension function signature
-- [ ] 3.2 Import `ExtensionAPI` type or define minimal interface
-- [ ] 3.3 Import `matchAndResolve` from engine (`src/engine/`)
-- [ ] 3.4 Import `ALL_RULE_PACKS` from rule packs (`src/packs/`)
-- [ ] 3.5 Import or define `PI_CAPABILITIES` from core (`src/core/`)
-- [ ] 3.6 Register `tool_call` hook via `pi.on("tool_call", handler)` for ALL tools
+> **TDD**: Write a smoke test that imports the adapter and verifies
+> it exports a default function before implementing.
 
-## 4. ToolCallContext Normalization (Using Extracted Normalizer)
+- [ ] 2.0 RED: Write test `src/adapters/pi/adapter.test.ts` that imports default export and asserts it's a function
+- [ ] 2.1 GREEN: Create `src/adapters/pi/index.ts` with minimal extension function:
+  ```typescript
+  export default function (pi: ExtensionAPI) {
+    // stub — hooks registered in task 4
+  }
+  ```
+- [ ] 2.2 Define minimal `ExtensionAPI` type interface (or import from Pi types if available)
 
-- [ ] 4.1 Adapter's `normalizeToContext(event)` delegates to `normalizeToolCall()` from `src/core/normalizer.ts` (Change 1 task 5.0a) for type dispatch
-- [ ] 4.2 Adapter extracts Pi-specific event fields (e.g., `event.input.command`, `event.input.path`) and passes them to `normalizeToolCall`
-- [ ] 4.3 Handle unknown tools: `{ toolName: event.toolName }` (catch-all, passes through)
-- [ ] 4.4 Export adapter-specific normalizeToContext for testing
+## 3. ToolCallContext Normalization
 
-## 5. Hook Logic
+> **TDD**: Test the adapter-specific `normalizeToContext` helper independently.
+> Note: `normalizeToolCall()` from change-1 (`src/core/normalizer.ts`) handles
+> generic tool dispatch. The adapter's job is to extract Pi-specific event
+> fields and delegate.
 
-- [ ] 5.1 In `tool_call` handler: normalize event → ToolCallContext
-- [ ] 5.2 Call `matchAndResolve(toolCtx, ALL_RULE_PACKS, PI_CAPABILITIES)`
-- [ ] 5.3 If result is block/suggest: return `{ block: true, reason: result.message }`
-- [ ] 5.4 If result is null or allow: return `undefined` (pass through)
+- [ ] 3.0 RED: Write tests for `normalizeToContext`:
+  - bash event → `{ toolName: "bash", command: "..." }`
+  - read event → `{ toolName: "read", filePath: "..." }`
+  - write event → `{ toolName: "write", filePath: "..." }`
+  - unknown event → `{ toolName: "..." }` (catch-all)
+- [ ] 3.1 GREEN: Implement `normalizeToContext(event)` in `src/adapters/pi/normalize.ts`:
+  ```typescript
+  export function normalizeToContext(event: any): ToolCallContext {
+    return normalizeToolCall(event.toolName, event.input || {});
+  }
+  ```
+- [ ] 3.2 REFACTOR: Verify all normalization tests pass
 
-## 6. Module Exports
+## 4. Hook Logic (Block Behavior)
 
-- [ ] 6.1 Export extension function as default export
-- [ ] 6.2 Add JSDoc documentation
+> **TDD**: Test hook behavior with mock Pi API. Write mock tool_call events
+> and verify adapter returns correct block/passthrough responses.
 
-## 7. Unit Tests
+- [ ] 4.0 RED: Write tests:
+  - `cat .env` → returns `{ block: true, reason: "..." }`
+  - `sops -d secrets.yaml` → returns `{ block: true, reason: "..." }`
+  - `ls -la` → returns `undefined` (pass through)
+  - `cat README.md` → returns `undefined`
+  - Unknown tool → returns `undefined`
+  - Reason message contains interpolated `{matched}` value
+- [ ] 4.1 GREEN: Implement `tool_call` hook:
+  ```typescript
+  pi.on("tool_call", async (event, ctx) => {
+    const toolCtx = normalizeToContext(event);
+    const result = matchAndResolve(toolCtx, ALL_RULE_PACKS, PI_CAPABILITIES);
+    if (result?.type === "block" || result?.type === "suggest") {
+      return { block: true, reason: result.message };
+    }
+    return undefined;
+  });
+  ```
+- [ ] 4.2 REFACTOR: Verify all hook tests pass
 
-- [ ] 7.1 Test `.env` file read via bash is blocked with correct reason
-- [ ] 7.2 Test `.env` file read via read tool is blocked (file-path matcher)
-- [ ] 7.3 Test `cat .env` bash command is blocked
-- [ ] 7.4 Test `sops -d secrets.yaml` command is blocked
-- [ ] 7.5 Test `age -d file.age` command is blocked
-- [ ] 7.6 Test `gpg --decrypt file.gpg` command is blocked
-- [ ] 7.7 Test `openssl enc -d -aes-256-cbc -in file.enc` command is blocked
-- [ ] 7.8 Test `op read op://vault/item` command is blocked
-- [ ] 7.9 Test `pass show secret/path` command is blocked
-- [ ] 7.10 Test `gopass show secret/path` command is blocked
-- [ ] 7.11 Test private key read via read tool (`id_rsa`, `~/.ssh/my_key`) is blocked (predicate matcher)
-- [ ] 7.12 Test private key read via file extension (`.pem`, `.key`) is blocked
-- [ ] 7.13 Test safe commands pass through (`ls`, `cat README.md`, `git status`)
-- [ ] 7.14 Test safe file reads pass through (`config.yaml`, `src/index.ts`)
-- [ ] 7.15 Test unknown tool types pass through without blocking
-- [ ] 7.16 Test reason messages include `{matched}` interpolation
+## 5. Session-End Observability
 
-## 8. Integration Tests
+> **TDD**: Test that stats are logged at session end when interventions > 0.
 
-- [ ] 8.1 Create mock `ExtensionAPI` with event emitter
-- [ ] 8.2 Test extension registers handler for `tool_call`
-- [ ] 8.3 Test blocking returns `{ block: true, reason: "..." }` to Pi
-- [ ] 8.4 Test passthrough returns `undefined` to Pi
-- [ ] 8.5 Test ALL_RULE_PACKS are loaded (not curated by Adapter)
-- [ ] 8.6 Test all Rule Packs are exercised (env, sops, private-key, encryption-tools, secret-managers)
-- [ ] 8.7 Test read tool triggers file-path and predicate matchers
-- [ ] 8.8 Test unknown tool types pass through safely
+- [ ] 5.0 RED: Write test: when `getStats()` returns `{ matches: 3, blocks: 2, suggests: 1 }`, session_end handler calls `pi.log()` with summary line
+- [ ] 5.1 GREEN: Register `session_end` handler:
+  ```typescript
+  pi.on("session_end", () => {
+    const stats = getStats();
+    if (stats.matches > 0) {
+      pi.log(`🛡️ Guardrails: ${stats.matches} interventions this session (${stats.blocks} blocked, ${stats.suggests} suggested)`);
+    }
+    resetStats();
+  });
+  ```
+- [ ] 5.2 REFACTOR: Verify test passes
 
-## 9. Performance Tests
+## 6. Adapter-Specific Integration Tests
 
-- [ ] 9.1 Create `tests/performance/pi.perf.ts` benchmark suite
-- [ ] 9.2 Measure baseline: tool_call with no rules loaded
-- [ ] 9.3 Measure with rules: tool_call with all rules loaded
-- [ ] 9.4 Test with varying rule counts: 0, 10, 50, 100 rules
-- [ ] 9.5 Assert overhead < 50% and absolute time < 10ms
-- [ ] 9.6 Report min, max, mean, p95, p99 latencies
+> **TDD**: These are higher-level tests that exercise the full adapter
+> with a mock Pi ExtensionAPI, verifying the hook-pipeline end-to-end.
 
-## 10. Documentation
+- [ ] 6.0 RED: Write integration tests with mock ExtensionAPI:
+  - Extension registers handler for `tool_call`
+  - Extension registers handler for `session_end`
+  - `.env` read via bash is blocked
+  - `.env` read via read tool is blocked (file-path matcher)
+  - Private key read via read tool is blocked (predicate matcher)
+  - All rule packs are exercised (env, sops, private-key, encryption-tools, secret-managers, hardening)
+  - ALL_RULE_PACKS are loaded (not curated by adapter)
+- [ ] 6.1 GREEN: Create mock ExtensionAPI with event emitter, verify tests pass
+- [ ] 6.2 REFACTOR: Clean up
 
-- [ ] 10.1 Create `src/adapters/pi/README.md` with installation instructions
-- [ ] 10.2 Document Adapter hooks and expected Behavior
+## 7. Performance Tests
+
+- [ ] 7.1 Create `src/adapters/pi/adapter.perf.ts` benchmark suite
+- [ ] 7.2 Measure baseline: tool_call with no rules loaded
+- [ ] 7.3 Measure with all rules loaded
+- [ ] 7.4 Assert absolute time < 10ms per tool_call
+- [ ] 7.5 Report min, max, mean, p95, p99 latencies
+
+## 8. Documentation
+
+- [ ] 8.1 Create `src/adapters/pi/README.md` with installation instructions
+- [ ] 8.2 Document adapter hooks and expected behavior

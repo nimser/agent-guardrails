@@ -1,12 +1,16 @@
 # Delta for Project Foundation
 
+> **TDD**: See `.agents/skills/tdd/SKILL.md`. Every requirement below MUST be
+> implemented via RED→GREEN→REFACTOR vertical slices. Write one failing test,
+> then minimal code to pass, then refactor. Never write all tests first.
+
 ## ADDED Requirements
 
 ### Requirement: Behavior Enum
-The system MUST define a TypeScript enum for guardrail Behaviors.
+The system MUST define a TypeScript type for guardrail Behaviors.
 
 #### Scenario: Behavior types
-- WHEN the Behavior enum is defined
+- WHEN the Behavior type is defined
 - THEN it MUST contain:
   - `block` - Stop Tool Call, no alternative. Works in all Harnesses, all Phases.
   - `suggest` - Stop Tool Call, suggest safer alternative to LLM. Works in all Harnesses, before-tool Phase only.
@@ -21,25 +25,51 @@ The system MUST define a TypeScript enum for guardrail Behaviors.
   - `after-tool` Phase: only redact is available
 
 ### Requirement: GuardrailMatcher Type
-The system MUST define a discriminated union type for Guardrail Matchers. Core owns this type and all matcher variants.
+The system MUST define a discriminated union type for Guardrail Matchers.
 
 #### Scenario: Matcher types
 - WHEN the GuardrailMatcher type is defined
 - THEN it MUST be a discriminated union on `type`:
-  - `{ type: "bash-command"; pattern: RegExp }` - Matches against bash command strings
-  - `{ type: "file-path"; pattern: RegExp }` - Matches against file path strings
-  - `{ type: "predicate"; test: (ctx: ToolCallContext) => boolean }` - Function-based matcher for complex logic
-- AND adding a new matcher type MUST be a core change that forces updates to the engine
-- AND the engine MUST exhaustively handle all matcher variants (compiler-checked)
+  - `{ type: "bash-command"; pattern: RegExp }` — Matches against bash command strings
+  - `{ type: "file-path"; pattern: RegExp }` — Matches against file path strings
+  - `{ type: "predicate"; predicateName: string }` — References a registered predicate function by name (used by YAML rule packs)
+- AND each rule's `match` field MUST be a single `GuardrailMatcher` (not an array)
+- AND rules needing multiple match conditions MUST be split into separate rules
+
+> **Design note**: The `predicate` type uses a `predicateName: string` reference
+> (not a function pointer) so that rule packs can be fully serialized to/from YAML.
+> Predicate functions are registered separately in TypeScript via the
+> PredicateRegistry, and `yaml-pack-loader.ts` resolves names to functions at
+> load time.
+
+### Requirement: Predicate Registry
+The system MUST provide a registry for predicate functions referenced by name in YAML rule packs.
+
+#### Scenario: Registry API
+- WHEN the PredicateRegistry is used
+- THEN it MUST provide `register(name: string, fn: (ctx: ToolCallContext) => boolean): void`
+- AND it MUST provide `resolve(name: string): ((ctx: ToolCallContext) => boolean) | undefined`
+- AND it MUST provide `clear(): void` for test isolation
+
+#### Scenario: YAML pack loading with predicates
+- WHEN `yaml-pack-loader.ts` loads a YAML rule pack containing a `predicate` matcher
+- THEN it MUST look up `predicateName` in the PredicateRegistry
+- AND convert it to a runtime `GuardrailMatcher` with the function attached
+- AND throw a clear error if the predicate name is not registered
+
+#### Scenario: Built-in predicate registration
+- WHEN the system bootstraps
+- THEN it MUST register all built-in predicates before loading built-in YAML rule packs
+- AND built-in predicates (e.g., `ssh-private-key`) MUST be defined in `src/packs/predicates.ts`
 
 ### Requirement: Matcher Registry
-The system MUST provide a matcher registry that enables Open/Closed Principle (OCP) compliance for matcher types.
+The system MUST provide a matcher registry with explicit initialization for evaluating GuardrailMatchers against ToolCallContexts. The registry is the **evaluation mechanism** (OCP-compliant), while the `GuardrailMatcher` discriminated union is the **type contract** (compiler-checked).
 
 #### Scenario: Registry structure
 - WHEN the matcher registry is implemented
-- THEN it MUST provide a `register(handler: MatcherHandler): void` method
-- AND it MUST provide a `matches(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean` method
-- AND it MUST provide a `clear(): void` method for test isolation
+- THEN it MUST provide `register(handler: MatcherHandler): void`
+- AND it MUST provide `evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean`
+- AND it MUST provide `clear(): void` for test isolation
 - AND it MUST reject duplicate type registrations (error or override)
 
 #### Scenario: MatcherHandler interface
@@ -48,42 +78,28 @@ The system MUST provide a matcher registry that enables Open/Closed Principle (O
   ```typescript
   interface MatcherHandler<T extends string = string> {
     type: T;
-    matches(matcher: MatcherOf<T>, ctx: ToolCallContext): boolean;
+    matches(matcher: Extract<GuardrailMatcher, { type: T }>, ctx: ToolCallContext): boolean;
   }
   ```
 - AND the `matches` method MUST evaluate the matcher against the context
-- AND TypeScript exhaustiveness checks MUST be enforced at compile time
 
 #### Scenario: Explicit initialization lifecycle
 - WHEN adapters bootstrap the system
 - THEN they MUST call `initializeMatcherRegistry()` exactly once before handling tool calls
-- AND the initialization function MUST register all built-in matchers:
+- AND the initialization function MUST register all built-in handlers:
   - `bash-command` handler
   - `file-path` handler
   - `predicate` handler
 - AND the initialization MUST NOT use module-level side effects
-- AND the initialization function signature MUST be:
-  ```typescript
-  export function initializeMatcherRegistry(): void;
-  ```
 
 #### Scenario: Test isolation
 - WHEN tests require a subset of matchers
-- THEN they MUST create a fresh registry instance
+- THEN they MUST create a fresh registry instance or call `registry.clear()` first
 - AND they MUST register only the matchers needed for the test
 - AND they MUST NOT rely on global registry state between tests
-- AND test setup MUST call `registry.clear()` if reusing a shared instance
-
-#### Scenario: Adding new matcher types
-- WHEN a new matcher type is added (e.g., `shell-ast`)
-- THEN a new handler file MUST be created in `src/matchers/`
-- AND the handler MUST be imported into `src/matchers/registry-setup.ts`
-- AND the handler MUST be registered in `initializeMatcherRegistry()`
-- AND the matcher type MUST be added to the `GuardrailMatcher` discriminated union
-- AND TypeScript compiler MUST enforce exhaustiveness in all switch statements
 
 ### Requirement: ToolCallContext Type
-The system MUST define a discriminated union type for tool call context, used by the engine to evaluate Matchers.
+The system MUST define a discriminated union type for tool call context.
 
 #### Scenario: ToolCallContext structure
 - WHEN a ToolCallContext is created
@@ -92,7 +108,7 @@ The system MUST define a discriminated union type for tool call context, used by
   - `{ toolName: "read"; filePath: string }`
   - `{ toolName: "write"; filePath: string }`
   - `{ toolName: string; command?: string; filePath?: string }` (catch-all for unknown tools)
-- AND the compiler MUST enforce that required fields are present for each toolName variant
+- AND the compiler MUST enforce required fields per variant
 
 ### Requirement: Guardrail Rule Interface
 The system MUST define a TypeScript interface for guardrail Rules.
@@ -100,12 +116,12 @@ The system MUST define a TypeScript interface for guardrail Rules.
 #### Scenario: Rule structure
 - WHEN a Guardrail Rule is defined
 - THEN it MUST have:
-  - `id: string` - Stable Rule ID (e.g., `sops.decrypt`, `git.reset-hard`)
-  - `title: string` - Human-readable name
-  - `description: string` - What the Rule matches
-  - `phase: "before-tool" | "after-tool"` - Phase when the Rule fires
-  - `match: GuardrailMatcher` - Guardrail Matcher for matching the condition
-  - `defaultAction: GuardrailAction` - Default Action
+  - `id: string` — Stable Rule ID (e.g., `sops.decrypt`)
+  - `title: string` — Human-readable name
+  - `description: string` — What the Rule matches
+  - `phase: "before-tool" | "after-tool"` — Phase when the Rule fires
+  - `match: GuardrailMatcher` — Single GuardrailMatcher (not array; use separate rules for OR conditions)
+  - `defaultAction: GuardrailAction` — Default Action
 
 ### Requirement: Guardrail Action Types
 The system MUST define TypeScript types for guardrail Actions.
@@ -113,23 +129,18 @@ The system MUST define TypeScript types for guardrail Actions.
 #### Scenario: Action types
 - WHEN a Guardrail Action is defined
 - THEN it MUST be one of:
-  - `{ type: "allow" }` - Allow without modification
-  - `{ type: "block"; message: string }` - Block with Message
-  - `{ type: "suggest"; replacement: string; message?: string }` - Block + suggest single Replacement
-  - `{ type: "run"; replacement: string; message?: string }` - Block + execute Replacement, optional Message shown to user
-  - `{ type: "redact"; replacement: string }` - Allow + sanitize Output
-  - `{ type: "confirm"; message: string; fallback?: GuardrailAction }` - Ask user with Fallback
+  - `{ type: "allow" }`
+  - `{ type: "block"; message: string }`
+  - `{ type: "suggest"; replacement: string; message?: string }`
+  - `{ type: "run"; replacement: string; message?: string }`
+  - `{ type: "redact"; replacement: string }`
+  - `{ type: "confirm"; message: string; fallback?: GuardrailAction }`
 
 #### Scenario: Message templates
 - WHEN a Guardrail Action has a `message` field
-- THEN the message MUST support the `{matched}` placeholder
-- AND the engine MUST interpolate `{matched}` with the actual matched value (file path or command) at match time
+- THEN the message MUST support `{matched}` placeholder
+- AND the engine MUST interpolate `{matched}` with the actual matched value at match time
 - AND `{matched}` MUST be available for all Action types (block, suggest, run, confirm)
-
-#### Scenario: Run with message
-- WHEN a run Action has a `message` field
-- THEN the Message MUST be shown to the user/agent before or during execution
-- AND the Message SHOULD explain what the safer alternative does
 
 ### Requirement: Rule Pack Interface
 The system MUST define a TypeScript interface for Rule Packs.
@@ -137,10 +148,37 @@ The system MUST define a TypeScript interface for Rule Packs.
 #### Scenario: Rule Pack structure
 - WHEN a Rule Pack is defined
 - THEN it MUST have:
-  - `id: string` - Unique identifier (e.g., `env`, `sops`, `git`)
-  - `name: string` - Human-readable name
-  - `description: string` - What the pack covers
-  - `rules: GuardrailRule[]` - Rules in the pack
+  - `id: string`
+  - `name: string`
+  - `description: string`
+  - `rules: GuardrailRule[]`
+
+### Requirement: Rule Pack Format (YAML for built-in and user packs)
+
+> **Design Decision 16 (authoritative)**: All rule packs — both built-in and
+> user-provided — are defined as **YAML files** and loaded via
+> `src/infrastructure/yaml-pack-loader.ts`. This lowers the contribution
+> barrier (no TypeScript knowledge required), enables a community rule pack
+> ecosystem, and ensures consistency between built-in and custom packs.
+> See `docs/yaml-rule-packs.md` for the full YAML schema.
+
+#### Scenario: Built-in pack format
+- WHEN a built-in rule pack is shipped with Agent Guardrails
+- THEN it MUST be a `.yaml` file in `src/packs/`
+- AND it MUST conform to the YAML rule pack schema
+- AND it MUST be loaded via `yaml-pack-loader.ts` at bootstrap
+
+#### Scenario: User-provided pack format
+- WHEN a user provides custom rule packs in `.agent-guardrails/packs/`
+- THEN they MUST also be `.yaml` files
+- AND they MUST be loaded via the same `yaml-pack-loader.ts`
+
+#### Scenario: Predicate matchers in YAML packs
+- WHEN a YAML rule pack needs a `predicate` matcher (e.g., SSH directory heuristic)
+- THEN the YAML `match` block MUST use `type: predicate` with `predicateName: <name>`
+- AND the named predicate function MUST be registered in `src/packs/predicates.ts`
+- AND `yaml-pack-loader.ts` MUST resolve the name to the function at load time
+- AND an unregistered predicate name MUST produce a clear error at load time
 
 ### Requirement: Harness Capabilities
 The system MUST define a TypeScript interface for Harness Capabilities.
@@ -148,14 +186,13 @@ The system MUST define a TypeScript interface for Harness Capabilities.
 #### Scenario: Capability model
 - WHEN Harness Capabilities are defined
 - THEN it MUST have:
-  - `block: boolean` - Can block Tool Calls (all Harnesses: true)
-  - `suggest: boolean` - Can suggest alternatives (all Harnesses: true)
-  - `run: boolean` - Can execute Replacement commands (opencode, Pi only)
-  - `redact: boolean` - Can modify Tool Output (opencode, Pi only)
-  - `confirm: boolean` - Has native confirmation UI (Pi, Codex only)
+  - `block: boolean`
+  - `suggest: boolean`
+  - `run: boolean`
+  - `redact: boolean`
+  - `confirm: boolean`
 
 ### Requirement: Built-in Harness Capabilities
-The system MUST define Capabilities for supported Harnesses.
 
 #### Scenario: opencode Capabilities
 - WHEN opencode Capabilities are queried
@@ -174,46 +211,48 @@ The system MUST define Capabilities for supported Harnesses.
 - THEN it MUST return: `{ block: true, suggest: true, run: false, redact: false, confirm: true }`
 
 ### Requirement: Action Fallback Chain
-The system MUST define a formalized fallback chain for resolving Actions when a Harness lacks the required Capability or when a safer command cannot be found.
+The system MUST define a formalized fallback chain for resolving Actions.
 
 #### Scenario: Fallback chain definition
 - WHEN the fallback chain is defined
 - THEN it MUST follow this order:
   - `run` → `suggest` → `block`
   - `confirm` → `suggest`
-  - `suggest` (when `findSaferCommand` returns null) → `block` (with generic contextual message)
+  - `suggest` (when `findSaferCommand` returns null, per change-5) → `block`
 
 #### Scenario: resolveAction function
 - WHEN the engine calls `resolveAction(action, capabilities, matchContext)`
 - THEN it MUST walk the fallback chain if the Harness lacks the required Capability
-- AND if a `suggest` Action cannot find a safer command, it MUST fall back to `block`
-- AND the fallback `block` message MUST include `{matched}` interpolation
-- AND the fallback `block` message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
+- AND if `suggest` cannot find a safer command, it MUST fall back to `block`
+- AND the fallback message MUST be: `"Blocked: \`{matched}\` — no safer alternative available."`
 
 ### Requirement: Engine Package
-The system MUST provide a engine (`src/engine/`) package that centralizes matching and Action resolution.
+The system MUST provide an engine (`src/engine/`) package that centralizes matching and Action resolution.
 
-#### Scenario: Engine package structure
+#### Scenario: Engine composition
 - WHEN the engine package is created
-- THEN it MUST export a `matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: HarnessCapabilities): GuardrailAction | null` function
-- AND it MUST evaluate all Matcher types against the appropriate ToolCallContext fields
-- AND it MUST apply the Action Fallback Chain when resolving Actions
-- AND Adapters MUST use the engine rather than implementing their own matching logic
+- THEN it MUST export `matchAndResolve(ctx: ToolCallContext, packs: RulePack[], caps: HarnessCapabilities): GuardrailAction | null`
+- AND it MUST compose extracted modules: `splitCommands`, `resolveAction`, `StatsTracker`
+- AND it MUST evaluate matchers via the MatcherRegistry
+- AND Adapters MUST use the engine, not implement their own matching
 
-#### Scenario: Engine matcher evaluation
-- WHEN `matchAndResolve` is called with a ToolCallContext
-- THEN it MUST iterate all Rules in all Rule Packs
-- AND for each Rule, evaluate its GuardrailMatcher against the ToolCallContext:
-  - `bash-command` matcher: test `pattern` against `ctx.command` (if present)
-  - `file-path` matcher: test `pattern` against `ctx.filePath` (if present)
-  - `predicate` matcher: call `test(ctx)`
-- AND return the resolved GuardrailAction for the first matching Rule
-- AND return `null` if no Rules match
+#### Scenario: Tool-type early exit
+- WHEN `matchAndResolve` receives a ToolCallContext with no `command` and no `filePath`
+- THEN it MUST return `null` immediately without iterating rules
 
-### Requirement: Zero Dependencies
-The core module MUST have zero external dependencies.
+### Requirement: Zero Dependencies in Core
+The `src/core/` directory MUST have zero external npm dependencies.
 
 #### Scenario: Dependency policy
-- WHEN the core module package is checked
-- THEN `dependencies` in package.json MUST be empty
-- AND only `devDependencies` for testing are allowed
+- WHEN `src/core/` is checked
+- THEN its modules MUST NOT import any npm packages
+- AND the `yaml` npm package (used by `yaml-pack-loader.ts`) MUST live in `src/infrastructure/`
+
+### Requirement: Infrastructure Layer
+
+#### Scenario: yaml-pack-loader
+- WHEN `yaml-pack-loader.ts` is implemented
+- THEN it MUST live in `src/infrastructure/`
+- AND it MUST load YAML rule packs from a given directory or list of files
+- AND it MUST resolve `predicate` matcher names via the PredicateRegistry
+- AND it MUST run `validateRulePack()` on each loaded pack (fail fast)

@@ -70,15 +70,16 @@ The `suggest` Behavior is universal (works in all Harnesses). The `run` Behavior
 - Format detection (extension + flags) selects the right shell pipeline
 - TypeScript format-aware redaction deferred to `run` Behavior change
 
-### Decision 5: Reuse existing Rule Packs, add kubernetes, gh-cli, direnv
+### Decision 5: Reuse existing YAML Rule Packs, add new YAML packs
 
-**Choice**: Use the same Rule Packs from `change-2-secret-blocking`, add kubernetes, gh-cli, direnv packs
+**Choice**: Update the existing YAML rule packs from `change-2-secret-blocking` (change `defaultAction` from `block` to `suggest`), and add new YAML packs for kubernetes, gh-cli, direnv.
 
 **Rationale**:
 - Rule IDs (`sops.decrypt`, `env.read`) remain stable
-- Only the Action changes (block → suggest)
+- Only the Action changes in the YAML (block → suggest)
 - kubernetes, gh-cli, direnv are high-frequency tools in dev workflows
 - vault dropped from MVP (enterprise-focused, smallest audience, moved to future-secret-packs.md backlog)
+- All packs remain in YAML format per Change 1 Decision 16
 
 ### Decision 6: Suggest as universal Behavior
 
@@ -138,6 +139,17 @@ export function resolveAction(action, caps, ctx?) {
   // ...
 }
 ```
+
+### Decision 9: Rule packs in YAML, resolver logic in TypeScript
+
+**Choice**: All rule pack definitions (both existing and new) remain as `.yaml` files in `src/packs/`. Only the resolver logic (`findSaferCommand`, `detectSopsFormat`, `sopsFormatPipeline`) is written in TypeScript under `src/resolver/`.
+
+**Rationale**:
+- Consistent with Change 1 Decision 16 (YAML built-in packs)
+- Rule pack data (matchers, actions, messages) is declarative — perfect for YAML
+- Resolver logic (format detection, command transformation) is imperative — belongs in TypeScript
+- Pure TypeScript resolver functions are independently testable without YAML loading
+- The `findSaferCommand` function is called by `resolveAction` at runtime, not baked into YAML
 
 ## Risks / Trade-offs
 

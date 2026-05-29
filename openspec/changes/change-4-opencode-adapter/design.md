@@ -49,7 +49,7 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 - `ALL_RULE_PACKS` ensures all packs are loaded without Adapters curating the list
 - Adding new packs requires zero Adapter changes
 
-### Decision 5: ToolCallContext normalization
+### Decision 4: ToolCallContext normalization
 
 **Choice**: Adapter normalizes opencode events into `ToolCallContext` discriminated union
 
@@ -58,7 +58,7 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 - Engine evaluates all matcher types against whatever fields are present
 - Unknown tools get catch-all variant (no fields, no matchers fire, passes through)
 
-### Decision 4: Performance benchmarking
+### Decision 5: Performance benchmarking
 
 **Choice**: Include performance test suite with configurable rule counts
 
@@ -68,7 +68,7 @@ opencode is a popular AI coding assistant with a plugin system that supports `to
 - Measure min, max, mean, p95, p99 latencies
 - Catch performance regressions early
 
-### Decision 5: Observability Tier 1 (session-teardown logging)
+### Decision 6: Observability Tier 1 (session-teardown logging)
 
 **Choice**: Adapter reads engine stats and logs one-line summary at session teardown via `console.log()`
 

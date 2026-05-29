@@ -1,81 +1,28 @@
-## ADDED Requirements
+# Delta for Pi Adapter — Engine Consumption (No New Engine Requirements)
 
-### Requirement: Engine Decomposition into Pure Function Modules
-The engine MUST be decomposed into focused modules rather than implemented as a monolithic function.
+> **This spec change adds no new engine requirements.** The engine
+> (`matchAndResolve`, `getStats`, `resetStats`, tool-type early exit,
+> engine decomposition) is fully specified in `change-1-project-foundation/specs/core/spec.md`.
+>
+> This file exists only to document how the Pi adapter **consumes** the
+> engine's public API, and to assert the interface contract the adapter
+> depends on.
 
-#### Scenario: Extracted modules
-- WHEN the engine is implemented
-- THEN it MUST compose the following extracted modules:
-  - `src/core/normalizer.ts` — pure function `normalizeToolCall(tool, args) → ToolCallContext`
-  - `src/matcher/command-splitter.ts` — pure function `splitCommands(command) → string[]`
-  - `src/resolver/action-resolver.ts` — pure function `resolveAction(action, caps, ctx?) → GuardrailAction`
-  - `src/engine/stats-tracker.ts` — `StatsTracker` class with `record()`, `getStats()`, `reset()` methods
-- AND `src/engine/engine.ts` MUST contain only orchestration logic (composing the above modules)
-- AND each extracted module MUST be independently testable without requiring the full engine
+## Engine Interface Contract (consumed, not defined here)
 
-#### Scenario: Module responsibilities
-- WHEN examining the engine implementation
-- THEN Normalization logic MUST live in `src/core/normalizer.ts` (not in adapters or engine)
-- AND command splitting logic MUST live in `src/matcher/command-splitter.ts` (not embedded in engine)
-- AND action resolution with fallback chains MUST live in `src/resolver/action-resolver.ts` (not duplicated across engine/adapters)
-- AND statistics tracking state MUST be encapsulated in `StatsTracker` class (not module-level globals)
+### Requirement: matchAndResolve Signature (from change-1)
+The Pi adapter depends on the engine's `matchAndResolve` function.
 
-#### Scenario: Independent testability
-- WHEN testing individual modules
-- THEN `normalizeToolCall()` MUST be testable without instantiating the engine
-- AND `splitCommands()` MUST be testable without instantiating the engine
-- AND `resolveAction()` MUST be testable without instantiating the engine or loading rule packs
-- AND `StatsTracker` instances MUST be testable in isolation
+#### Scenario: Adapter calls matchAndResolve
+- WHEN the Pi adapter invokes `matchAndResolve(ctx, ALL_RULE_PACKS, PI_CAPABILITIES)`
+- THEN it MUST receive `GuardrailAction | null`
+- AND the engine MUST have been initialized (via `initializeMatcherRegistry()`) before this call
+- AND `null` means no rules matched → tool call passes through
 
-### Requirement: matchAndResolve Function
-The system MUST provide a `matchAndResolve()` function in engine (`src/engine/`) that evaluates a `ToolCallContext` against Rule Packs and returns the effective Guardrail Action.
+### Requirement: Stats API (from change-1)
+The Pi adapter depends on `getStats()` and `resetStats()`.
 
-#### Scenario: Function signature
-- **WHEN** `matchAndResolve(ctx, packs, capabilities)` is called
-- **THEN** it MUST accept:
-  - `ctx: ToolCallContext` — the normalized tool call context from an Adapter
-  - `packs: RulePack[]` — the Rule Packs to evaluate against
-  - `capabilities: HarnessCapabilities` — the Harness capabilities for fallback resolution
-- **AND** it MUST return `GuardrailAction | null`
-  - `null` means no rules matched, tool call is allowed
-  - non-null is the effective action after fallback resolution
-
-#### Scenario: No matching rules
-- **WHEN** no rule in any pack matches the `ToolCallContext`
-- **THEN** the function MUST return `null`
-
-#### Scenario: Matching rule with supported action
-- **WHEN** a rule matches and its action is supported by the Harness capabilities
-- **THEN** the function MUST return that action with `{matched}` template interpolated
-
-#### Scenario: Matching rule with unsupported action
-- **WHEN** a rule matches but its action is not supported by the Harness
-- **THEN** the function MUST walk the fallback chain (`run → suggest → block`, `confirm → suggest`)
-- **AND** return the first action in the chain that IS supported
-
-#### Scenario: suggest with no safer command
-- **WHEN** a rule matches with a `suggest` action but `findSaferCommand()` returns `null`
-- **THEN** the function MUST fall back to `block`
-- **AND** use the generic fallback message with `{matched}` interpolated
-
-### Requirement: Tool-Type Early Exit
-The system's `matchAndResolve()` function MUST skip rule evaluation entirely when the `ToolCallContext` has no fields that any active matcher type can evaluate against.
-
-#### Scenario: Tool with no matchable fields
-- **WHEN** a tool call produces a `ToolCallContext` with no `command` and no `filePath` (e.g., a `search` tool that only returns text)
-- **THEN** `matchAndResolve()` MUST return `null` immediately without iterating rules
-- **AND** the tool call MUST be allowed through
-
-#### Scenario: Tool with only filePath
-- **WHEN** a tool call produces a `ToolCallContext` with `filePath` but no `command` (e.g., `read` tool)
-- **THEN** `matchAndResolve()` MUST evaluate only rules with `file-path` matchers
-- **AND** rules with `bash-command` matchers MUST be skipped
-
-#### Scenario: Tool with only command
-- **WHEN** a tool call produces a `ToolCallContext` with `command` but no `filePath` (e.g., `bash` tool)
-- **THEN** `matchAndResolve()` MUST evaluate only rules with `bash-command` matchers
-- **AND** rules with `file-path` matchers MUST be skipped
-
-#### Scenario: Tool with both fields
-- **WHEN** a tool call produces a `ToolCallContext` with both `command` and `filePath`
-- **THEN** `matchAndResolve()` MUST evaluate all matcher types
+#### Scenario: Adapter reads stats at session end
+- WHEN the adapter calls `getStats()` during `session_end`
+- THEN it MUST receive an object with at least: `{ matches: number, blocks: number, suggests: number }`
+- AND calling `resetStats()` MUST zero all counters for the next session
