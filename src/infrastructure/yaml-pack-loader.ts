@@ -5,10 +5,6 @@ import { PredicateRegistry } from '../core/predicate-registry.js';
 import { validateRulePack, getRulePackErrors } from '../core/validator.js';
 import type { GuardrailMatcher, GuardrailAction, BeforeToolAction, RulePack } from '../core/types.js';
 
-/**
- * Load a YAML rule pack from a file.
- * Validates the pack and resolves predicate matcher names.
- */
 export function loadYamlRulePack(
   filePath: string,
   predicateRegistry: PredicateRegistry
@@ -58,9 +54,6 @@ export function loadYamlRulePack(
   return pack;
 }
 
-/**
- * Load all YAML rule packs from a directory.
- */
 export function loadAllRulePacks(
   packDir: string,
   predicateRegistry: PredicateRegistry
@@ -91,9 +84,6 @@ export function loadAllRulePacks(
   return packs;
 }
 
-/**
- * Parse a matcher definition from YAML.
- */
 function parseMatcher(
   raw: any,
   predicateRegistry: PredicateRegistry,
@@ -144,9 +134,6 @@ function parseMatcher(
   }
 }
 
-/**
- * Parse an action definition from YAML.
- */
 function parseAction(raw: any): GuardrailAction {
   if (!raw.type) {
     throw new Error('Action missing "type" field');
@@ -182,9 +169,6 @@ function parseAction(raw: any): GuardrailAction {
   }
 }
 
-/**
- * Parse a before-tool action (excludes redact).
- */
 function parseBeforeToolAction(raw: any): BeforeToolAction {
   const action = parseAction(raw);
   if (action.type === 'redact') {
