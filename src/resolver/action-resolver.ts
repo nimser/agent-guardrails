@@ -89,7 +89,7 @@ export function resolveAction(
         };
       }
       // Fallback to suggest
-      if (capabilities.suggest) {
+      if (capabilities.suggest && action.replacement) {
         const replacement = action.replacement;
         const resolvedCtx = { ...ctx, replacement };
         return {
@@ -98,7 +98,6 @@ export function resolveAction(
           message: interpolateMessage(action.message, resolvedCtx),
         };
       }
-      // Fallback to block
       return {
         type: 'block',
         message: interpolate(
@@ -139,15 +138,13 @@ export function resolveAction(
       if (action.fallback) {
         return resolveAction(action.fallback, capabilities, ctx);
       }
-      // Fallback to suggest if capability available
-      if (capabilities.suggest) {
+      if (capabilities.suggest && ctx.replacement) {
         return {
           type: 'suggest',
-          replacement: ctx.replacement ?? '',
+          replacement: ctx.replacement,
           message: interpolate(action.message, ctx),
         };
       }
-      // Fallback to block
       return {
         type: 'block',
         message: interpolate(
