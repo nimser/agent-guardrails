@@ -1,24 +1,24 @@
-import type { GuardrailAction, HarnessCapabilities } from '../core/types.js';
+import type { GuardrailAction, HarnessCapabilities } from '../core/types.js'
 
 export interface ResolveContext {
-  matched?: string;
-  replacement?: string;
+  matched?: string
+  replacement?: string
 }
 
 function interpolate(message: string, ctx: ResolveContext): string {
-  let result = message;
+  let result = message
   if (ctx.matched !== undefined) {
-    result = result.replace(/\{matched\}/g, ctx.matched);
+    result = result.replace(/\{matched\}/g, ctx.matched)
   }
   if (ctx.replacement !== undefined) {
-    result = result.replace(/\{replacement\}/g, ctx.replacement);
+    result = result.replace(/\{replacement\}/g, ctx.replacement)
   }
-  return result;
+  return result
 }
 
 function interpolateMessage(message: string | undefined, ctx: ResolveContext): string | undefined {
-  if (message === undefined) return undefined;
-  return interpolate(message, ctx);
+  if (message === undefined) return undefined
+  return interpolate(message, ctx)
 }
 
 /**
@@ -38,63 +38,63 @@ export function resolveAction(
 ): GuardrailAction {
   switch (action.type) {
     case 'allow':
-      return action;
+      return action
 
     case 'block':
       return {
         type: 'block',
         message: interpolate(action.message, ctx),
-      };
+      }
 
     case 'suggest': {
       if (capabilities.suggest) {
-        const replacement = action.replacement;
-        const resolvedCtx = { ...ctx, replacement };
+        const replacement = action.replacement
+        const resolvedCtx = { ...ctx, replacement }
         return {
           type: 'suggest',
           replacement,
           message: interpolateMessage(action.message, resolvedCtx),
-        };
+        }
       }
       return {
         type: 'block',
         message: interpolate(
-          action.message 
-            ? `Blocked: ${action.message}` 
+          action.message
+            ? `Blocked: ${action.message}`
             : `Blocked: \`${ctx.matched ?? ''}\` — capability unavailable.`,
           ctx
         ),
-      };
+      }
     }
 
     case 'run': {
       if (capabilities.run) {
-        const replacement = action.replacement;
-        const resolvedCtx = { ...ctx, replacement };
+        const replacement = action.replacement
+        const resolvedCtx = { ...ctx, replacement }
         return {
           type: 'run',
           replacement,
           message: interpolateMessage(action.message, resolvedCtx),
-        };
+        }
       }
       if (capabilities.suggest && action.replacement) {
-        const replacement = action.replacement;
-        const resolvedCtx = { ...ctx, replacement };
+        const replacement = action.replacement
+        const resolvedCtx = { ...ctx, replacement }
         return {
           type: 'suggest',
           replacement,
           message: interpolateMessage(action.message, resolvedCtx),
-        };
+        }
       }
       return {
         type: 'block',
         message: interpolate(
-          action.message 
-            ? `Blocked: ${action.message}` 
+          action.message
+            ? `Blocked: ${action.message}`
             : `Blocked: \`${ctx.matched ?? ''}\` — no Replacement available.`,
           ctx
         ),
-      };
+      }
     }
 
     case 'redact': {
@@ -102,7 +102,7 @@ export function resolveAction(
         return {
           type: 'redact',
           replacement: action.replacement,
-        };
+        }
       }
       return {
         type: 'block',
@@ -110,7 +110,7 @@ export function resolveAction(
           `Blocked: \`${ctx.matched ?? ''}\` — redact capability unavailable.`,
           ctx
         ),
-      };
+      }
     }
 
     case 'confirm': {
@@ -119,27 +119,27 @@ export function resolveAction(
           type: 'confirm',
           message: interpolate(action.message, ctx),
           fallback: action.fallback,
-        };
+        }
       }
       if (action.fallback) {
-        return resolveAction(action.fallback, capabilities, ctx);
+        return resolveAction(action.fallback, capabilities, ctx)
       }
       if (capabilities.suggest && ctx.replacement) {
         return {
           type: 'suggest',
           replacement: ctx.replacement,
           message: interpolate(action.message, ctx),
-        };
+        }
       }
       return {
         type: 'block',
         message: interpolate(
-          action.message 
-            ? `Blocked: ${action.message}` 
+          action.message
+            ? `Blocked: ${action.message}`
             : `Blocked: \`${ctx.matched ?? ''}\` — no Replacement available.`,
           ctx
         ),
-      };
+      }
     }
   }
 }

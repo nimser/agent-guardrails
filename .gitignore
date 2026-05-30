@@ -2,3 +2,7 @@
 .opencode/
 .agents/
 .pi/
+node_modules
+dist
+*.tsbuildinfo
+.env

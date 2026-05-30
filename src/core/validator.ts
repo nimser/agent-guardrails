@@ -104,10 +104,8 @@ export function getRulePackErrors(input: unknown): string[] {
     return ['RulePack is not an object']
   }
 
-  if (typeof input.id !== 'string' || !input.id)
-    errors.push('RulePack "id" is required')
-  if (typeof input.name !== 'string' || !input.name)
-    errors.push('RulePack "name" is required')
+  if (typeof input.id !== 'string' || !input.id) errors.push('RulePack "id" is required')
+  if (typeof input.name !== 'string' || !input.name) errors.push('RulePack "name" is required')
   if (typeof input.description !== 'string' || !input.description)
     errors.push('RulePack "description" is required')
 

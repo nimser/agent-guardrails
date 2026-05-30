@@ -4,11 +4,7 @@
     "browser": true,
     "node": true
   },
-  "plugins": [
-    "eslint",
-    "typescript",
-    "unicorn"
-  ],
+  "plugins": ["eslint", "typescript", "unicorn"],
   "rules": {
     "no-console": "error",
     "typescript/no-explicit-any": "error"

@@ -1,15 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import {
-  validateRule,
-  validateRulePack,
-  getRuleErrors,
-  getRulePackErrors,
-} from './validator.js'
+import { validateRule, validateRulePack, getRuleErrors, getRulePackErrors } from './validator.js'
 import type { GuardrailRule, RulePack } from './types.js'
 
-function validRule(
-  overrides: Partial<GuardrailRule> = {}
-): GuardrailRule {
+function validRule(overrides: Partial<GuardrailRule> = {}): GuardrailRule {
   return {
     id: 'test.rule',
     title: 'Test Rule',
@@ -51,9 +44,7 @@ describe('validateRule', () => {
       defaultAction: { type: 'block' as const, message: 'nope' },
     }
     expect(validateRule(rule)).toBe(false)
-    expect(getRuleErrors(rule)).toEqual(
-      expect.arrayContaining([expect.stringContaining('redact')])
-    )
+    expect(getRuleErrors(rule)).toEqual(expect.arrayContaining([expect.stringContaining('redact')]))
   })
 
   it('validates when after-tool has redact action', () => {
