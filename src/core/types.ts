@@ -1,12 +1,15 @@
 export type GuardrailBehavior = 'block' | 'suggest' | 'run' | 'redact' | 'confirm';
 
-export type GuardrailAction =
+export type BeforeToolAction =
   | { type: 'allow' }
   | { type: 'block'; message: string }
   | { type: 'suggest'; replacement: string; message?: string }
   | { type: 'run'; replacement: string; message?: string }
-  | { type: 'redact'; replacement: string }
-  | { type: 'confirm'; message: string; fallback?: GuardrailAction };
+  | { type: 'confirm'; message: string; fallback?: BeforeToolAction };
+
+export type AfterToolAction = { type: 'redact'; replacement: string };
+
+export type GuardrailAction = BeforeToolAction | AfterToolAction;
 
 export type GuardrailMatcher =
   | { type: 'bash-command'; pattern: RegExp }
@@ -19,14 +22,25 @@ export type ToolCallContext =
   | { toolName: 'write'; filePath: string }
   | { toolName: string; command?: string; filePath?: string };
 
-export interface GuardrailRule {
+export interface BeforeToolRule {
   id: string;
   title: string;
   description: string;
-  phase: 'before-tool' | 'after-tool';
+  phase: 'before-tool';
   match: GuardrailMatcher;
-  defaultAction: GuardrailAction;
+  defaultAction: BeforeToolAction;
 }
+
+export interface AfterToolRule {
+  id: string;
+  title: string;
+  description: string;
+  phase: 'after-tool';
+  match: GuardrailMatcher;
+  defaultAction: AfterToolAction;
+}
+
+export type GuardrailRule = BeforeToolRule | AfterToolRule;
 
 export interface RulePack {
   id: string;

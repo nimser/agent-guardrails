@@ -2,8 +2,8 @@ import { readFileSync, readdirSync, statSync } from 'fs';
 import { parse as parseYaml } from 'yaml';
 import { join } from 'path';
 import { PredicateRegistry } from '../core/predicate-registry.js';
-import { validateRulePack } from '../core/validator.js';
-import type { GuardrailMatcher, GuardrailAction, GuardrailRule, RulePack } from '../core/types.js';
+import { validateRulePack, getRulePackErrors } from '../core/validator.js';
+import type { GuardrailMatcher, GuardrailAction, BeforeToolAction, RulePack } from '../core/types.js';
 
 /**
  * Load a YAML rule pack from a file.
@@ -30,7 +30,7 @@ export function loadYamlRulePack(
     throw new Error(`Rule pack "rules" must be an array: ${filePath}`);
   }
 
-  const rules: GuardrailRule[] = rawRules.map((rawRule: any, index: number) => {
+  const rules = rawRules.map((rawRule: any, index: number) => {
     if (!rawRule.id || !rawRule.title || !rawRule.description || !rawRule.phase || !rawRule.match || !rawRule.defaultAction) {
       throw new Error(`Rule #${index} in ${filePath} missing required fields`);
     }
@@ -48,11 +48,11 @@ export function loadYamlRulePack(
     };
   });
 
-  const pack: RulePack = { id, name, description, rules };
+  const pack: unknown = { id, name, description, rules };
 
-  const validation = validateRulePack(pack);
-  if (!validation.valid) {
-    throw new Error(`Rule pack "${id}" validation failed: ${validation.errors.join(', ')}`);
+  if (!validateRulePack(pack)) {
+    const errors = getRulePackErrors(pack);
+    throw new Error(`Rule pack "${id}" validation failed: ${errors.join('; ')}`);
   }
 
   return pack;
@@ -163,9 +163,20 @@ function parseAction(raw: any): GuardrailAction {
       return {
         type: 'confirm',
         message: raw.message || '',
-        fallback: raw.fallback ? parseAction(raw.fallback) : undefined,
+        fallback: raw.fallback ? parseBeforeToolAction(raw.fallback) : undefined,
       };
     default:
       throw new Error(`Unknown action type "${raw.type}"`);
   }
+}
+
+/**
+ * Parse a before-tool action (excludes redact).
+ */
+function parseBeforeToolAction(raw: any): BeforeToolAction {
+  const action = parseAction(raw);
+  if (action.type === 'redact') {
+    throw new Error('redact action is not allowed in before-tool context');
+  }
+  return action;
 }

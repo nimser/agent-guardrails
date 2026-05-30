@@ -5,6 +5,10 @@ export type {
   ToolCallContext,
   GuardrailMatcher,
   GuardrailRule,
+  BeforeToolRule,
+  AfterToolRule,
+  BeforeToolAction,
+  AfterToolAction,
   RulePack,
 } from './core/types.js';
 
@@ -12,7 +16,7 @@ export type {
 export { PredicateRegistry } from './core/predicate-registry.js';
 
 // Validation
-export { validateRule, validateRulePack } from './core/validator.js';
+export { validateRule, validateRulePack, getRuleErrors, getRulePackErrors } from './core/validator.js';
 
 // Matcher
 export { MatcherRegistry, matcherRegistry } from './matcher/registry.js';
