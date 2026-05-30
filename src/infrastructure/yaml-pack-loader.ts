@@ -126,7 +126,6 @@ function parseMatcher(
       if (!fn) {
         throw new Error(`Unknown predicate "${raw.predicateName}" in ${filePath}`);
       }
-      // Return with predicateName — the predicate handler will resolve it
       return { type: 'predicate', predicateName: raw.predicateName };
     }
     default:

@@ -23,7 +23,7 @@ export function matchAndResolve(
 
     for (const pack of packs) {
       for (const rule of pack.rules) {
-        // Only before-tool rules apply (after-tool not yet implemented)
+        // TODO: after-tool phase not yet implemented
         if (rule.phase !== 'before-tool') {
           continue;
         }
