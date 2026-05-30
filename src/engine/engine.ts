@@ -11,6 +11,16 @@ import { StatsTracker } from './stats-tracker.js'
 
 const statsTracker = new StatsTracker()
 
+/**
+ * Main engine entry point. Evaluates a ToolCallContext against all rules
+ * in the given RulePacks and returns the first matching resolved action.
+ * Uses the MatcherRegistry for evaluation and resolveAction for fallback chains.
+ *
+ * @param ctx - Normalized tool call context
+ * @param packs - Rule packs to evaluate against
+ * @param capabilities - Harness capability flags
+ * @returns The resolved action, or undefined if no rule matched
+ */
 export function matchAndResolve(
   ctx: ToolCallContext,
   packs: RulePack[],
@@ -55,10 +65,12 @@ export function matchAndResolve(
   return undefined
 }
 
+/** Get a snapshot of current intervention stats. */
 export function getStats() {
   return statsTracker.getStats()
 }
 
+/** Reset intervention stats to zero. */
 export function resetStats() {
   statsTracker.resetStats()
 }

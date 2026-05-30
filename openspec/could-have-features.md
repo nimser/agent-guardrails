@@ -70,3 +70,14 @@ npx ag stats
 When piped commands already contain output-limiting precautions (`grep -o` with bounded context, `head -n`, `tail -n`, `wc`), allow them through without blocking. Requires shell tokenizer (Change 8) for proper structural analysis.
 
 Currently deferred entirely — all piped commands that match dangerous patterns are blocked/suggested even with precautions. See Change 8.
+
+## Release Automation
+
+Automated versioning, changelog generation, and npm publish via changesets or release-please. Should cover:
+- Semantic version bump on merge to main
+- CHANGELOG.md auto-generation
+- GitHub release creation
+- npm publish
+- Git tag creation
+
+**Why deferred:** Not needed until the first public release (v0.1.0). Manual release is fine for pre-1.0 development.

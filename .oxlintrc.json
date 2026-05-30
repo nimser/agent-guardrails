@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxlint/main/crates/oxc_linter/src/configuration_schema.json",
+  "ignorePatterns": ["dist/", "docs/api/"],
   "env": {
     "browser": true,
     "node": true

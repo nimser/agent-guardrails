@@ -1,5 +1,10 @@
 import type { GuardrailAction, HarnessCapabilities } from '../core/types.js'
 
+/**
+ * Interpolation context for guardrail action messages.
+ * `{matched}` is replaced with the matched command or file path.
+ * `{replacement}` is replaced with the suggested/replacement command.
+ */
 export interface ResolveContext {
   matched?: string
   replacement?: string
