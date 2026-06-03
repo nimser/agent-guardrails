@@ -33,7 +33,7 @@ Pick these up as post-MVP changes. Reference `change-2-secret-blocking` and `cha
 
 - `psql -c "SELECT * FROM users LIMIT 10"` (could dump credentials table)
 - `mysql -e "SHOW VARIABLES LIKE '%password%'"` (leaks server config)
-- `mongosh --eval "db.users.find()"` 
+- `mongosh --eval "db.users.find()"`
 - Hard to match reliably — most DB queries are legitimate
 - Probably needs after-tool redaction (detect secret-shaped output) rather than before-tool block
 - Consider scoping to known sensitive tables/columns via config
@@ -57,6 +57,7 @@ Pick these up as post-MVP changes. Reference `change-2-secret-blocking` and `cha
 ## Priority Guidance
 
 When picking these up, prioritize by:
+
 1. **Likelihood of agent encountering it** — Terraform and AWS SSM top the list
 2. **Pattern clarity** — can you match without excessive false positives?
 3. **Block vs suggest feasibility** — is there a meaningful **Safer Alternative**?

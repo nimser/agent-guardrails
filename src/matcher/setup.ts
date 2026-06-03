@@ -1,8 +1,8 @@
-import { matcherRegistry, MatcherRegistry } from './registry.js'
-import { bashCommandHandler } from './handlers/bash-command.js'
-import { filePathHandler } from './handlers/file-path.js'
-import { createPredicateHandler } from './handlers/predicate.js'
-import { PredicateRegistry } from '../core/predicate-registry.js'
+import { matcherRegistry, MatcherRegistry } from "./registry.js";
+import { bashCommandHandler } from "./handlers/bash-command.js";
+import { filePathHandler } from "./handlers/file-path.js";
+import { createPredicateHandler } from "./handlers/predicate.js";
+import { PredicateRegistry } from "../core/predicate-registry.js";
 
 /**
  * Initialize the matcher registry with all built-in handlers.
@@ -10,9 +10,9 @@ import { PredicateRegistry } from '../core/predicate-registry.js'
  */
 export function initializeMatcherRegistry(
   registry: MatcherRegistry = matcherRegistry,
-  predicateRegistry = new PredicateRegistry()
+  predicateRegistry = new PredicateRegistry(),
 ): void {
-  registry.register(bashCommandHandler)
-  registry.register(filePathHandler)
-  registry.register(createPredicateHandler(predicateRegistry))
+  registry.register(bashCommandHandler);
+  registry.register(filePathHandler);
+  registry.register(createPredicateHandler(predicateRegistry));
 }

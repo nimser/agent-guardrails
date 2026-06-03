@@ -1,5 +1,5 @@
 // ── Core Types ──────────────────────────────────────────
-export type { HarnessCapabilities } from './core/types.js'
+export type { HarnessCapabilities } from "./core/types.js";
 export type {
   /** The five behaviors a guardrail rule can enforce. */
   GuardrailBehavior,
@@ -21,14 +21,14 @@ export type {
   AfterToolAction,
   /** A named collection of guardrail rules. */
   RulePack,
-} from './core/types.js'
+} from "./core/types.js";
 
 // ── Predicate Registry ──────────────────────────────────
 export {
   /** Registry for named predicate matchers referenced by YAML configs. */
   PredicateRegistry,
-} from './core/predicate-registry.js'
-export type { PredicateFunction } from './core/predicate-registry.js'
+} from "./core/predicate-registry.js";
+export type { PredicateFunction } from "./core/predicate-registry.js";
 
 // ── Validator ───────────────────────────────────────────
 export {
@@ -40,31 +40,31 @@ export {
   getRuleErrors,
   /** Return descriptive validation errors for a potential RulePack. */
   getRulePackErrors,
-} from './core/validator.js'
+} from "./core/validator.js";
 
 // ── Matcher Registry ────────────────────────────────────
-export type { MatcherHandler } from './matcher/registry.js'
+export type { MatcherHandler } from "./matcher/registry.js";
 export {
   /** Registry of matcher handlers for extensible matching. */
   MatcherRegistry,
   /** Default singleton matcher registry. */
   matcherRegistry,
-} from './matcher/registry.js'
+} from "./matcher/registry.js";
 export {
   /** Populate the matcher registry with built-in handlers. Call once at startup. */
   initializeMatcherRegistry,
-} from './matcher/setup.js'
+} from "./matcher/setup.js";
 export {
   /** Split a shell command string on `;`, `&&`, `||`, and newlines (respects quotes). */
   splitCommands,
-} from './matcher/command-splitter.js'
+} from "./matcher/command-splitter.js";
 
 // ── Resolver ────────────────────────────────────────────
-export { resolveAction } from './resolver/action-resolver.js'
-export type { ResolveContext } from './resolver/action-resolver.js'
+export { resolveAction } from "./resolver/action-resolver.js";
+export type { ResolveContext } from "./resolver/action-resolver.js";
 
 // ── Engine ──────────────────────────────────────────────
-export type { Stats } from './engine/stats-tracker.js'
+export type { Stats } from "./engine/stats-tracker.js";
 export {
   /**
    * The main entry point: evaluate a ToolCallContext against RulePacks and
@@ -75,11 +75,11 @@ export {
   getStats,
   /** Reset intervention stats to zero. */
   resetStats,
-} from './engine/engine.js'
+} from "./engine/engine.js";
 export {
   /** Accumulator for intervention stats (checks, blocks, suggests). */
   StatsTracker,
-} from './engine/stats-tracker.js'
+} from "./engine/stats-tracker.js";
 
 // ── Infrastructure ──────────────────────────────────────
 export {
@@ -87,4 +87,4 @@ export {
   loadYamlRulePack,
   /** Load all YAML rule packs from a directory. */
   loadAllRulePacks,
-} from './infrastructure/yaml-pack-loader.js'
+} from "./infrastructure/yaml-pack-loader.js";

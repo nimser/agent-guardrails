@@ -5,6 +5,7 @@
 Agent Guardrails is a **pattern-based policy engine** for AI coding agent workflows. It provides defense-in-depth by intercepting tool calls and matching them against rule packs before execution.
 
 It is **not** a security audit tool, a sandbox, or a complete security boundary. Deterministic regex matching cannot catch every adversarial payload. It should be combined with:
+
 - Network-level controls (egress filtering, proxy rules)
 - Credential scanning in repositories
 - Human review for sensitive operations
@@ -13,8 +14,8 @@ It is **not** a security audit tool, a sandbox, or a complete security boundary.
 ## Supported Versions
 
 | Version | Supported |
-|---|---|
-| 0.1.x | ✅ |
+| ------- | --------- |
+| 0.1.x   | ✅        |
 
 ## Reporting a Vulnerability
 

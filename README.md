@@ -31,6 +31,7 @@ Agent Tool Call → Normalize → Match Rules → Resolve Action → Enforce
 ## Features
 
 ### Core Engine
+
 - **Multi-layer matching** — substring pre-filter, structural regex, and adversarial wrapper detection
 - **Action fallback chain** — `run → suggest → block` when capabilities are missing
 - **Harness capability model** — each adapter declares what behaviors its harness supports
@@ -38,15 +39,17 @@ Agent Tool Call → Normalize → Match Rules → Resolve Action → Enforce
 - **Zero runtime dependencies** — the engine itself is pure logic
 
 ### Behaviors
-| Behavior | What it does | Phase |
-|---|---|---|
-| `block` | Stop the tool call, no alternative | before-tool, after-tool |
-| `suggest` | Stop the call, offer a safer replacement | before-tool |
-| `run` | Execute the replacement in the hook, return output | before-tool |
-| `redact` | Allow the call, sanitize output before LLM sees it | after-tool |
-| `confirm` | Ask the user (native UI or fallback to suggest) | before-tool |
+
+| Behavior  | What it does                                       | Phase                   |
+| --------- | -------------------------------------------------- | ----------------------- |
+| `block`   | Stop the tool call, no alternative                 | before-tool, after-tool |
+| `suggest` | Stop the call, offer a safer replacement           | before-tool             |
+| `run`     | Execute the replacement in the hook, return output | before-tool             |
+| `redact`  | Allow the call, sanitize output before LLM sees it | after-tool              |
+| `confirm` | Ask the user (native UI or fallback to suggest)    | before-tool             |
 
 ### Built-in Rule Packs
+
 - **env** — Block `.env` file reads (both file-path and bash commands)
 - **private-key** — Block private key access, including SSH directory files
 - **secret-managers** — Block 1Password, gopass, pass, and Bitwarden secret retrieval
@@ -56,6 +59,7 @@ Agent Tool Call → Normalize → Match Rules → Resolve Action → Enforce
 - **direnv**, **kubernetes**, **gh-cli** — Platform-specific guardrails
 
 ### Adapters
+
 - ✅ **Pi** — native plugin for [Pi](https://github.com/earendil-works/pi)
 - ✅ **OpenCode** — native plugin for [OpenCode](https://github.com/anomalyco/opencode)
 - 🚧 **Codex** — coming soon
@@ -65,16 +69,12 @@ Agent Tool Call → Normalize → Match Rules → Resolve Action → Enforce
 ## Quick Start
 
 ```typescript
-import {
-  matchAndResolve,
-  initializeMatcherRegistry,
-  loadAllRulePacks,
-} from 'agent-guardrails'
+import { matchAndResolve, initializeMatcherRegistry, loadAllRulePacks } from "agent-guardrails";
 
 // One-time setup
-initializeMatcherRegistry()
+initializeMatcherRegistry();
 
-const packs = loadAllRulePacks()
+const packs = loadAllRulePacks();
 
 const capabilities = {
   block: true,
@@ -82,17 +82,13 @@ const capabilities = {
   run: false,
   redact: false,
   confirm: true,
-}
+};
 
 // On each tool call:
-const action = matchAndResolve(
-  { toolName: 'bash', command: 'cat .env' },
-  packs,
-  capabilities
-)
+const action = matchAndResolve({ toolName: "bash", command: "cat .env" }, packs, capabilities);
 
-if (action?.type === 'block') {
-  console.log(action.message)
+if (action?.type === "block") {
+  console.log(action.message);
   // → "Blocked: `cat .env` — displaying .env file content may leak secrets."
 }
 ```

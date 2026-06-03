@@ -47,22 +47,24 @@ description: Prevents dangerous operations related to X
 
 # Required: list of rules
 rules:
-  - id: my-pack.dangerous-op      # Required: stable rule ID (dotted, unique)
-    title: Dangerous Operation     # Required: human-readable
-    description: What this catches  # Required: explanation
-    phase: before-tool             # Required: before-tool | after-tool
-    match:                         # Required: how to detect
-      type: bash-command           # bash-command | file-path | predicate
-      pattern: "regex-pattern"     # regex string (for bash-command/file-path)
-    action:                        # Required: what to do when matched
-      type: block                  # allow | block | suggest | run | redact | confirm
+  - id: my-pack.dangerous-op # Required: stable rule ID (dotted, unique)
+    title: Dangerous Operation # Required: human-readable
+    description: What this catches # Required: explanation
+    phase: before-tool # Required: before-tool | after-tool
+    match: # Required: how to detect
+      type: bash-command # bash-command | file-path | predicate
+      pattern: "regex-pattern" # regex string (for bash-command/file-path)
+    action: # Required: what to do when matched
+      type: block # allow | block | suggest | run | redact | confirm
       message: "Why this was blocked"
 ```
 
 ## Matcher Types
 
 ### bash-command
+
 Matches against the full command string passed to the `bash` tool.
+
 ```yaml
 match:
   type: bash-command
@@ -70,7 +72,9 @@ match:
 ```
 
 ### file-path
+
 Matches against file path arguments passed to `read`/`write` tools.
+
 ```yaml
 match:
   type: file-path
@@ -78,7 +82,9 @@ match:
 ```
 
 ### predicate
+
 Function-based matcher for complex logic. Requires JavaScript expression.
+
 ```yaml
 match:
   type: predicate
@@ -91,7 +97,9 @@ match:
 ## Action Types
 
 ### block
+
 Stops the tool call with no alternative.
+
 ```yaml
 action:
   type: block
@@ -99,7 +107,9 @@ action:
 ```
 
 ### suggest
+
 Stops the tool call and suggests a safer alternative.
+
 ```yaml
 action:
   type: suggest
@@ -108,7 +118,9 @@ action:
 ```
 
 ### confirm
+
 Prompts the user before allowing (falls back to suggest if harness lacks native confirmation UI).
+
 ```yaml
 action:
   type: confirm
@@ -121,6 +133,7 @@ action:
 ## Message Templates
 
 All actions support the `{matched}` placeholder, interpolated at match time:
+
 ```yaml
 message: "Blocked: `{matched}` — this file may contain secrets."
 ```
@@ -129,26 +142,26 @@ message: "Blocked: `{matched}` — this file may contain secrets."
 
 Not all behaviors work in all phases:
 
-| Phase | block | suggest | run | redact | confirm |
-|-------|-------|---------|-----|--------|---------|
-| `before-tool` | ✅ | ✅ | ✅ | ❌ | ✅ |
-| `after-tool` | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Phase         | block | suggest | run | redact | confirm |
+| ------------- | ----- | ------- | --- | ------ | ------- |
+| `before-tool` | ✅    | ✅      | ✅  | ❌     | ✅      |
+| `after-tool`  | ❌    | ❌      | ❌  | ✅     | ❌      |
 
 ## Built-in Rule Packs
 
 Agent Guardrails ships with built-in rule packs covering the most common secret exposure vectors:
 
-| Pack ID | What it catches |
-|---------|----------------|
-| `env` | `.env` and `.env.*` file reads |
-| `sops` | `sops -d` / `sops --decrypt` commands |
-| `private-key` | `.pem`, `.key`, SSH key file reads |
-| `encryption-tools` | `age -d`, `gpg --decrypt`, `openssl enc -d` |
-| `secret-managers` | `op read`, `gopass show`, `pass show`, `bw get` |
-| `kubernetes` | `kubectl get secrets`, `kubectl describe secrets` |
-| `gh-cli` | `gh secret view`, `gh variable get` |
-| `direnv` | `direnv exec`, `source .env` |
-| `hardening` | Eval/subshell wrappers, redirects to sensitive paths |
+| Pack ID            | What it catches                                      |
+| ------------------ | ---------------------------------------------------- |
+| `env`              | `.env` and `.env.*` file reads                       |
+| `sops`             | `sops -d` / `sops --decrypt` commands                |
+| `private-key`      | `.pem`, `.key`, SSH key file reads                   |
+| `encryption-tools` | `age -d`, `gpg --decrypt`, `openssl enc -d`          |
+| `secret-managers`  | `op read`, `gopass show`, `pass show`, `bw get`      |
+| `kubernetes`       | `kubectl get secrets`, `kubectl describe secrets`    |
+| `gh-cli`           | `gh secret view`, `gh variable get`                  |
+| `direnv`           | `direnv exec`, `source .env`                         |
+| `hardening`        | Eval/subshell wrappers, redirects to sensitive paths |
 
 Built-in packs are defined as YAML and shipped with Agent Guardrails. They can be overridden per-rule via `agent-guardrails.json` configuration.
 

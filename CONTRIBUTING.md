@@ -37,6 +37,7 @@ See existing packs in `src/packs/` for the format. Browse the [Future Secret Pac
 ### 🟡 Medium Effort: New Adapters
 
 Want to add support for another AI coding harness? Adapters are thin shims:
+
 1. Normalize the harness event → `ToolCallContext`
 2. Call `matchAndResolve()` from the engine
 3. Translate the result back to the harness's native mechanism
@@ -69,6 +70,7 @@ The linter and formatter will catch most issues automatically.
 The `openspec/changes/` directory contains design proposals and specifications for past and planned changes. These are working documents — they capture the author's thinking and intended direction but should not be treated as immutable specs. The source of truth is the code and tests.
 
 For deeper architectural context, see:
+
 - [Matching Strategy](docs/matching-strategy.md)
 - [YAML Rule Packs](docs/yaml-rule-packs.md)
 - [Future Secret Packs](docs/future-secret-packs.md)

@@ -19,6 +19,7 @@ function containsRiskyKeywords(cmd: string): boolean {
 ```
 
 **Characteristics:**
+
 - O(n) string scan (very fast)
 - Catches wrapped commands: `eval "sops -d file"`, `$(sops -d file)`
 - Some false positives: `echo "use sops -d to decrypt"` (but these are safe to block)
@@ -32,6 +33,7 @@ const sopsPattern = /sops\s+(-{1,2}d(ecrypt)?\s+|.*\s+-{1,2}d(ecrypt)?\b)/;
 ```
 
 **Characteristics:**
+
 - Checks flag structure and positioning
 - Catches standard usage patterns
 - Misses adversarial wrapping
@@ -44,23 +46,24 @@ Detects shell constructs that hide intent:
 const wrappers = ["eval ", "bash -c", "sh -c", "$("];
 
 function hasAdversarialWrappers(cmd: string): boolean {
-  return wrappers.some(w => cmd.includes(w));
+  return wrappers.some((w) => cmd.includes(w));
 }
 ```
 
 **Characteristics:**
+
 - Identifies potential evasion attempts
 - Triggers risk escalation regardless of Layer 2 result
 
 ## Behavior Matrix
 
-| Substring (L1) | Regex (L2) | Wrappers (L3) | Interpretation | Behavior |
-|----------------|------------|---------------|----------------|----------|
-| ❌ | ❌ | ❌ | Safe | Allow |
-| ✅ | ✅ | ❌ | Standard dangerous command | Configured behavior (suggest/run/etc.) |
-| ✅ | ❌ | ❌ | Substring false positive | Allow (regex didn't match) |
-| ✅ | ✅ | ✅ | Adversarial wrapping detected | **Force block** (escalate) |
-| ✅ | ❌ | ✅ | Adversarial but unclear intent | **Force block** (escalate, log warning) |
+| Substring (L1) | Regex (L2) | Wrappers (L3) | Interpretation                 | Behavior                                |
+| -------------- | ---------- | ------------- | ------------------------------ | --------------------------------------- |
+| ❌             | ❌         | ❌            | Safe                           | Allow                                   |
+| ✅             | ✅         | ❌            | Standard dangerous command     | Configured behavior (suggest/run/etc.)  |
+| ✅             | ❌         | ❌            | Substring false positive       | Allow (regex didn't match)              |
+| ✅             | ✅         | ✅            | Adversarial wrapping detected  | **Force block** (escalate)              |
+| ✅             | ❌         | ✅            | Adversarial but unclear intent | **Force block** (escalate, log warning) |
 
 ## Risk Escalation Principle
 
