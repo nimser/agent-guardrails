@@ -32,6 +32,13 @@ interface RawRule {
   defaultAction: RawAction
 }
 
+/**
+ * Load and parse a single YAML rule pack file.
+ * Validates structure and returns a typed RulePack, or throws on error.
+ *
+ * @param filePath - Path to the YAML file
+ * @param predicateRegistry - Registry for resolving named predicate matchers
+ */
 export function loadYamlRulePack(filePath: string, predicateRegistry: PredicateRegistry): RulePack {
   const content = readFileSync(filePath, 'utf-8')
   const raw = parseYaml(content)
@@ -85,6 +92,13 @@ export function loadYamlRulePack(filePath: string, predicateRegistry: PredicateR
   return pack
 }
 
+/**
+ * Load all `.yaml` / `.yml` files from a directory as rule packs.
+ * Non-YAML files are silently skipped. Throws if any YAML file fails validation.
+ *
+ * @param packDir - Directory containing YAML rule pack files
+ * @param predicateRegistry - Registry for resolving named predicate matchers
+ */
 export function loadAllRulePacks(
   packDir: string,
   predicateRegistry: PredicateRegistry

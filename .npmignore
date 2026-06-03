@@ -1,0 +1,17 @@
+.devcontainer/
+.opencode/
+.agents/
+.pi/
+openspec/
+research/
+node_modules/
+src/
+.git/
+.github/
+vitest.config.ts
+.dprint.json
+.oxfmtrc.json
+.oxlintrc.json
+.code-style.local
+tsconfig.json
+tsconfig.build.json

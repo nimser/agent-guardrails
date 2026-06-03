@@ -58,10 +58,18 @@ function isAfterToolAction(v: unknown): v is AfterToolAction {
   return isObject(v) && v.type === 'redact' && typeof v.replacement === 'string'
 }
 
+/**
+ * Check whether an unknown value is a valid GuardrailRule.
+ * Returns true if the rule passes all structural and phase-compatibility checks.
+ */
 export function validateRule(input: unknown): input is GuardrailRule {
   return getRuleErrors(input).length === 0
 }
 
+/**
+ * Return descriptive validation errors for a potential GuardrailRule.
+ * Checks: required fields, valid phase, valid matcher shape, action-phase compatibility.
+ */
 export function getRuleErrors(input: unknown): string[] {
   const errors: string[] = []
 
@@ -93,10 +101,18 @@ export function getRuleErrors(input: unknown): string[] {
   return errors
 }
 
+/**
+ * Check whether an unknown value is a valid RulePack.
+ * Validates structure, required fields, unique rule IDs, and each rule individually.
+ */
 export function validateRulePack(input: unknown): input is RulePack {
   return getRulePackErrors(input).length === 0
 }
 
+/**
+ * Return descriptive validation errors for a potential RulePack.
+ * Checks: required fields, rules array, unique rule IDs, and per-rule validation.
+ */
 export function getRulePackErrors(input: unknown): string[] {
   const errors: string[] = []
 
