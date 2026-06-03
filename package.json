@@ -49,6 +49,7 @@
     "oxlint-tsgolint": "^0.23.0",
     "typedoc": "^0.28.19",
     "typescript": "^5.4.0",
+    "@vitest/coverage-v8": "^1.6.0",
     "vitest": "^1.6.0",
     "yaml": "^2.4.0",
     "eslint": "^9.0.0",
