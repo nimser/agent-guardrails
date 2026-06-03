@@ -43,8 +43,8 @@ export function loadYamlRulePack(filePath: string, predicateRegistry: PredicateR
   const content = readFileSync(filePath, 'utf-8')
   const raw = parseYaml(content)
 
-  if (!raw || typeof raw !== 'object') {
-    throw new Error(`Invalid YAML file: ${filePath}`)
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error(`Rule pack YAML must be a mapping with id, name, description, and rules fields: ${filePath}`)
   }
 
   const { id, name, description, rules: rawRules } = raw
