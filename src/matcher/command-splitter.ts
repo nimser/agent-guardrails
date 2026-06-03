@@ -1,6 +1,7 @@
 /**
  * Split a command string into individual commands based on shell separators.
  * Respects quoted strings to avoid splitting inside quotes.
+ * Handles shell line continuation (`\` + newline) as non-breaking.
  */
 export function splitCommands(command: string): string[] {
   if (!command.trim()) {
@@ -16,6 +17,19 @@ export function splitCommands(command: string): string[] {
   while (i < command.length) {
     const char = command[i]
     const next = i + 1 < command.length ? command[i + 1] : ''
+
+    // Shell line continuation: `\` followed by newline
+    // Only when the backslash is *not* itself escaped (\ followed by \ = literal \, not continuation)
+    if (!inSingleQuote && char === '\\' && !isEscaped(command, i)) {
+      if (next === '\n') {
+        i += 2 // LF continuation
+        continue
+      }
+      if (next === '\r' && i + 2 < command.length && command[i + 2] === '\n') {
+        i += 3 // CRLF continuation
+        continue
+      }
+    }
 
     if (char === "'" && !inDoubleQuote) {
       if (!isEscaped(command, i)) {

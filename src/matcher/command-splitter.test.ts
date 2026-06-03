@@ -54,4 +54,33 @@ describe('splitCommands', () => {
   it('handles whitespace-only input', () => {
     expect(splitCommands('   ')).toEqual([])
   })
+
+  it('skips line continuation (backslash + newline)', () => {
+    // `cat \<newline>.env` → one command: `cat .env`
+    const cmd = 'cat ' + '\\' + '\n' + '.env'
+    expect(splitCommands(cmd)).toEqual(['cat .env'])
+  })
+
+  it('skips line continuation with CRLF', () => {
+    const cmd = 'cat ' + '\\' + '\r\n' + '.env'
+    expect(splitCommands(cmd)).toEqual(['cat .env'])
+  })
+
+  it('does NOT skip escaped backslash + newline', () => {
+    // `cat \\<newline>.env` — double backslash means literal backslash, newline splits
+    const cmd = 'cat ' + '\\\\' + '\n' + '.env'
+    expect(splitCommands(cmd)).toEqual(['cat \\\\', '.env'])
+  })
+
+  it('handles multi-line continuation', () => {
+    // `cat \<newline>\<newline>.env` → two continuations skipped, spaces preserved
+    const cmd = 'cat ' + '\\' + '\n' + '\\' + '\n' + '  .env'
+    expect(splitCommands(cmd)).toEqual(['cat   .env'])
+  })
+
+  it('does NOT apply continuation inside single quotes', () => {
+    // Inside single quotes, backslash is literal — the whole string stays
+    const cmd = "echo 'cmd1" + '\\' + "\n'; cmd2"
+    expect(splitCommands(cmd)).toEqual(["echo 'cmd1\\\n'", 'cmd2'])
+  })
 })
