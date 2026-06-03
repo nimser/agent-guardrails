@@ -1,0 +1,29 @@
+import { describe, it, expect } from 'vitest';
+import { bashCommandHandler } from './bash-command';
+import type { GuardrailMatcher, ToolCallContext } from '../../core/types';
+
+describe('bash-command matcher', () => {
+  it('returns true when pattern matches command', () => {
+    const matcher: GuardrailMatcher = { type: 'bash-command', pattern: /sops/i };
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt file.yaml' };
+    expect(bashCommandHandler.matches(matcher as any, ctx)).toBe(true);
+  });
+
+  it('returns false when pattern does not match command', () => {
+    const matcher: GuardrailMatcher = { type: 'bash-command', pattern: /sops/i };
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'ls -la' };
+    expect(bashCommandHandler.matches(matcher as any, ctx)).toBe(false);
+  });
+
+  it('returns false for non-bash tool', () => {
+    const matcher: GuardrailMatcher = { type: 'bash-command', pattern: /test/i };
+    const ctx: ToolCallContext = { toolName: 'read', filePath: '/tmp' };
+    expect(bashCommandHandler.matches(matcher as any, ctx)).toBe(false);
+  });
+
+  it('returns false when command is missing', () => {
+    const matcher: GuardrailMatcher = { type: 'bash-command', pattern: /test/i };
+    const ctx: ToolCallContext = { toolName: 'bash' } as any;
+    expect(bashCommandHandler.matches(matcher as any, ctx)).toBe(false);
+  });
+});
