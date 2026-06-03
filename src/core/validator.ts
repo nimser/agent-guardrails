@@ -1,65 +1,152 @@
-import type { GuardrailRule, RulePack } from './types';
+import type {
+  AfterToolAction,
+  BeforeToolAction,
+  GuardrailMatcher,
+  GuardrailRule,
+  RulePack,
+} from './types.js'
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
+const VALID_PHASES = new Set(['before-tool', 'after-tool'])
+
+function isObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object'
 }
 
-const BEFORE_TOOL_ACTIONS = new Set(['allow', 'block', 'suggest', 'run', 'confirm']);
-const AFTER_TOOL_ACTIONS = new Set(['redact']);
+function isGuardrailMatcher(v: unknown): v is GuardrailMatcher {
+  if (!isObject(v)) return false
 
-export function validateRule(rule: GuardrailRule): ValidationResult {
-  const errors: string[] = [];
-
-  // Required fields
-  if (!rule.id) errors.push('Rule "id" is required');
-  if (!rule.title) errors.push('Rule "title" is required');
-  if (!rule.description) errors.push('Rule "description" is required');
-  if (!rule.phase) errors.push('Rule "phase" is required');
-  if (!rule.match) errors.push('Rule "match" is required');
-  if (!rule.defaultAction) errors.push('Rule "defaultAction" is required');
-
-  // Phase-Behavior Matrix
-  if (rule.phase === 'after-tool') {
-    if (!AFTER_TOOL_ACTIONS.has(rule.defaultAction.type)) {
-      errors.push(
-        `after-tool phase only supports "redact" action, got "${rule.defaultAction.type}"`
-      );
-    }
-  } else if (rule.phase === 'before-tool') {
-    if (!BEFORE_TOOL_ACTIONS.has(rule.defaultAction.type)) {
-      errors.push(
-        `before-tool phase does not support "redact" action`
-      );
-    }
+  switch (v.type) {
+    case 'bash-command':
+    case 'file-path':
+      return v.pattern instanceof RegExp
+    case 'predicate':
+      return typeof v.predicateName === 'string' && v.predicateName.length > 0
+    default:
+      return false
   }
-
-  return { valid: errors.length === 0, errors };
 }
 
-export function validateRulePack(pack: RulePack): ValidationResult {
-  const errors: string[] = [];
+function isBeforeToolAction(v: unknown): v is BeforeToolAction {
+  if (!isObject(v)) return false
 
-  if (!pack.id) errors.push('RulePack "id" is required');
-  if (!pack.name) errors.push('RulePack "name" is required');
-  if (!pack.description) errors.push('RulePack "description" is required');
-
-  // Duplicate rule IDs
-  const ids = new Set<string>();
-  for (const rule of pack.rules) {
-    if (ids.has(rule.id)) {
-      errors.push(`duplicate rule id "${rule.id}"`);
+  switch (v.type) {
+    case 'allow':
+      return true
+    case 'block':
+      return typeof v.message === 'string'
+    case 'suggest':
+      return (
+        typeof v.replacement === 'string' &&
+        (v.message === undefined || typeof v.message === 'string')
+      )
+    case 'run':
+      return (
+        typeof v.replacement === 'string' &&
+        (v.message === undefined || typeof v.message === 'string')
+      )
+    case 'confirm': {
+      if (typeof v.message !== 'string') return false
+      if (v.fallback !== undefined && !isBeforeToolAction(v.fallback)) return false
+      return true
     }
-    ids.add(rule.id);
+    default:
+      return false
+  }
+}
+
+function isAfterToolAction(v: unknown): v is AfterToolAction {
+  return isObject(v) && v.type === 'redact' && typeof v.replacement === 'string'
+}
+
+/**
+ * Type guard: narrows unknown input to a valid GuardrailRule.
+ */
+export function validateRule(input: unknown): input is GuardrailRule {
+  return getRuleErrors(input).length === 0
+}
+
+/**
+ * Collect all validation errors on a rule candidate.
+ */
+export function getRuleErrors(input: unknown): string[] {
+  const errors: string[] = []
+
+  if (!isObject(input)) {
+    return ['Rule is not an object']
   }
 
-  // Validate each rule
-  for (const rule of pack.rules) {
-    const ruleResult = validateRule(rule);
-    if (!ruleResult.valid) {
-      errors.push(...ruleResult.errors.map(e => `rule "${rule.id}": ${e}`));
+  if (typeof input.id !== 'string' || !input.id) errors.push('Rule "id" is required')
+  if (typeof input.title !== 'string' || !input.title) errors.push('Rule "title" is required')
+  if (typeof input.description !== 'string' || !input.description)
+    errors.push('Rule "description" is required')
+
+  if (typeof input.phase !== 'string' || !VALID_PHASES.has(input.phase)) {
+    errors.push('Rule "phase" must be "before-tool" or "after-tool"')
+  }
+
+  if (!isGuardrailMatcher(input.match)) {
+    errors.push('Rule "match" is invalid or malformed')
+  }
+
+  if (typeof input.phase === 'string' && VALID_PHASES.has(input.phase)) {
+    if (input.phase === 'before-tool' && !isBeforeToolAction(input.defaultAction)) {
+      errors.push('Rule "defaultAction" is invalid for before-tool phase')
+    } else if (input.phase === 'after-tool' && !isAfterToolAction(input.defaultAction)) {
+      errors.push('Rule "defaultAction" must be a redact action for after-tool phase')
     }
   }
 
-  return { valid: errors.length === 0, errors };
+  return errors
+}
+
+/**
+ * Type guard: narrows unknown input to a valid RulePack.
+ */
+export function validateRulePack(input: unknown): input is RulePack {
+  return getRulePackErrors(input).length === 0
+}
+
+/**
+ * Collect all validation errors on a rule pack candidate.
+ */
+export function getRulePackErrors(input: unknown): string[] {
+  const errors: string[] = []
+
+  if (!isObject(input)) {
+    return ['RulePack is not an object']
+  }
+
+  if (typeof input.id !== 'string' || !input.id)
+    errors.push('RulePack "id" is required')
+  if (typeof input.name !== 'string' || !input.name)
+    errors.push('RulePack "name" is required')
+  if (typeof input.description !== 'string' || !input.description)
+    errors.push('RulePack "description" is required')
+
+  if (!Array.isArray(input.rules)) {
+    errors.push('RulePack "rules" must be an array')
+    return errors
+  }
+
+  const ids = new Set<string>()
+  for (const rule of input.rules) {
+    if (!isObject(rule)) {
+      errors.push('RulePack contains a non-object rule')
+      continue
+    }
+    if (typeof rule.id === 'string' && rule.id) {
+      if (ids.has(rule.id)) {
+        errors.push(`duplicate rule id "${rule.id}"`)
+      }
+      ids.add(rule.id)
+    }
+
+    const ruleErrors = getRuleErrors(rule)
+    if (ruleErrors.length > 0) {
+      const ruleLabel = typeof rule.id === 'string' ? rule.id : '<unknown>'
+      errors.push(...ruleErrors.map((e) => `rule "${ruleLabel}": ${e}`))
+    }
+  }
+
+  return errors
 }
