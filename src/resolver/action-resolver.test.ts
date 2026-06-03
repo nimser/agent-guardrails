@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { resolveAction } from './action-resolver.js';
-import type { GuardrailAction, HarnessCapabilities } from '../core/types.js';
+import { describe, expect, it } from 'vitest'
+import { resolveAction } from './action-resolver.js'
+import type { GuardrailAction, HarnessCapabilities } from '../core/types.js'
 
 describe('resolveAction', () => {
   const fullCapabilities: HarnessCapabilities = {
@@ -9,7 +9,7 @@ describe('resolveAction', () => {
     run: true,
     redact: true,
     confirm: true,
-  };
+  }
 
   const limitedCapabilities: HarnessCapabilities = {
     block: true,
@@ -17,7 +17,7 @@ describe('resolveAction', () => {
     run: false,
     redact: false,
     confirm: false,
-  };
+  }
 
   const noSuggest: HarnessCapabilities = {
     block: true,
@@ -25,23 +25,23 @@ describe('resolveAction', () => {
     run: false,
     redact: false,
     confirm: false,
-  };
+  }
 
   describe('allow action', () => {
     it('returns allow action directly', () => {
-      const action: GuardrailAction = { type: 'allow' };
-      const result = resolveAction(action, fullCapabilities);
-      expect(result).toEqual({ type: 'allow' });
-    });
-  });
+      const action: GuardrailAction = { type: 'allow' }
+      const result = resolveAction(action, fullCapabilities)
+      expect(result).toEqual({ type: 'allow' })
+    })
+  })
 
   describe('block action', () => {
     it('returns block action with interpolated message', () => {
-      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' };
-      const result = resolveAction(action, fullCapabilities, { matched: 'suspicious' });
-      expect(result).toEqual({ type: 'block', message: 'Blocked: suspicious' });
-    });
-  });
+      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' }
+      const result = resolveAction(action, fullCapabilities, { matched: 'suspicious' })
+      expect(result).toEqual({ type: 'block', message: 'Blocked: suspicious' })
+    })
+  })
 
   describe('suggest action', () => {
     it('returns suggest with replacement when capability available', () => {
@@ -49,39 +49,39 @@ describe('resolveAction', () => {
         type: 'suggest',
         replacement: 'ls -la',
         message: 'Try: {replacement}',
-      };
-      const result = resolveAction(action, fullCapabilities);
+      }
+      const result = resolveAction(action, fullCapabilities)
       expect(result).toEqual({
         type: 'suggest',
         replacement: 'ls -la',
         message: 'Try: ls -la',
-      });
-    });
+      })
+    })
 
     it('interpolates {matched} in suggest message', () => {
       const action: GuardrailAction = {
         type: 'suggest',
         replacement: 'safe-cmd',
         message: 'Instead of {matched}, use {replacement}',
-      };
-      const result = resolveAction(action, fullCapabilities, { matched: 'dangerous' });
+      }
+      const result = resolveAction(action, fullCapabilities, { matched: 'dangerous' })
       expect(result).toEqual({
         type: 'suggest',
         replacement: 'safe-cmd',
         message: 'Instead of dangerous, use safe-cmd',
-      });
-    });
+      })
+    })
 
     it('falls back to block when suggest capability is unavailable', () => {
       const action: GuardrailAction = {
         type: 'suggest',
         replacement: 'safe-cmd',
         message: 'Try {replacement}',
-      };
-      const result = resolveAction(action, noSuggest, { matched: 'dangerous-cmd' });
-      expect(result.type).toBe('block');
-    });
-  });
+      }
+      const result = resolveAction(action, noSuggest, { matched: 'dangerous-cmd' })
+      expect(result.type).toBe('block')
+    })
+  })
 
   describe('run action', () => {
     it('returns run action when capability available', () => {
@@ -89,50 +89,50 @@ describe('resolveAction', () => {
         type: 'run',
         replacement: 'safe-command',
         message: 'Running: {replacement}',
-      };
-      const result = resolveAction(action, fullCapabilities);
+      }
+      const result = resolveAction(action, fullCapabilities)
       expect(result).toEqual({
         type: 'run',
         replacement: 'safe-command',
         message: 'Running: safe-command',
-      });
-    });
+      })
+    })
 
     it('falls back to suggest when run capability unavailable', () => {
       const action: GuardrailAction = {
         type: 'run',
         replacement: 'safe-cmd',
-      };
-      const result = resolveAction(action, limitedCapabilities);
-      expect(result.type).toBe('suggest');
-      if (result.type === 'suggest') {
-        expect(result.replacement).toBe('safe-cmd');
       }
-    });
+      const result = resolveAction(action, limitedCapabilities)
+      expect(result.type).toBe('suggest')
+      if (result.type === 'suggest') {
+        expect(result.replacement).toBe('safe-cmd')
+      }
+    })
 
     it('falls back through suggest to block when both capabilities unavailable', () => {
       const action: GuardrailAction = {
         type: 'run',
         replacement: 'safe-cmd',
-      };
-      const result = resolveAction(action, noSuggest);
-      expect(result.type).toBe('block');
-    });
-  });
+      }
+      const result = resolveAction(action, noSuggest)
+      expect(result.type).toBe('block')
+    })
+  })
 
   describe('redact action', () => {
     it('returns redact action when capability available', () => {
-      const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' };
-      const result = resolveAction(action, fullCapabilities);
-      expect(result).toEqual({ type: 'redact', replacement: '[REDACTED]' });
-    });
+      const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' }
+      const result = resolveAction(action, fullCapabilities)
+      expect(result).toEqual({ type: 'redact', replacement: '[REDACTED]' })
+    })
 
     it('falls back to block when redact capability unavailable', () => {
-      const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' };
-      const result = resolveAction(action, limitedCapabilities);
-      expect(result.type).toBe('block');
-    });
-  });
+      const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' }
+      const result = resolveAction(action, limitedCapabilities)
+      expect(result.type).toBe('block')
+    })
+  })
 
   describe('confirm action', () => {
     it('returns confirm action when capability available', () => {
@@ -140,103 +140,103 @@ describe('resolveAction', () => {
         type: 'confirm',
         message: 'Proceed with {matched}?',
         fallback: { type: 'block', message: 'User cancelled' },
-      };
-      const result = resolveAction(action, fullCapabilities, { matched: 'dangerous' });
+      }
+      const result = resolveAction(action, fullCapabilities, { matched: 'dangerous' })
       expect(result).toEqual({
         type: 'confirm',
         message: 'Proceed with dangerous?',
         fallback: { type: 'block', message: 'User cancelled' },
-      });
-    });
+      })
+    })
 
     it('falls back to suggest when confirm capability unavailable', () => {
       const action: GuardrailAction = {
         type: 'confirm',
         message: 'Confirm: {matched}',
         fallback: { type: 'suggest', replacement: 'safe-cmd' },
-      };
-      const result = resolveAction(action, limitedCapabilities, { matched: 'test' });
-      expect(result.type).toBe('suggest');
-    });
+      }
+      const result = resolveAction(action, limitedCapabilities, { matched: 'test' })
+      expect(result.type).toBe('suggest')
+    })
 
     it('falls back to block when confirm capability unavailable, no fallback, and no suggest', () => {
       const action: GuardrailAction = {
         type: 'confirm',
         message: 'Confirm: {matched}',
-      };
+      }
       const noConfirmNoSuggest: HarnessCapabilities = {
         block: true,
         suggest: false,
         run: false,
         redact: false,
         confirm: false,
-      };
-      const result = resolveAction(action, noConfirmNoSuggest, { matched: 'test' });
-      expect(result.type).toBe('block');
-    });
-  });
+      }
+      const result = resolveAction(action, noConfirmNoSuggest, { matched: 'test' })
+      expect(result.type).toBe('block')
+    })
+  })
 
   describe('fallback chain', () => {
     it('run → suggest → block', () => {
-      const action: GuardrailAction = { type: 'run', replacement: 'safe' };
+      const action: GuardrailAction = { type: 'run', replacement: 'safe' }
       const noRunNoSuggest: HarnessCapabilities = {
         block: true,
         suggest: false,
         run: false,
         redact: false,
         confirm: false,
-      };
-      const result = resolveAction(action, noRunNoSuggest);
-      expect(result.type).toBe('block');
-    });
+      }
+      const result = resolveAction(action, noRunNoSuggest)
+      expect(result.type).toBe('block')
+    })
 
     it('confirm → suggest → block', () => {
-      const action: GuardrailAction = { type: 'confirm', message: 'Confirm?' };
+      const action: GuardrailAction = { type: 'confirm', message: 'Confirm?' }
       const noConfirmNoSuggest: HarnessCapabilities = {
         block: true,
         suggest: false,
         run: false,
         redact: false,
         confirm: false,
-      };
-      const result = resolveAction(action, noConfirmNoSuggest);
-      expect(result.type).toBe('block');
-    });
-  });
+      }
+      const result = resolveAction(action, noConfirmNoSuggest)
+      expect(result.type).toBe('block')
+    })
+  })
 
   describe('template interpolation', () => {
     it('interpolates {matched} placeholder', () => {
-      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' };
-      const result = resolveAction(action, fullCapabilities, { matched: 'sops decrypt' });
-      expect(result).toEqual({ type: 'block', message: 'Blocked: sops decrypt' });
-    });
+      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' }
+      const result = resolveAction(action, fullCapabilities, { matched: 'sops decrypt' })
+      expect(result).toEqual({ type: 'block', message: 'Blocked: sops decrypt' })
+    })
 
     it('interpolates {replacement} placeholder', () => {
       const action: GuardrailAction = {
         type: 'suggest',
         replacement: 'safe-cmd',
         message: 'Use {replacement}',
-      };
-      const result = resolveAction(action, fullCapabilities);
-      expect(result).toEqual({ type: 'suggest', replacement: 'safe-cmd', message: 'Use safe-cmd' });
-    });
+      }
+      const result = resolveAction(action, fullCapabilities)
+      expect(result).toEqual({ type: 'suggest', replacement: 'safe-cmd', message: 'Use safe-cmd' })
+    })
 
     it('handles missing context values gracefully', () => {
-      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' };
-      const result = resolveAction(action, fullCapabilities);
-      expect(result).toEqual({ type: 'block', message: 'Blocked: {matched}' });
-    });
+      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' }
+      const result = resolveAction(action, fullCapabilities)
+      expect(result).toEqual({ type: 'block', message: 'Blocked: {matched}' })
+    })
 
     it('interpolates multiple {matched} occurrences', () => {
       const action: GuardrailAction = {
         type: 'block',
         message: 'Blocked {matched} because {matched} is dangerous',
-      };
-      const result = resolveAction(action, fullCapabilities, { matched: 'sops' });
+      }
+      const result = resolveAction(action, fullCapabilities, { matched: 'sops' })
       expect(result).toEqual({
         type: 'block',
         message: 'Blocked sops because sops is dangerous',
-      });
-    });
-  });
-});
+      })
+    })
+  })
+})
