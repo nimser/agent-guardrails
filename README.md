@@ -17,16 +17,16 @@ Your agent shouldn't read `.env` files, decrypt secrets, or exfiltrate private k
 ## How It Works
 
 ```
-Agent Tool Call → Normalize → Match Rules → Resolve Action → Enforce
-                     ↑             ↑              ↑              ↑
-              ToolCallContext  Rule Packs    Fallback      Harness-Specific
-                             (YAML or TS)    Chain         Block/Suggest
+Agent Tool Call → Match Rules → Resolve Action → Enforce
+      ↓               ↓             ↓                   ↓
+ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
+               (YAML)       + Fallback Chain      Behaviour
 ```
 
-1. **Adapters** normalize harness-specific events into a common `ToolCallContext`
-2. **Rule Packs** define matchers (regex, file-path, predicate) and default actions
-3. **The Engine** evaluates rules in order and resolves the action through a fallback chain
-4. **The Adapter** translates the result back into the harness's native blocking mechanism
+1. **ToolCallContext** — the adapter normalizes harness-specific events into this common shape
+2. **Rule Packs** — matchers (regex, file-path) and default actions that define what to watch for
+3. **GuardrailAction** — the engine evaluates rules and resolves the action through a fallback chain
+4. **Behaviour** — the adapter translates the resolved behaviour (`block`, `suggest`, `run`, `redact`, `confirm`) into harness-specific enforcement
 
 ## Features
 
@@ -95,9 +95,10 @@ if (action?.type === "block") {
 
 ## Documentation
 
-- [Matching Strategy](docs/matching-strategy.md) — how multi-layer matching works
-- [YAML Rule Packs](docs/yaml-rule-packs.md) — author your own rule packs
-- [Future Secret Packs](docs/future-secret-packs.md) — backlog of planned rule packs (AWS, Terraform, Vault, etc.)
+- [Getting Started](docs/getting-started.md) — contributor gateway, architecture overview, key vocabulary
+- [Architecture Decisions (ADRs)](docs/adrs/) — the _why_ behind core design choices
+- [How Matching Works](docs/how-matching-works.md) — layer-by-layer walkthrough with real examples
+- [Rule Pack Guide](docs/rule-pack-guide.md) — complete YAML format spec, action types, defense-in-depth tips
 
 ## Contributing
 

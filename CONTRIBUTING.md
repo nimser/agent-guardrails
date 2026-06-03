@@ -30,7 +30,11 @@ A pre-commit hook (installed via the code-style skill) runs `format` then `check
 
 The easiest way to contribute is writing a YAML rule pack. No TypeScript required. Define matchers and actions in a `.yaml` file and submit it.
 
-See existing packs in `src/packs/` for the format. Browse the [Future Secret Packs](docs/future-secret-packs.md) backlog for ideas — AWS, Terraform, Vault, Azure CLI, GCP CLI, database CLIs, and more.
+- **Format & schema:** [Rule Pack Guide](docs/rule-pack-guide.md)
+- **Examples:** Built-in packs in `src/packs/`
+- **How matching works:** [How Matching Works](docs/how-matching-works.md) — understand the three detection layers before writing patterns
+
+Ideas for new packs: AWS SSM/Secrets Manager, Terraform, HashiCorp Vault, database CLIs, Azure CLI, GCP CLI. Pick whichever your team uses most — likelihood of encounter matters more than completeness.
 
 **Sharing your rule packs:** Once accepted, community rule packs are curated in the companion repo [awesome-agent-guardrails](https://github.com/nimser/awesome-agent-guardrails). We'll feature useful packs there for others to discover.
 
@@ -42,11 +46,11 @@ Want to add support for another AI coding harness? Adapters are thin shims:
 2. Call `matchAndResolve()` from the engine
 3. Translate the result back to the harness's native mechanism
 
-See the existing Pi and OpenCode adapters (specs in `openspec/changes/`) for the pattern. Community adapters for Codex, Claude Code, Aider, and others are welcome starting at v0.2.0.
+The existing Pi and OpenCode adapters show the pattern. Community adapters for Codex, Claude Code, Aider, and others are welcome starting at v0.2.0.
 
 ### 🔴 Deeper Work: Engine Improvements
 
-Changes to the matcher registry, resolver, action fallback chain, or type system require more context. Read the specs in `openspec/changes/` first, and feel free to open an issue to discuss your approach before diving in.
+Changes to the matcher registry, resolver, action fallback chain, or type system require more context. Start with the [Architecture Decisions](docs/adrs/) (read in order 1–5), then open an issue to discuss your approach before diving in.
 
 ## Code Style
 
@@ -67,14 +71,14 @@ The linter and formatter will catch most issues automatically.
 
 ## Design Context
 
-The `openspec/changes/` directory contains design proposals and specifications for past and planned changes. These are working documents — they capture the author's thinking and intended direction but should not be treated as immutable specs. The source of truth is the code and tests.
+For architectural reasoning, see the docs in this repo:
 
-For deeper architectural context, see:
+- **[Getting Started](docs/getting-started.md)** — contributor gateway, key vocabulary, architecture at a glance
+- **[Architecture Decisions (ADRs)](docs/adrs/)** — the _why_ behind core design choices (read in order 1–5)
+- **[How Matching Works](docs/how-matching-works.md)** — layer-by-layer matching with real command examples
+- **[Rule Pack Guide](docs/rule-pack-guide.md)** — complete YAML format spec and action types
 
-- [Matching Strategy](docs/matching-strategy.md)
-- [YAML Rule Packs](docs/yaml-rule-packs.md)
-- [Future Secret Packs](docs/future-secret-packs.md)
-- `UBIQUITOUS_LANGUAGE.md` — domain terminology
+The source of truth is the code and tests. If a doc and the code disagree, trust the code — and please open an issue so we can fix the doc.
 
 ## Reporting Security Issues
 
