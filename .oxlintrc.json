@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxlint/main/crates/oxc_linter/src/configuration_schema.json",
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn"
+  ],
+  "rules": {
+    "no-console": "error",
+    "typescript/no-explicit-any": "error"
+  }
+}
