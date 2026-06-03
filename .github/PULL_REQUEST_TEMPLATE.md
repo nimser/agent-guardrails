@@ -4,7 +4,7 @@
 
 ## What kind of contribution is this?
 
-- [ ] New rule pack (YAML or TypeScript)
+- [ ] New rule pack (YAML)
 - [ ] New adapter (harness integration)
 - [ ] Engine change (matcher, resolver, types, etc.)
 - [ ] Documentation

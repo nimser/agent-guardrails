@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-Different AI coding harnesses (Pi, OpenCode, Claude Code, Codex) support different capabilities. The engine needs a consistent vocabulary for *what to do* when a rule matches, and *when* it fires — and must fall back gracefully when a harness can't do what the rule asks.
+Different AI coding harnesses (Pi, OpenCode, Claude Code, Codex) support different capabilities. The engine needs a consistent vocabulary for _what to do_ when a rule matches, and _when_ it fires — and must fall back gracefully when a harness can't do what the rule asks.
 
 ## Decision
 
@@ -44,7 +44,7 @@ Implemented in `resolveAction()` (`src/resolver/action-resolver.ts`). Adapters j
 
 ### Contextual Messages
 
-All action messages support `{matched}` template interpolation, replaced at match time with the actual command or file path that triggered the rule. This tells the agent *what* was caught, not just that something was caught.
+All action messages support `{matched}` template interpolation, replaced at match time with the actual command or file path that triggered the rule. This tells the agent _what_ was caught, not just that something was caught.
 
 ## Rationale
 
