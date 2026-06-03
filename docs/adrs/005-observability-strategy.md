@@ -5,6 +5,7 @@ ref: openspec/changes/change-1-project-foundation/design.md (internal use only)
 ---
 
 # ADR-005: Observability Strategy
+
 **Related:** `openspec/could-have-features.md` § Observability Tier 2
 
 ## Context
@@ -16,11 +17,13 @@ Engine owners need to know: how many tool calls were checked? How many were bloc
 ### Tier 1: In-Memory Stats (MVP)
 
 `StatsTracker` (`src/engine/stats-tracker.ts`) accumulates counts in memory:
+
 - Total checks
 - Blocks, suggests, runs per behavior
 - Optional: per-rule match counts
 
 Public API:
+
 - `getStats(): Stats` — snapshot
 - `resetStats(): void` — zero counters
 
@@ -34,11 +37,11 @@ The engine produces domain events internally (`RuleMatchedEvent`, `FallbackTrigg
 
 Deferred features documented in `openspec/could-have-features.md` and `openspec/future-architecture-decisions.md`:
 
-| Tier | Description | Status |
-|------|-------------|--------|
-| Tier 1 | In-memory stats, session-end logging | ✅ Shipped in 0.1.0 |
-| Tier 2 | Persistent daily JSON stats + `npx ag stats` CLI | Deferred |
-| Tier 3 | Real-time event stream for audit/telemetry | Deferred |
+| Tier   | Description                                      | Status              |
+| ------ | ------------------------------------------------ | ------------------- |
+| Tier 1 | In-memory stats, session-end logging             | ✅ Shipped in 0.1.0 |
+| Tier 2 | Persistent daily JSON stats + `npx ag stats` CLI | Deferred            |
+| Tier 3 | Real-time event stream for audit/telemetry       | Deferred            |
 
 ### Package Split Trigger
 

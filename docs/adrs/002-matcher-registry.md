@@ -18,9 +18,9 @@ The engine must detect dangerous patterns in tool calls. A hard-coded switch of 
 
 ```typescript
 class MatcherRegistry {
-  register(type: string, handler: MatcherHandler): void
-  evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean
-  clear(): void  // test isolation
+  register(type: string, handler: MatcherHandler): void;
+  evaluate(matcher: GuardrailMatcher, ctx: ToolCallContext): boolean;
+  clear(): void; // test isolation
 }
 ```
 
@@ -43,6 +43,7 @@ Registration is explicit, not automatic on import. Adapters call `initializeMatc
 ### Aggregate Validation
 
 `validateRule()` and `validateRulePack()` (in `src/core/validator.ts`) verify:
+
 - All required fields present
 - Phase-behavior compatibility
 - Matcher type is registered

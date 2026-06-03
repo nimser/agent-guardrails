@@ -30,17 +30,17 @@ Adapters (not yet in `public/`) depend on `engine`.
 
 `src/engine/engine.ts` is orchestration only (~60 lines). Responsibility is distributed:
 
-| Module | Responsibility | Pure / Stateful |
-|---|---|---|
-| `core/types.ts` | Type definitions | Pure |
-| `core/validator.ts` | Rule & pack validation | Pure |
-| `matcher/registry.ts` | Handler lookup | Stateful (singleton) |
-| `matcher/command-splitter.ts` | Shell command splitting | Pure |
-| `matcher/handlers/*` | Pattern matching logic | Pure |
-| `resolver/action-resolver.ts` | Fallback chain, interpolation | Pure |
-| `engine/engine.ts` | Orchestrates match → resolve → stats | Pure |
-| `engine/stats-tracker.ts` | Stats accumulation | Stateful (encapsulated) |
-| `infrastructure/yaml-pack-loader.ts` | YAML parsing, pack validation | Stateless |
+| Module                               | Responsibility                       | Pure / Stateful         |
+| ------------------------------------ | ------------------------------------ | ----------------------- |
+| `core/types.ts`                      | Type definitions                     | Pure                    |
+| `core/validator.ts`                  | Rule & pack validation               | Pure                    |
+| `matcher/registry.ts`                | Handler lookup                       | Stateful (singleton)    |
+| `matcher/command-splitter.ts`        | Shell command splitting              | Pure                    |
+| `matcher/handlers/*`                 | Pattern matching logic               | Pure                    |
+| `resolver/action-resolver.ts`        | Fallback chain, interpolation        | Pure                    |
+| `engine/engine.ts`                   | Orchestrates match → resolve → stats | Pure                    |
+| `engine/stats-tracker.ts`            | Stats accumulation                   | Stateful (encapsulated) |
+| `infrastructure/yaml-pack-loader.ts` | YAML parsing, pack validation        | Stateless               |
 
 ### Concrete Infrastructure (MVP)
 
@@ -49,6 +49,7 @@ Adapters (not yet in `public/`) depend on `engine`.
 ### Package Split Trigger
 
 Split into separate packages when:
+
 1. **3+ adapters exist** (amortized cost of interfaces exceeds single-package benefit)
 2. **Independent versioning needed** (adapters and core diverge in release cadence)
 3. **Community rule pack registry required** (separate publishing lifecycle)

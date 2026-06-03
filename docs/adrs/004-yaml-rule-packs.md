@@ -32,7 +32,7 @@ rules:
     description: What this catches
     phase: before-tool
     match:
-      type: bash-command  # or file-path (not predicate in YAML)
+      type: bash-command # or file-path (not predicate in YAML)
       pattern: "regex-pattern"
     action:
       type: block

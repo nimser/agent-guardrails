@@ -8,7 +8,7 @@ ref: openspec/changes/change-1-project-foundation/design.md (internal use only)
 
 ## Context
 
-Guardrail rules need a consistent vocabulary for *what to do* when they match, and *when* they fire. Different AI coding harnesses (Pi, OpenCode, Claude Code, Codex) support different capabilities, so the engine must express intents generatively and fall back gracefully when a harness lacks a capability.
+Guardrail rules need a consistent vocabulary for _what to do_ when they match, and _when_ they fire. Different AI coding harnesses (Pi, OpenCode, Claude Code, Codex) support different capabilities, so the engine must express intents generatively and fall back gracefully when a harness lacks a capability.
 
 ## Decision
 
@@ -16,13 +16,13 @@ Guardrail rules need a consistent vocabulary for *what to do* when they match, a
 
 Five behaviors, each with clear semantics:
 
-| Behavior | Phase | What it does | Capability required |
-|---|---|---|---|
-| `block` | before, after | Stops tool call with a message | None (universal) |
-| `suggest` | before | Stops call, offers a safer replacement | None (universal) |
-| `run` | before | Stops call, executes replacement in-hook, returns output | `run` |
-| `redact` | after | Allows call, sanitizes output before LLM sees it | `redact` |
-| `confirm` | before | Prompts user for approval | `confirm` |
+| Behavior  | Phase         | What it does                                             | Capability required |
+| --------- | ------------- | -------------------------------------------------------- | ------------------- |
+| `block`   | before, after | Stops tool call with a message                           | None (universal)    |
+| `suggest` | before        | Stops call, offers a safer replacement                   | None (universal)    |
+| `run`     | before        | Stops call, executes replacement in-hook, returns output | `run`               |
+| `redact`  | after         | Allows call, sanitizes output before LLM sees it         | `redact`            |
+| `confirm` | before        | Prompts user for approval                                | `confirm`           |
 
 ### Phase-Behavior Constraints
 
@@ -52,7 +52,7 @@ All action messages support `{matched}` template interpolation, replaced at matc
 
 - **Universality first:** `block` and `suggest` work everywhere, providing a safe baseline for new harnesses
 - **Graceful degradation:** Fallback chains mean adapters never need duplicate logic — the engine handles it
-- **Learnability:** `{matched}` tells the agent *what* was caught, not just that something was caught
+- **Learnability:** `{matched}` tells the agent _what_ was caught, not just that something was caught
 - **Phase constraints** enforced at validation time prevent silent misconfiguration
 
 ## Consequences
