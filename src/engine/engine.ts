@@ -47,8 +47,7 @@ export function matchAndResolve(
         const matches = matcherRegistry.evaluate(rule.match, matchCtx);
 
         if (matches) {
-          // Extract matched value for interpolation
-          const matchedValue = ctx.command || ctx.filePath || '';
+          const matchedValue = cmd || ctx.filePath || '';
 
           // Resolve action with capability fallback
           const action = resolveAction(
