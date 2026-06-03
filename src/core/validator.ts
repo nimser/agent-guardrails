@@ -58,16 +58,10 @@ function isAfterToolAction(v: unknown): v is AfterToolAction {
   return isObject(v) && v.type === 'redact' && typeof v.replacement === 'string'
 }
 
-/**
- * Type guard: narrows unknown input to a valid GuardrailRule.
- */
 export function validateRule(input: unknown): input is GuardrailRule {
   return getRuleErrors(input).length === 0
 }
 
-/**
- * Collect all validation errors on a rule candidate.
- */
 export function getRuleErrors(input: unknown): string[] {
   const errors: string[] = []
 
@@ -99,16 +93,10 @@ export function getRuleErrors(input: unknown): string[] {
   return errors
 }
 
-/**
- * Type guard: narrows unknown input to a valid RulePack.
- */
 export function validateRulePack(input: unknown): input is RulePack {
   return getRulePackErrors(input).length === 0
 }
 
-/**
- * Collect all validation errors on a rule pack candidate.
- */
 export function getRulePackErrors(input: unknown): string[] {
   const errors: string[] = []
 
