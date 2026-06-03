@@ -22,14 +22,18 @@ export function splitCommands(command: string): string[] {
 
     // Handle quotes
     if (char === "'" && !inDoubleQuote) {
-      inSingleQuote = !inSingleQuote;
+      if (!isEscaped(command, i)) {
+        inSingleQuote = !inSingleQuote;
+      }
       current += char;
       i++;
       continue;
     }
 
     if (char === '"' && !inSingleQuote) {
-      inDoubleQuote = !inDoubleQuote;
+      if (!isEscaped(command, i)) {
+        inDoubleQuote = !inDoubleQuote;
+      }
       current += char;
       i++;
       continue;
@@ -93,4 +97,14 @@ export function splitCommands(command: string): string[] {
   }
 
   return commands;
+}
+
+function isEscaped(input: string, index: number): boolean {
+  let backslashes = 0;
+  let j = index - 1;
+  while (j >= 0 && input[j] === '\\') {
+    backslashes++;
+    j--;
+  }
+  return backslashes % 2 !== 0;
 }

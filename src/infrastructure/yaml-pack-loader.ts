@@ -108,13 +108,25 @@ function parseMatcher(
       if (typeof raw.pattern !== 'string') {
         throw new Error(`bash-command matcher requires string pattern: ${filePath}`);
       }
-      return { type: 'bash-command', pattern: new RegExp(raw.pattern) };
+      try {
+        return { type: 'bash-command', pattern: new RegExp(raw.pattern) };
+      } catch (err) {
+        throw new Error(
+          `Invalid regex "${raw.pattern}" in ${filePath}: ${(err as Error).message}`
+        );
+      }
     }
     case 'file-path': {
       if (typeof raw.pattern !== 'string') {
         throw new Error(`file-path matcher requires string pattern: ${filePath}`);
       }
-      return { type: 'file-path', pattern: new RegExp(raw.pattern) };
+      try {
+        return { type: 'file-path', pattern: new RegExp(raw.pattern) };
+      } catch (err) {
+        throw new Error(
+          `Invalid regex "${raw.pattern}" in ${filePath}: ${(err as Error).message}`
+        );
+      }
     }
     case 'predicate': {
       if (typeof raw.predicateName !== 'string') {
