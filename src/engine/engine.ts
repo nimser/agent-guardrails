@@ -30,6 +30,16 @@ export function matchAndResolve(
   const filePath = "filePath" in ctx ? ctx.filePath : undefined;
 
   if (!command && !filePath) {
+    // Known tools require specific fields (bash→command, read/write→filePath).
+    // Fail closed to prevent guardrail bypass via malformed tool call contexts.
+    if (ctx.toolName === "bash" || ctx.toolName === "read" || ctx.toolName === "write") {
+      const action: GuardrailAction = {
+        type: "block",
+        message: `Malformed ${ctx.toolName} tool call: missing required fields`,
+      };
+      statsTracker.record(action);
+      return action;
+    }
     statsTracker.record(null);
     return undefined;
   }

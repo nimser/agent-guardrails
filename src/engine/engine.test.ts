@@ -27,6 +27,36 @@ describe("matchAndResolve", () => {
     expect(result).toBeUndefined();
   });
 
+  it("fails closed (block) when bash context is missing required command", () => {
+    const ctx: ToolCallContext = { toolName: "bash" } as ToolCallContext;
+    const packs: RulePack[] = [];
+    const result = matchAndResolve(ctx, packs, fullCapabilities);
+    expect(result).toEqual({
+      type: "block",
+      message: "Malformed bash tool call: missing required fields",
+    });
+  });
+
+  it("fails closed (block) when read context is missing required filePath", () => {
+    const ctx = { toolName: "read" } as ToolCallContext;
+    const packs: RulePack[] = [];
+    const result = matchAndResolve(ctx, packs, fullCapabilities);
+    expect(result).toEqual({
+      type: "block",
+      message: "Malformed read tool call: missing required fields",
+    });
+  });
+
+  it("fails closed (block) when write context is missing required filePath", () => {
+    const ctx = { toolName: "write" } as ToolCallContext;
+    const packs: RulePack[] = [];
+    const result = matchAndResolve(ctx, packs, fullCapabilities);
+    expect(result).toEqual({
+      type: "block",
+      message: "Malformed write tool call: missing required fields",
+    });
+  });
+
   it("returns undefined when no rules match", () => {
     const ctx: ToolCallContext = { toolName: "bash", command: "ls -la" };
     const packs: RulePack[] = [
