@@ -29,6 +29,10 @@ export function splitCommands(command: string): string[] {
         i += 3; // CRLF continuation
         continue;
       }
+      if (next === "") {
+        i++; // trailing backslash at EOF — consume it
+        continue;
+      }
     }
 
     if (char === "'" && !inDoubleQuote) {

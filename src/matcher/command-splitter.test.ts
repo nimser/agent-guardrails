@@ -83,4 +83,38 @@ describe("splitCommands", () => {
     const cmd = "echo 'cmd1" + "\\" + "\n'; cmd2";
     expect(splitCommands(cmd)).toEqual(["echo 'cmd1\\\n'", "cmd2"]);
   });
+
+  it("consumes trailing backslash at EOF", () => {
+    // A lone trailing backslash should be consumed (line continuation with nothing after)
+    expect(splitCommands("cmd1 \\")).toEqual(["cmd1"]);
+  });
+
+  it("consumes only trailing backslash, not the whole command", () => {
+    expect(splitCommands("\\")).toEqual([]);
+  });
+
+  it("handles mixed separators across continuations", () => {
+    // "cmd1 \<LF> && \<LF> cmd2" → && must still be recognized as separator
+    const cmd = "cmd1 " + "\\" + "\n" + " && " + "\\" + "\n" + " cmd2";
+    expect(splitCommands(cmd)).toEqual(["cmd1", "cmd2"]);
+  });
+
+  it("handles separator continuations with || and semicolons", () => {
+    const cmd1 = "cmd1 " + "\\" + "\n" + " || " + "cmd2";
+    expect(splitCommands(cmd1)).toEqual(["cmd1", "cmd2"]);
+
+    const cmd2 = "cmd1 " + "\\" + "\n" + " ; " + "cmd2";
+    expect(splitCommands(cmd2)).toEqual(["cmd1", "cmd2"]);
+  });
+
+  it("applies continuation inside double quotes (bash semantics)", () => {
+    // In bash, backslash-newline inside double quotes IS a line continuation
+    const cmd = 'echo "hello ' + "\\" + "\n" + 'world"';
+    expect(splitCommands(cmd)).toEqual(['echo "hello world"']);
+  });
+
+  it("does not split on separators inside continued double-quoted strings", () => {
+    const cmd = 'echo "hello ' + "\\" + "\n" + '; world"; cmd2';
+    expect(splitCommands(cmd)).toEqual(['echo "hello ; world"', "cmd2"]);
+  });
 });
