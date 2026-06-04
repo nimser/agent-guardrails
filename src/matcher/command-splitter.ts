@@ -8,103 +8,136 @@ export function splitCommands(command: string): string[] {
     return [];
   }
 
-  const commands: string[] = [];
-  let current = "";
-  let inSingleQuote = false;
-  let inDoubleQuote = false;
+  const ctx: SplitContext = {
+    command,
+    commands: [],
+    current: "",
+    inSingleQuote: false,
+    inDoubleQuote: false,
+  };
   let i = 0;
 
-  while (i < command.length) {
-    const char = command[i];
-    const next = i + 1 < command.length ? command[i + 1] : "";
+  while (i < ctx.command.length) {
+    const consumed =
+      handleLineContinuation(ctx, i) ?? handleQuoteChar(ctx, i) ?? handleSeparator(ctx, i);
 
-    // Shell line continuation: `\` followed by newline
-    // Only when the backslash is *not* itself escaped (\ followed by \ = literal \, not continuation)
-    if (!inSingleQuote && char === "\\" && !isEscaped(command, i)) {
-      if (next === "\n") {
-        i += 2; // LF continuation
-        continue;
-      }
-      if (next === "\r" && i + 2 < command.length && command[i + 2] === "\n") {
-        i += 3; // CRLF continuation
-        continue;
-      }
-      if (next === "") {
-        i++; // trailing backslash at EOF — consume it
-        continue;
-      }
-    }
-
-    if (char === "'" && !inDoubleQuote) {
-      if (!isEscaped(command, i)) {
-        inSingleQuote = !inSingleQuote;
-      }
-      current += char;
+    if (consumed !== null) {
+      i += consumed;
+    } else {
+      ctx.current += ctx.command[i];
       i++;
-      continue;
     }
-
-    if (char === '"' && !inSingleQuote) {
-      if (!isEscaped(command, i)) {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      current += char;
-      i++;
-      continue;
-    }
-
-    if (!inSingleQuote && !inDoubleQuote) {
-      if (char === "&" && next === "&") {
-        const trimmed = current.trim();
-        if (trimmed) {
-          commands.push(trimmed);
-        }
-        current = "";
-        i += 2;
-        continue;
-      }
-
-      if (char === "|" && next === "|") {
-        const trimmed = current.trim();
-        if (trimmed) {
-          commands.push(trimmed);
-        }
-        current = "";
-        i += 2;
-        continue;
-      }
-
-      if (char === ";") {
-        const trimmed = current.trim();
-        if (trimmed) {
-          commands.push(trimmed);
-        }
-        current = "";
-        i++;
-        continue;
-      }
-
-      if (char === "\n") {
-        const trimmed = current.trim();
-        if (trimmed) {
-          commands.push(trimmed);
-        }
-        current = "";
-        i++;
-        continue;
-      }
-    }
-
-    current += char;
-    i++;
   }
 
-  const trimmed = current.trim();
+  pushCommand(ctx);
+  return ctx.commands;
+}
+
+interface SplitContext {
+  command: string;
+  commands: string[];
+  current: string;
+  inSingleQuote: boolean;
+  inDoubleQuote: boolean;
+}
+
+/** Check if char at `index` is an unescaped backslash. */
+function isUnescapedBackslash(input: string, index: number): boolean {
+  return input[index] === "\\" && !isEscaped(input, index);
+}
+
+/** Push current buffer into commands list if non-empty. */
+function pushCommand(ctx: SplitContext): void {
+  const trimmed = ctx.current.trim();
   if (trimmed) {
-    commands.push(trimmed);
+    ctx.commands.push(trimmed);
+  }
+  ctx.current = "";
+}
+
+/**
+ * Handle shell line continuation: `\` followed by newline.
+ * Returns number of chars consumed, or null if not applicable.
+ */
+function handleLineContinuation(ctx: SplitContext, i: number): number | null {
+  if (ctx.inSingleQuote || !isUnescapedBackslash(ctx.command, i)) {
+    return null;
   }
 
-  return commands;
+  const next = i + 1 < ctx.command.length ? ctx.command[i + 1] : "";
+
+  if (next === "\n") {
+    return 2; // LF continuation
+  }
+  if (next === "\r" && i + 2 < ctx.command.length && ctx.command[i + 2] === "\n") {
+    return 3; // CRLF continuation
+  }
+  if (next === "") {
+    return 1; // trailing backslash at EOF — consume it
+  }
+
+  return null;
+}
+
+/**
+ * Handle a quote character (single or double). Toggles quote state.
+ * Returns 1 if consumed, or null if not a quote at this position.
+ */
+function handleQuoteChar(ctx: SplitContext, i: number): number | null {
+  const char = ctx.command[i];
+
+  if (char === "'" && !ctx.inDoubleQuote) {
+    if (!isEscaped(ctx.command, i)) {
+      ctx.inSingleQuote = !ctx.inSingleQuote;
+    }
+    ctx.current += char;
+    return 1;
+  }
+
+  if (char === '"' && !ctx.inSingleQuote) {
+    if (!isEscaped(ctx.command, i)) {
+      ctx.inDoubleQuote = !ctx.inDoubleQuote;
+    }
+    ctx.current += char;
+    return 1;
+  }
+
+  return null;
+}
+
+/**
+ * Handle a shell separator (&&, ||, ;, \n) when outside quotes.
+ * Pushes the current buffer and returns number of chars consumed, or null.
+ */
+function handleSeparator(ctx: SplitContext, i: number): number | null {
+  if (ctx.inSingleQuote || ctx.inDoubleQuote) {
+    return null;
+  }
+
+  const char = ctx.command[i];
+  const next = i + 1 < ctx.command.length ? ctx.command[i + 1] : "";
+
+  if (char === "&" && next === "&") {
+    pushCommand(ctx);
+    return 2;
+  }
+
+  if (char === "|" && next === "|") {
+    pushCommand(ctx);
+    return 2;
+  }
+
+  if (char === ";") {
+    pushCommand(ctx);
+    return 1;
+  }
+
+  if (char === "\n") {
+    pushCommand(ctx);
+    return 1;
+  }
+
+  return null;
 }
 
 function isEscaped(input: string, index: number): boolean {
