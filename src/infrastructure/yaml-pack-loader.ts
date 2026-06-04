@@ -110,8 +110,8 @@ export function loadAllRulePacks(
   let entries: string[];
   try {
     entries = readdirSync(packDir);
-  } catch {
-    return [];
+  } catch (err) {
+    throw new Error(`Failed to read rule pack directory ${packDir}: ${(err as Error).message}`);
   }
 
   for (const entry of entries) {
