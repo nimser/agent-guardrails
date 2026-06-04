@@ -1,0 +1,9 @@
+# Harnesses directories
+.agents
+.opencode
+.pi
+.claude
+
+# TSDoc
+docs/api
+
