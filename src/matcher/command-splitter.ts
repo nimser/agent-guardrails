@@ -21,7 +21,7 @@ export function splitCommands(command: string): string[] {
     const consumed =
       handleLineContinuation(ctx, i) ?? handleQuoteChar(ctx, i) ?? handleSeparator(ctx, i);
 
-    if (consumed !== null) {
+    if (isHandled(consumed)) {
       i += consumed;
     } else {
       ctx.current += ctx.command[i];
@@ -150,4 +150,8 @@ function isEscaped(input: string, index: number): boolean {
     j--;
   }
   return backslashes % 2 !== 0;
+}
+
+function isHandled(consumed: number | null): consumed is number {
+  return consumed !== null;
 }
