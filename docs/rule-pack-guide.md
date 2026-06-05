@@ -24,7 +24,7 @@ rules:
     match:
       type: bash-command
       pattern: "docker\\s+run.*--env-file"
-    action:
+    defaultAction:
       type: suggest
       replacement: "docker run --secret id=mysecret,src=.env"
       message: "Use Docker secrets instead of --env-file. `{matched}` exposes .env contents."
@@ -48,7 +48,7 @@ rules:
     match:
       type: bash-command # bash-command or file-path
       pattern: "regex-here" # Regex matching the tool call input
-    action:
+    defaultAction:
       type: block # block, suggest, run, redact, or confirm
       message: "Why this was stopped. `{matched}` triggered the rule."
 ```
@@ -86,7 +86,7 @@ Function-based matcher for complex logic. Can't be expressed in YAML — require
 ### block — Stop it, no alternative
 
 ```yaml
-action:
+defaultAction:
   type: block
   message: "Blocked: `{matched}` exposes secrets."
 ```
@@ -94,7 +94,7 @@ action:
 ### suggest — Stop it, offer a safer alternative
 
 ```yaml
-action:
+defaultAction:
   type: suggest
   replacement: "sed 's/=.*/=[REDACTED]/' {matched}"
   message: "`{matched}` may contain secrets. Try viewing keys without values."
@@ -103,7 +103,7 @@ action:
 ### confirm — Ask the user
 
 ```yaml
-action:
+defaultAction:
   type: confirm
   message: "Read `{matched}`? It may contain sensitive data."
   fallback:
@@ -172,7 +172,7 @@ rules:
     match:
       type: bash-command
       pattern: "\\b(cat|less|more|head|tail)\\s+[^|&]*\\.env"
-    action:
+    defaultAction:
       type: block
       message: "Blocked: `{matched}` may expose secrets."
 
@@ -182,7 +182,7 @@ rules:
     match:
       type: file-path
       pattern: "\\.env(\\..+)?$"
-    action:
+    defaultAction:
       type: block
       message: "Blocked: reading `{matched}` may expose secrets."
 ```
