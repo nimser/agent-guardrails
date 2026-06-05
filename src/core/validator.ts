@@ -35,10 +35,6 @@ function isBeforeToolAction(v: unknown): v is BeforeToolAction {
     case "block":
       return typeof v.message === "string";
     case "suggest":
-      return (
-        typeof v.replacement === "string" &&
-        (v.message === undefined || typeof v.message === "string")
-      );
     case "run":
       return (
         typeof v.replacement === "string" &&
