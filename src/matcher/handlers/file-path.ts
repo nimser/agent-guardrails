@@ -6,6 +6,7 @@ export const filePathHandler: MatcherHandler<"file-path"> = {
   matches(matcher, ctx) {
     if (!ctx.filePath) return false;
     if (ctx.filePath.length > MAX_MATCH_INPUT_LENGTH) return false;
+    matcher.pattern.lastIndex = 0;
     return matcher.pattern.test(ctx.filePath);
   },
 };
