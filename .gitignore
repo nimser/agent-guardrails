@@ -12,6 +12,7 @@ node_modules
 docs/api
 *.tsbuildinfo
 dist
+coverage
 
 # Misc
 .env
