@@ -29,77 +29,35 @@ reviews:
   path_instructions:
     - path: "src/core/**/*.ts"
       instructions: |-
-        Core layer — pure types, validation, zero runtime dependencies.
-        - Never import from matcher/, resolver/, engine/, or infrastructure/.
-        - Types must be precise discriminated unions, not `any` or loose unions.
-        - GuardrailBehavior is exactly: block | suggest | run | redact | confirm.
-        - Phase-behavior matrix is enforced here: before-tool allows block/suggest/run/confirm;
-          after-tool allows redact only. Violations must fail at load time.
-        - New types must be exported from src/index.ts.
+        Flag if: imports from matcher/, resolver/, engine/, or infrastructure/; use of `any` or `!` non-null assertion; default exports.
+        Do NOT flag: the five-value GuardrailBehavior union, the phase-behavior matrix, or fail-at-load-time validation — these are intentional design decisions documented in README.md.
     - path: "src/matcher/**/*.ts"
       instructions: |-
-        Matcher layer — pattern matching against ToolCallContext.
-        - Only imports from core/. Never from resolver/, engine/, or infrastructure/.
-        - Handlers implement MatcherHandler<T> for their matcher type (bash-command, file-path, predicate).
-        - Regex patterns must be tested against adversarial shell wrapping (eval, bash -c, $()).
-        - Command splitter must handle: ; && || and newlines. Variable tracking is out of scope.
-        - MatcherRegistry is a singleton — new handler types go through registerHandler().
-        - All handler logic must be pure (no side effects, no global state).
+        Flag if: imports from resolver/, engine/, or infrastructure/; impure handler logic (side effects, global state); missing adversarial test cases for new regex patterns.
+        Do NOT flag: command-splitting limitations (variable tracking is explicitly out of scope); the singleton MatcherRegistry pattern.
     - path: "src/resolver/**/*.ts"
       instructions: |-
-        Resolver layer — action resolution with fallback chains.
-        - Only imports from core/. Never from matcher/, engine/, or infrastructure/.
-        - Fallback chains: run→suggest→block, confirm→suggest→block, redact→block.
-        - Messages use {matched} and {replacement} template interpolation.
-        - resolveAction() must handle every GuardrailAction variant exhaustively.
-        - New behaviors require updating both the type union in core/ and the switch in resolveAction().
+        Flag if: imports from matcher/, engine/, or infrastructure/; missing GuardrailAction variant in switch/exhaustive check; new behavior added without updating both core/types.ts and resolveAction().
+        Do NOT flag: the confirm→suggest→block fallback chain — it is correct as implemented. Do NOT suggest changing the `yaml` package to `js-yaml` — this project uses the `yaml` package (v2.4.0).
     - path: "src/engine/**/*.ts"
       instructions: |-
-        Engine layer — orchestration only. Composes matcher + resolver.
-        - Imports from core/, matcher/, resolver/. Never from infrastructure/.
-        - matchAndResolve() is the single public entry point.
-        - Fail closed: malformed ToolCallContext with missing required fields → block.
-        - StatsTracker is stateful and encapsulated — stats are in-memory only.
-        - Keep orchestration thin (~60 lines). Business logic belongs in resolver/ or matcher/.
+        Flag if: imports from infrastructure/; orchestration growing beyond ~80 lines (business logic belongs in resolver/ or matcher/); non-fail-closed handling of malformed ToolCallContext.
     - path: "src/infrastructure/**/*.ts"
       instructions: |-
-        Infrastructure layer — I/O boundary (YAML loading, config).
-        - Only concrete implementations. No port interfaces yet (deferred until 3rd adapter).
-        - YAML pack loading must validate against the RulePack schema.
-        - The `yaml` npm package is the only runtime dependency — it lives here, not in core/.
-        - All loaded packs pass through core/validator.ts before use.
+        Flag if: imports from matcher/, resolver/, or engine/; missing schema validation on loaded packs; importing any package not already in package.json.
+        Do NOT flag: the `yaml` npm package as a "wrong package name" — this project uses `yaml` (not `js-yaml`).
     - path: "src/**/*.test.ts"
       instructions: |-
-        Test files — colocated next to the module they test.
-        - Use vitest (describe/it/expect). No jest.
-        - Test both happy path and adversarial inputs (shell wrapping, edge cases).
-        - Matcher tests should cover: exact match, no match, adversarial evasion, empty input.
-        - Resolver tests should cover: every fallback chain, template interpolation, capability flags.
-        - Engine tests should verify fail-closed behavior for malformed contexts.
-        - No snapshot tests for regex patterns — inline expected values.
+        Flag if: snapshot tests for regex patterns (use inline values); missing adversarial/edge-case coverage for matchers; jest imports (this project uses vitest).
     - path: "src/index.ts"
       instructions: |-
-        Public API surface. Every exported type and function is part of the stable API.
-        - Only re-export from core/ and engine/.
-        - Named exports only — no default exports.
-        - Adding an export = adding a public contract. Ensure it's documented and intentional.
+        Flag if: default exports; re-exports from layers other than core/ and engine/; new exports without corresponding documentation.
     - path: "**/*.yml"
       instructions: |-
-        YAML rule pack files — the primary contribution path.
-        - Verify: id is kebab-case, rule IDs use dotted notation (pack.rule-name).
-        - Verify: phase matches the action type (before-tool: block/suggest/run/confirm; after-tool: redact only).
-        - Verify: regex patterns are correct and tested against edge cases (see how-matching-works.md).
-        - Verify: {matched} template used in messages to show what was caught.
-        - Verify: suggest actions include a realistic replacement command.
-        - Cross-check against docs/rule-pack-guide.md for schema compliance.
+        YAML rule pack files. Flag if: non-kebab-case pack id; non-dotted rule id; phase/action mismatch (before-tool: block/suggest/run/confirm, after-tool: redact only); missing {matched} template in messages; suggest action without replacement.
     - path: "docs/**/*.md"
       instructions: |-
-        Documentation — architecture decisions, guides, and API docs.
-        - ADRs follow status: accepted/proposed/rejected format.
-        - Cross-references between docs must use relative links.
-        - Code examples in docs must match actual API signatures.
-        - Key vocabulary: Rule, RulePack, Behavior, Phase, ToolCallContext, Adapter, FallbackChain, Matcher.
-          Do not confuse: Behavior (category) vs Action (concrete object); RulePack (domain) vs package (npm).
+        Flag if: broken relative links; code examples that don't match actual API signatures; incorrect vocabulary usage (see README.md vocabulary table — Behavior≠Action, RulePack≠package, Harness≠Agent).
 
   slop_detection:
     label: slop
@@ -184,3 +142,7 @@ reviews:
 
 knowledge_base:
   opt_out: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/README.md"

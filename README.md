@@ -102,6 +102,65 @@ if (action?.type === "block") {
 }
 ```
 
+## Architecture
+
+Single package with strict layered directories. Dependency direction flows downward only:
+
+```
+src/
+  core/           Types, validation. ZERO runtime dependencies.
+  matcher/        Rule matching (handlers + registry). Imports core/ only.
+  resolver/       Action resolution, fallback chains. Imports core/ only.
+  engine/         Orchestration (~60 lines). Imports core/, matcher/, resolver/.
+  infrastructure/ → I/O boundary (YAML loading). The ONLY layer with external deps.
+```
+
+**Import rules** (hard constraints):
+
+- `core/` imports nothing
+- `matcher/` and `resolver/` import `core/` only
+- `engine/` imports `core/`, `matcher/`, `resolver/` (never `infrastructure/`)
+- `infrastructure/` imports `core/` only
+- The `yaml` npm package (v2.4.0) is used ONLY in `infrastructure/yaml-pack-loader.ts`
+
+### Fallback Chains
+
+When a harness lacks a capability, the engine walks a deterministic chain:
+
+- `run → suggest → block`
+- `confirm → suggest → block` (or via `action.fallback` if defined)
+- `redact → block`
+- `suggest → block` (when no replacement available)
+
+Implemented in `src/resolver/action-resolver.ts`. Adapters declare `HarnessCapabilities`; the engine handles the rest.
+
+### Matching Layers
+
+Three-layer defense-in-depth:
+
+- **L1** Substring pre-filter — fast scan, catches wrappers
+- **L2** Structural regex — precise, configured behavior
+- **L3** Wrapper detection (`eval`, `bash -c`, `$()`) — triggers force-block
+
+L1+L3 match = force-block regardless of L2 (adversarial pattern detected).
+
+## Vocabulary
+
+| Term            | Meaning                                                                        |
+| --------------- | ------------------------------------------------------------------------------ |
+| Rule            | Detection pattern + phase + default action                                     |
+| Rule Pack       | Named collection of rules (YAML or TypeScript)                                 |
+| Behavior        | Category: block/suggest/run/redact/confirm                                     |
+| Action          | Concrete response object (e.g., a suggest action with replacement + message)   |
+| Phase           | When a rule fires: before-tool or after-tool                                   |
+| ToolCallContext | Normalized input from a harness (discriminated union on `toolName`)            |
+| Adapter         | Integration shim for a specific harness (Pi, OpenCode, etc.)                   |
+| Harness         | The platform (Pi, OpenCode). NOT the agent (the AI model).                     |
+| Fallback Chain  | Deterministic degradation when a harness lacks a capability                    |
+| Matcher         | Pattern spec: bash-command (regex), file-path (regex), or predicate (function) |
+
+Do not confuse: Behavior (category) vs Action (concrete object); RulePack (domain concept) vs package (npm artifact); Harness (platform) vs Agent (AI model).
+
 ## Documentation
 
 - [Getting Started](docs/getting-started.md) — contributor gateway, architecture overview, key vocabulary
