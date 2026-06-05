@@ -56,7 +56,7 @@ export function loadYamlRulePack(filePath: string, predicateRegistry: PredicateR
   }
 
   if (!Array.isArray(rawRules)) {
-    throw new Error(`Rule pack "rules" must be an array: ${filePath}`);
+    throw new TypeError(`Rule pack "rules" must be an array: ${filePath}`);
   }
 
   const rules = rawRules.map((rawRule: RawRule, index: number) => {
@@ -143,7 +143,7 @@ function parseMatcher(
   switch (raw.type) {
     case "bash-command": {
       if (typeof raw.pattern !== "string") {
-        throw new Error(`bash-command matcher requires string pattern: ${filePath}`);
+        throw new TypeError(`bash-command matcher requires string pattern: ${filePath}`);
       }
       try {
         return { type: "bash-command", pattern: new RegExp(raw.pattern) };
@@ -153,7 +153,7 @@ function parseMatcher(
     }
     case "file-path": {
       if (typeof raw.pattern !== "string") {
-        throw new Error(`file-path matcher requires string pattern: ${filePath}`);
+        throw new TypeError(`file-path matcher requires string pattern: ${filePath}`);
       }
       try {
         return { type: "file-path", pattern: new RegExp(raw.pattern) };
@@ -163,7 +163,7 @@ function parseMatcher(
     }
     case "predicate": {
       if (typeof raw.predicateName !== "string") {
-        throw new Error(`predicate matcher requires string predicateName: ${filePath}`);
+        throw new TypeError(`predicate matcher requires string predicateName: ${filePath}`);
       }
       const fn = predicateRegistry.resolve(raw.predicateName);
       if (!fn) {
