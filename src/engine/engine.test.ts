@@ -14,7 +14,6 @@ describe("matchAndResolve", () => {
   };
 
   beforeEach(() => {
-    // Initialize the matcher registry with built-in handlers
     matcherRegistry.clear();
     initializeMatcherRegistry();
     resetStats();

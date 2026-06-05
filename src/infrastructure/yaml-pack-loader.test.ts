@@ -145,7 +145,6 @@ describe("loadAllRulePacks", () => {
       `id: pack2\nname: Pack 2\ndescription: Second\nrules:\n  - id: rule-2\n    title: Rule 2\n    description: Test\n    phase: before-tool\n    match:\n      type: bash-command\n      pattern: cmd2\n    defaultAction:\n      type: block\n      message: "Blocked"\n`,
     );
 
-    // Write a non-YAML file (should be ignored)
     writeFileSync(join(testDir, "readme.txt"), "Not a YAML file");
 
     const packs = loadAllRulePacks(testDir, predicateRegistry);
