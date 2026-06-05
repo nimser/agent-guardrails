@@ -19,25 +19,24 @@ It is **not** a security audit tool, a sandbox, or a complete security boundary.
 
 ## Reporting a Vulnerability
 
-If you discover a security issue — such as a rule pack that can be bypassed, or an unsafe default — please report it **privately**:
+Open a **public GitHub issue** for any issue with rule packs, matchers, defaults, false negatives, or missing coverage. The reproducer is usually most of the fix, and the community can contribute improvements.
 
-1. **Email**: [security contact TBD]
-2. **GitHub Security Advisory**: Use the repository's private advisory feature
+In rare cases where the issue isn't a rule bypass but a fundamental flaw in how the engine itself processes invocations (for example, a condition that silently disables all rule matching), report privately:
 
-Do **not** open a public issue for security vulnerabilities.
+- **Email**: security-agent-guardrails「at」nwo「dot」pm
+- **GitHub Security Advisory**: Use the repository's private advisory feature
 
 ### What to Include
 
 - The affected rule pack, matcher, or behavior
-- A reproduction case (command, file path, or ToolCallContext that should be blocked but isn't)
-- The expected vs. actual behavior
-- Your assessment of severity (bypass, false negative, false positive, etc.)
+- A reproduction case (command, file path, or `ToolCallContext` that should be blocked but isn't)
+- Expected vs. actual behavior
+- Severity assessment (bypass, false negative, false positive, etc.)
+- If requesting private disclosure, a short justification against the criteria above
 
-### Response Timeline
+### What to Expect
 
-- **Acknowledge**: Within 48 hours
-- **Triage**: Within 1 week
-- **Fix**: Depends on severity — critical bypasses are prioritized
+Reports are triaged on a best-effort basis. Reports closed as `wontfix` will include a rationale, typically noting the issue falls under Known Limitations or is out of scope.
 
 ## Known Limitations
 
