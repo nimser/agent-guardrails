@@ -129,41 +129,57 @@ export function validateRulePack(input: unknown): input is RulePack {
  * Checks: required fields, rules array, unique rule IDs, and per-rule validation.
  */
 export function getRulePackErrors(input: unknown): string[] {
-  const errors: string[] = [];
-
   if (!isObject(input)) {
     return ["RulePack is not an object"];
   }
 
-  if (typeof input.id !== "string" || !input.id) errors.push('RulePack "id" is required');
-  if (typeof input.name !== "string" || !input.name) errors.push('RulePack "name" is required');
-  if (typeof input.description !== "string" || !input.description)
-    errors.push('RulePack "description" is required');
+  const errors: string[] = [];
+  errors.push(...checkRulePackRequiredFields(input));
 
   if (!Array.isArray(input.rules)) {
     errors.push('RulePack "rules" must be an array');
     return errors;
   }
 
+  errors.push(...checkRulesArray(input.rules));
+  return errors;
+}
+
+function checkRulePackRequiredFields(input: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  if (typeof input.id !== "string" || !input.id) errors.push('RulePack "id" is required');
+  if (typeof input.name !== "string" || !input.name) errors.push('RulePack "name" is required');
+  if (typeof input.description !== "string" || !input.description)
+    errors.push('RulePack "description" is required');
+  return errors;
+}
+
+function checkRulesArray(rules: unknown[]): string[] {
+  const errors: string[] = [];
   const ids = new Set<string>();
-  for (const rule of input.rules) {
+
+  for (const rule of rules) {
     if (!isObject(rule)) {
       errors.push("RulePack contains a non-object rule");
       continue;
     }
-    if (typeof rule.id === "string" && rule.id) {
-      if (ids.has(rule.id)) {
-        errors.push(`duplicate rule id "${rule.id}"`);
-      }
-      ids.add(rule.id);
-    }
-
-    const ruleErrors = getRuleErrors(rule);
-    if (ruleErrors.length > 0) {
-      const ruleLabel = typeof rule.id === "string" ? rule.id : "<unknown>";
-      errors.push(...ruleErrors.map((e) => `rule "${ruleLabel}": ${e}`));
-    }
+    errors.push(...checkRuleIdUniqueness(rule, ids));
+    errors.push(...checkRuleValidity(rule));
   }
 
   return errors;
+}
+
+function checkRuleIdUniqueness(rule: Record<string, unknown>, ids: Set<string>): string[] {
+  if (typeof rule.id !== "string" || !rule.id) return [];
+  if (ids.has(rule.id)) return [`duplicate rule id "${rule.id}"`];
+  ids.add(rule.id);
+  return [];
+}
+
+function checkRuleValidity(rule: Record<string, unknown>): string[] {
+  const ruleErrors = getRuleErrors(rule);
+  if (ruleErrors.length === 0) return [];
+  const ruleLabel = typeof rule.id === "string" ? rule.id : "<unknown>";
+  return ruleErrors.map((e) => `rule "${ruleLabel}": ${e}`);
 }
