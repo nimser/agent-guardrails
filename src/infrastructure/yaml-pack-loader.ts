@@ -1,6 +1,6 @@
-import { readFileSync, readdirSync, statSync } from "fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { parse as parseYaml } from "yaml";
-import { join } from "path";
+import { join } from "node:path";
 import { PredicateRegistry } from "../core/predicate-registry.js";
 import { validateRulePack, getRulePackErrors } from "../core/validator.js";
 import type {
