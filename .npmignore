@@ -1,17 +1,34 @@
+# Build tooling
 .devcontainer/
 .opencode/
 .agents/
 .pi/
-openspec/
-research/
-node_modules/
-src/
 .git/
 .github/
-vitest.config.ts
+node_modules/
+coverage/
+.pnpm-store/
+
+# Source
+src/
+
+# Config files
 .dprint.json
 .oxfmtrc.json
 .oxlintrc.json
 .code-style.local
+.coderabbit.yaml
+sonar-project.properties
 tsconfig.json
 tsconfig.build.json
+typedoc.json
+vitest.config.ts
+package-lock.json
+pnpm-lock.yaml
+
+# Docs (README.md is auto-included by npm)
+docs/
+CONTRIBUTING.md
+SECURITY.md
+openspec/
+research/
