@@ -87,7 +87,9 @@ function handleQuoteChar(ctx: SplitContext, i: number): number | null {
   const char = ctx.command[i];
 
   if (char === "'" && !ctx.inDoubleQuote) {
-    if (!isEscaped(ctx.command, i)) {
+    // Bash: backslash is literal inside single quotes, so a closing
+    // `'` toggles regardless of any preceding backslash.
+    if (ctx.inSingleQuote || !isEscaped(ctx.command, i)) {
       ctx.inSingleQuote = !ctx.inSingleQuote;
     }
     ctx.current += char;

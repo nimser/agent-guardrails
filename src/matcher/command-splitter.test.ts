@@ -107,6 +107,11 @@ describe("splitCommands", () => {
     expect(splitCommands(cmd2)).toEqual(["cmd1", "cmd2"]);
   });
 
+  it("closes single quote even when preceded by a backslash", () => {
+    const cmd = "echo 'a" + "\\" + "'; cmd2";
+    expect(splitCommands(cmd)).toEqual(["echo 'a\\'", "cmd2"]);
+  });
+
   it("applies continuation inside double quotes (bash semantics)", () => {
     // In bash, backslash-newline inside double quotes IS a line continuation
     const cmd = 'echo "hello ' + "\\" + "\n" + 'world"';
