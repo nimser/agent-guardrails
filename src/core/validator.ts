@@ -67,34 +67,53 @@ export function validateRule(input: unknown): input is GuardrailRule {
  * Checks: required fields, valid phase, valid matcher shape, action-phase compatibility.
  */
 export function getRuleErrors(input: unknown): string[] {
-  const errors: string[] = [];
-
   if (!isObject(input)) {
     return ["Rule is not an object"];
   }
 
-  if (typeof input.id !== "string" || !input.id) errors.push('Rule "id" is required');
-  if (typeof input.title !== "string" || !input.title) errors.push('Rule "title" is required');
-  if (typeof input.description !== "string" || !input.description)
-    errors.push('Rule "description" is required');
+  const errors: string[] = [];
+  errors.push(...checkRequiredStringFields(input));
+  errors.push(...checkPhase(input));
+  errors.push(...checkMatcher(input));
+  errors.push(...checkActionForPhase(input));
+  return errors;
+}
 
-  if (typeof input.phase !== "string" || !VALID_PHASES.has(input.phase)) {
-    errors.push('Rule "phase" must be "before-tool" or "after-tool"');
-  }
-
-  if (!isGuardrailMatcher(input.match)) {
-    errors.push('Rule "match" is invalid or malformed');
-  }
-
-  if (typeof input.phase === "string" && VALID_PHASES.has(input.phase)) {
-    if (input.phase === "before-tool" && !isBeforeToolAction(input.defaultAction)) {
-      errors.push('Rule "defaultAction" is invalid for before-tool phase');
-    } else if (input.phase === "after-tool" && !isAfterToolAction(input.defaultAction)) {
-      errors.push('Rule "defaultAction" must be a redact action for after-tool phase');
+function checkRequiredStringFields(input: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  for (const field of ["id", "title", "description"] as const) {
+    if (typeof input[field] !== "string" || !input[field]) {
+      errors.push(`Rule "${field}" is required`);
     }
   }
-
   return errors;
+}
+
+function checkPhase(input: Record<string, unknown>): string[] {
+  if (typeof input.phase !== "string" || !VALID_PHASES.has(input.phase)) {
+    return ['Rule "phase" must be "before-tool" or "after-tool"'];
+  }
+  return [];
+}
+
+function checkMatcher(input: Record<string, unknown>): string[] {
+  if (!isGuardrailMatcher(input.match)) {
+    return ['Rule "match" is invalid or malformed'];
+  }
+  return [];
+}
+
+function checkActionForPhase(input: Record<string, unknown>): string[] {
+  if (typeof input.phase !== "string" || !VALID_PHASES.has(input.phase)) {
+    return [];
+  }
+  if (input.phase === "before-tool" && !isBeforeToolAction(input.defaultAction)) {
+    return ['Rule "defaultAction" is invalid for before-tool phase'];
+  }
+  if (input.phase === "after-tool" && !isAfterToolAction(input.defaultAction)) {
+    return ['Rule "defaultAction" must be a redact action for after-tool phase'];
+  }
+  return [];
 }
 
 /**
