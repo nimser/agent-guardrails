@@ -9,7 +9,7 @@ export type PredicateFunction = (ctx: ToolCallContext) => boolean;
  * them by name.
  */
 export class PredicateRegistry {
-  private predicates = new Map<string, PredicateFunction>();
+  private readonly predicates = new Map<string, PredicateFunction>();
 
   /** Register a predicate function under a unique name. */
   register(name: string, fn: PredicateFunction): void {
