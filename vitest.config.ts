@@ -1,5 +1,8 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const baseDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
@@ -15,12 +18,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@core": path.resolve(__dirname, "src/core"),
-      "@matcher": path.resolve(__dirname, "src/matcher"),
-      "@resolver": path.resolve(__dirname, "src/resolver"),
-      "@engine": path.resolve(__dirname, "src/engine"),
-      "@infrastructure": path.resolve(__dirname, "src/infrastructure"),
-      "@packs": path.resolve(__dirname, "src/packs"),
+      "@core": path.resolve(baseDir, "src/core"),
+      "@matcher": path.resolve(baseDir, "src/matcher"),
+      "@resolver": path.resolve(baseDir, "src/resolver"),
+      "@engine": path.resolve(baseDir, "src/engine"),
+      "@infrastructure": path.resolve(baseDir, "src/infrastructure"),
+      "@packs": path.resolve(baseDir, "src/packs"),
     },
   },
 });
