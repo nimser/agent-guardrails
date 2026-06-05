@@ -109,7 +109,7 @@ function resolveRun(
     };
   }
   return fallbackBlock(
-    "`run` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+    "Neither `run` nor `suggest` capabilities are supported by your harness. Falling back to a `block`.",
     action.message,
     ctx,
   );
@@ -153,7 +153,7 @@ function resolveConfirm(
     };
   }
   return fallbackBlock(
-    "`confirm` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+    "`confirm` capability is not supported, no `fallback` action was defined, and no upstream `replacement` is available. Falling back to a `block`.",
     action.message,
     ctx,
   );

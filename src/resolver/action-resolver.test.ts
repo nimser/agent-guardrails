@@ -216,7 +216,7 @@ describe("resolveAction", () => {
       }
     });
 
-    it("attaches fallbackReason when run falls back to block (no replacement available)", () => {
+    it("attaches fallbackReason when run falls back to block (neither capability available)", () => {
       const action: GuardrailAction = { type: "run", replacement: "safe-cmd" };
       const noRunNoSuggest: HarnessCapabilities = {
         block: true,
@@ -229,7 +229,7 @@ describe("resolveAction", () => {
       expect(result.type).toBe("block");
       if (result.type === "block") {
         expect(result.fallbackReason).toBe(
-          "`run` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+          "Neither `run` nor `suggest` capabilities are supported by your harness. Falling back to a `block`.",
         );
       }
     });
@@ -258,7 +258,7 @@ describe("resolveAction", () => {
       expect(result.type).toBe("block");
       if (result.type === "block") {
         expect(result.fallbackReason).toBe(
-          "`confirm` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+          "`confirm` capability is not supported, no `fallback` action was defined, and no upstream `replacement` is available. Falling back to a `block`.",
         );
       }
     });

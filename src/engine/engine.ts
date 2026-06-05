@@ -93,7 +93,9 @@ function matchPackRules(
     if (!matcherRegistry.evaluate(rule.match, matchCtx)) continue;
 
     const matchedValue = cmd || ctx.filePath || "";
-    return resolveAction(rule.defaultAction, capabilities, { matched: matchedValue });
+    const replacement =
+      "replacement" in rule.defaultAction ? rule.defaultAction.replacement : undefined;
+    return resolveAction(rule.defaultAction, capabilities, { matched: matchedValue, replacement });
   }
   return undefined;
 }
