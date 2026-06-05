@@ -26,53 +26,75 @@ export function matchAndResolve(
   packs: RulePack[],
   capabilities: HarnessCapabilities,
 ): GuardrailAction | undefined {
-  const command = "command" in ctx ? ctx.command : undefined;
-  const filePath = "filePath" in ctx ? ctx.filePath : undefined;
+  const { command, filePath } = extractTargets(ctx);
 
   if (!command && !filePath) {
-    // Known tools require specific fields (bash→command, read/write→filePath).
-    // Fail closed to prevent guardrail bypass via malformed tool call contexts.
-    if (ctx.toolName === "bash" || ctx.toolName === "read" || ctx.toolName === "write") {
-      const action: GuardrailAction = {
-        type: "block",
-        message: `Malformed ${ctx.toolName} tool call: missing required fields`,
-      };
-      statsTracker.record(action);
-      return action;
-    }
-    statsTracker.record(null);
-    return undefined;
+    return handleMissingTargets(ctx, statsTracker);
   }
 
   const commands = command ? splitCommands(command) : [""];
+  const action = findFirstMatch(ctx, commands, packs, capabilities);
+  statsTracker.record(action ?? null);
+  return action;
+}
 
+function extractTargets(ctx: ToolCallContext): { command?: string; filePath?: string } {
+  return {
+    command: "command" in ctx ? ctx.command : undefined,
+    filePath: "filePath" in ctx ? ctx.filePath : undefined,
+  };
+}
+
+// Known tools require specific fields (bash→command, read/write→filePath).
+// Fail closed to prevent guardrail bypass via malformed tool call contexts.
+function handleMissingTargets(
+  ctx: ToolCallContext,
+  tracker: StatsTracker,
+): GuardrailAction | undefined {
+  if (!REQUIRES_KNOWN_FIELDS.has(ctx.toolName)) {
+    tracker.record(null);
+    return undefined;
+  }
+  const action: GuardrailAction = {
+    type: "block",
+    message: `Malformed ${ctx.toolName} tool call: missing required fields`,
+  };
+  tracker.record(action);
+  return action;
+}
+
+const REQUIRES_KNOWN_FIELDS = new Set(["bash", "read", "write"]);
+
+function findFirstMatch(
+  ctx: ToolCallContext,
+  commands: string[],
+  packs: RulePack[],
+  capabilities: HarnessCapabilities,
+): GuardrailAction | undefined {
   for (const cmd of commands) {
     const matchCtx = { ...ctx, command: cmd } as ToolCallContext;
-
     for (const pack of packs) {
-      for (const rule of pack.rules) {
-        // This entry point handles the before-tool phase only;
-        // after-tool rules are evaluated by a separate path.
-        if (rule.phase !== "before-tool") {
-          continue;
-        }
-
-        const matches = matcherRegistry.evaluate(rule.match, matchCtx);
-
-        if (matches) {
-          const matchedValue = cmd || ctx.filePath || "";
-
-          const action = resolveAction(rule.defaultAction, capabilities, { matched: matchedValue });
-
-          statsTracker.record(action);
-
-          return action;
-        }
-      }
+      const action = matchPackRules(pack, matchCtx, capabilities, ctx, cmd);
+      if (action) return action;
     }
   }
+  return undefined;
+}
 
-  statsTracker.record(null);
+function matchPackRules(
+  pack: RulePack,
+  matchCtx: ToolCallContext,
+  capabilities: HarnessCapabilities,
+  ctx: ToolCallContext,
+  cmd: string,
+): GuardrailAction | undefined {
+  for (const rule of pack.rules) {
+    if (rule.phase !== "before-tool") continue;
+    if (!matcherRegistry.evaluate(rule.match, matchCtx)) continue;
+
+    const matchedValue = cmd || ctx.filePath || "";
+    return resolveAction(rule.defaultAction, capabilities, { matched: matchedValue });
+  }
   return undefined;
 }
 
