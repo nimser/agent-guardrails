@@ -13,10 +13,10 @@ export interface ResolveContext {
 function interpolate(message: string, ctx: ResolveContext): string {
   let result = message;
   if (ctx.matched !== undefined) {
-    result = result.replace(/\{matched\}/g, ctx.matched);
+    result = result.replaceAll("{matched}", ctx.matched);
   }
   if (ctx.replacement !== undefined) {
-    result = result.replace(/\{replacement\}/g, ctx.replacement);
+    result = result.replaceAll("{replacement}", ctx.replacement);
   }
   return result;
 }
