@@ -1,0 +1,186 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Self-contained config — no inheritance. Forks get the full setup out of the box.
+
+early_access: true
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary_placeholder: "@rab summary"
+  high_level_summary_in_walkthrough: true
+  auto_title_placeholder: "@rab"
+  review_details: true
+  fail_commit_status: true
+  changed_files_summary: false
+  sequence_diagrams: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  auto_apply_labels: true
+  suggested_reviewers: false
+  auto_assign_reviewers: true
+  poem: false
+  disable_cache: true
+
+  path_filters:
+    - "!pnpm-lock.yaml"
+    - "!docs/api/**"
+    - "!node_modules/**"
+  path_instructions:
+    - path: "src/core/**/*.ts"
+      instructions: |-
+        Core layer — pure types, validation, zero runtime dependencies.
+        - Never import from matcher/, resolver/, engine/, or infrastructure/.
+        - Types must be precise discriminated unions, not `any` or loose unions.
+        - GuardrailBehavior is exactly: block | suggest | run | redact | confirm.
+        - Phase-behavior matrix is enforced here: before-tool allows block/suggest/run/confirm;
+          after-tool allows redact only. Violations must fail at load time.
+        - New types must be exported from src/index.ts.
+    - path: "src/matcher/**/*.ts"
+      instructions: |-
+        Matcher layer — pattern matching against ToolCallContext.
+        - Only imports from core/. Never from resolver/, engine/, or infrastructure/.
+        - Handlers implement MatcherHandler<T> for their matcher type (bash-command, file-path, predicate).
+        - Regex patterns must be tested against adversarial shell wrapping (eval, bash -c, $()).
+        - Command splitter must handle: ; && || and newlines. Variable tracking is out of scope.
+        - MatcherRegistry is a singleton — new handler types go through registerHandler().
+        - All handler logic must be pure (no side effects, no global state).
+    - path: "src/resolver/**/*.ts"
+      instructions: |-
+        Resolver layer — action resolution with fallback chains.
+        - Only imports from core/. Never from matcher/, engine/, or infrastructure/.
+        - Fallback chains: run→suggest→block, confirm→suggest→block, redact→block.
+        - Messages use {matched} and {replacement} template interpolation.
+        - resolveAction() must handle every GuardrailAction variant exhaustively.
+        - New behaviors require updating both the type union in core/ and the switch in resolveAction().
+    - path: "src/engine/**/*.ts"
+      instructions: |-
+        Engine layer — orchestration only. Composes matcher + resolver.
+        - Imports from core/, matcher/, resolver/. Never from infrastructure/.
+        - matchAndResolve() is the single public entry point.
+        - Fail closed: malformed ToolCallContext with missing required fields → block.
+        - StatsTracker is stateful and encapsulated — stats are in-memory only.
+        - Keep orchestration thin (~60 lines). Business logic belongs in resolver/ or matcher/.
+    - path: "src/infrastructure/**/*.ts"
+      instructions: |-
+        Infrastructure layer — I/O boundary (YAML loading, config).
+        - Only concrete implementations. No port interfaces yet (deferred until 3rd adapter).
+        - YAML pack loading must validate against the RulePack schema.
+        - The `yaml` npm package is the only runtime dependency — it lives here, not in core/.
+        - All loaded packs pass through core/validator.ts before use.
+    - path: "src/**/*.test.ts"
+      instructions: |-
+        Test files — colocated next to the module they test.
+        - Use vitest (describe/it/expect). No jest.
+        - Test both happy path and adversarial inputs (shell wrapping, edge cases).
+        - Matcher tests should cover: exact match, no match, adversarial evasion, empty input.
+        - Resolver tests should cover: every fallback chain, template interpolation, capability flags.
+        - Engine tests should verify fail-closed behavior for malformed contexts.
+        - No snapshot tests for regex patterns — inline expected values.
+    - path: "src/index.ts"
+      instructions: |-
+        Public API surface. Every exported type and function is part of the stable API.
+        - Only re-export from core/ and engine/.
+        - Named exports only — no default exports.
+        - Adding an export = adding a public contract. Ensure it's documented and intentional.
+    - path: "**/*.yml"
+      instructions: |-
+        YAML rule pack files — the primary contribution path.
+        - Verify: id is kebab-case, rule IDs use dotted notation (pack.rule-name).
+        - Verify: phase matches the action type (before-tool: block/suggest/run/confirm; after-tool: redact only).
+        - Verify: regex patterns are correct and tested against edge cases (see how-matching-works.md).
+        - Verify: {matched} template used in messages to show what was caught.
+        - Verify: suggest actions include a realistic replacement command.
+        - Cross-check against docs/rule-pack-guide.md for schema compliance.
+    - path: "docs/**/*.md"
+      instructions: |-
+        Documentation — architecture decisions, guides, and API docs.
+        - ADRs follow status: accepted/proposed/rejected format.
+        - Cross-references between docs must use relative links.
+        - Code examples in docs must match actual API signatures.
+        - Key vocabulary: Rule, RulePack, Behavior, Phase, ToolCallContext, Adapter, FallbackChain, Matcher.
+          Do not confuse: Behavior (category) vs Action (concrete object); RulePack (domain) vs package (npm).
+
+  slop_detection:
+    label: slop
+
+  auto_review:
+    auto_pause_after_reviewed_commits: 0
+    ignore_title_keywords:
+      - "#no-rabbit"
+      - "#no-review"
+      - "#no-auto-review"
+      - "#no-ai-review"
+    drafts: true
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: true
+
+  pre_merge_checks:
+    docstrings:
+      mode: off
+    title:
+      mode: off
+
+  tools:
+    # --- Enabled (relevant to this project) ---
+    eslint: { enabled: true }
+    oxc: { enabled: true }
+    actionlint: { enabled: true }
+    zizmor: { enabled: true }
+    yamllint: { enabled: true }
+    gitleaks: { enabled: true }
+    trufflehog: { enabled: true }
+    languagetool: { enabled: true }
+
+    # --- Disabled (not relevant — TS-only project, defaults are all true) ---
+    shellcheck: { enabled: false }
+    ruff: { enabled: false }
+    flake8: { enabled: false }
+    pylint: { enabled: false }
+    swiftlint: { enabled: false }
+    phpstan: { enabled: false }
+    phpmd: { enabled: false }
+    phpcs: { enabled: false }
+    golangci-lint: { enabled: false }
+    detekt: { enabled: false }
+    rubocop: { enabled: false }
+    clippy: { enabled: false }
+    pmd: { enabled: false }
+    clang: { enabled: false }
+    cppcheck: { enabled: false }
+    fbinfer: { enabled: false }
+    fortitudeLint: { enabled: false }
+    buf: { enabled: false }
+    regal: { enabled: false }
+    luacheck: { enabled: false }
+    shopifyThemeCheck: { enabled: false }
+    brakeman: { enabled: false }
+    htmlhint: { enabled: false }
+    checkmake: { enabled: false }
+    blinter: { enabled: false }
+    smartyLint: { enabled: false }
+    emberTemplateLint: { enabled: false }
+    psscriptanalyzer: { enabled: false }
+    checkov: { enabled: false }
+    tflint: { enabled: false }
+    circleci: { enabled: false }
+    hadolint: { enabled: false }
+    dotenvLint: { enabled: false }
+    biome: { enabled: false }
+    sqlfluff: { enabled: false }
+    stylelint: { enabled: false }
+    semgrep: { enabled: false }
+    opengrep: { enabled: false }
+    trivy: { enabled: false }
+    prismaLint: { enabled: false }
+    osvScanner: { enabled: false }
+    markdownlint: { enabled: false }
+
+knowledge_base:
+  opt_out: true
