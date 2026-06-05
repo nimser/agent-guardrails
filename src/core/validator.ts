@@ -33,7 +33,10 @@ function isBeforeToolAction(v: unknown): v is BeforeToolAction {
     case "allow":
       return true;
     case "block":
-      return typeof v.message === "string";
+      return (
+        typeof v.message === "string" &&
+        (v.fallbackReason === undefined || typeof v.fallbackReason === "string")
+      );
     case "suggest":
     case "run":
       return (
@@ -72,10 +75,12 @@ export function getRuleErrors(input: unknown): string[] {
   }
 
   const errors: string[] = [];
-  errors.push(...checkRequiredStringFields(input));
-  errors.push(...checkPhase(input));
-  errors.push(...checkMatcher(input));
-  errors.push(...checkActionForPhase(input));
+  errors.push(
+    ...checkRequiredStringFields(input),
+    ...checkPhase(input),
+    ...checkMatcher(input),
+    ...checkActionForPhase(input),
+  );
   return errors;
 }
 
@@ -163,8 +168,7 @@ function checkRulesArray(rules: unknown[]): string[] {
       errors.push("RulePack contains a non-object rule");
       continue;
     }
-    errors.push(...checkRuleIdUniqueness(rule, ids));
-    errors.push(...checkRuleValidity(rule));
+    errors.push(...checkRuleIdUniqueness(rule, ids), ...checkRuleValidity(rule));
   }
 
   return errors;
