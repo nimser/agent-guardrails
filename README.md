@@ -1,5 +1,7 @@
 # Agent Guardrails
 
+> **⚠️ Heavy development:** Agent Guardrails is under active development and not yet published to npm. Expect things to break so far. The quick start below shows the expected workflow once the package is available.
+>
 > **Security disclaimer:** Agent Guardrails is a pattern-based policy engine, not a security audit tool. It provides defense-in-depth for AI coding agent workflows but should not be treated as a complete security boundary. Deterministic regex matching cannot catch every adversarial payload. Combine with network controls, credential scanning, and human review for sensitive environments. See [SECURITY.md](SECURITY.md) for details.
 
 ---
@@ -77,30 +79,15 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 
 ## Quick Start
 
-```typescript
-import { matchAndResolve, initializeMatcherRegistry, loadAllRulePacks } from "agent-guardrails";
+> Not yet published. The workflow below shows the expected v0.1.0 experience.
 
-// One-time setup
-initializeMatcherRegistry();
-
-const packs = loadAllRulePacks();
-
-const capabilities = {
-  block: true,
-  suggest: true,
-  run: false,
-  redact: false,
-  confirm: true,
-};
-
-// On each tool call:
-const action = matchAndResolve({ toolName: "bash", command: "cat .env" }, packs, capabilities);
-
-if (action?.type === "block") {
-  console.log(action.message);
-  // → "Blocked: `cat .env` — displaying .env file content may leak secrets."
-}
+```bash
+npx agent-guardrails install pi
 ```
+
+That's it. Try `cat .env` in your agent — it should be blocked.
+
+To build from source today, see [Getting Started](docs/getting-started.md).
 
 ## Architecture
 

@@ -32,6 +32,37 @@ No TypeScript required. Write a YAML file describing what to watch for, submit a
 
 Adapters are thin shims between a harness (Pi, OpenCode, Codex, Claude Code) and the engine. If your favorite harness isn't supported yet, this is a high-impact contribution.
 
+#### Programmatic API
+
+Adapters use the engine's public API to match and resolve actions:
+
+```typescript
+import { matchAndResolve, initializeMatcherRegistry, loadAllRulePacks } from "agent-guardrails";
+
+// One-time setup
+initializeMatcherRegistry();
+
+const packs = loadAllRulePacks();
+
+const capabilities = {
+  block: true,
+  suggest: true,
+  run: false,
+  redact: false,
+  confirm: true,
+};
+
+// On each tool call:
+const action = matchAndResolve({ toolName: "bash", command: "cat .env" }, packs, capabilities);
+
+if (action?.type === "block") {
+  console.log(action.message);
+  // → "Blocked: `cat .env` — displaying .env file content may leak secrets."
+}
+```
+
+See the [API docs](api/) for the full reference.
+
 ### 🔴 Deeper: Engine Improvements
 
 Changes to the matcher registry, resolver, or type system. Read the architecture docs first (below), then open an issue to discuss your approach.
