@@ -31,10 +31,7 @@ export class MatcherRegistry {
     if (!handler) {
       throw new Error(`No handler registered for matcher type "${matcher.type}"`);
     }
-    return handler.matches(
-      matcher as Extract<GuardrailMatcher, { type: typeof matcher.type }>,
-      ctx,
-    );
+    return handler.matches(matcher, ctx);
   }
 
   /** Remove all registered handlers. */
