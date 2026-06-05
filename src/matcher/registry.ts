@@ -15,7 +15,7 @@ export interface MatcherHandler<T extends string = string> {
  * rather than using a hardcoded switch, enabling extensibility.
  */
 export class MatcherRegistry {
-  private handlers = new Map<string, MatcherHandler>();
+  private readonly handlers = new Map<string, MatcherHandler>();
 
   /** Register a handler for a specific matcher type. Throws if already registered. */
   register<T extends string>(handler: MatcherHandler<T>): void {
@@ -31,7 +31,7 @@ export class MatcherRegistry {
     if (!handler) {
       throw new Error(`No handler registered for matcher type "${matcher.type}"`);
     }
-    return (handler as MatcherHandler<typeof matcher.type>).matches(
+    return handler.matches(
       matcher as Extract<GuardrailMatcher, { type: typeof matcher.type }>,
       ctx,
     );
