@@ -51,7 +51,8 @@ export function matchAndResolve(
 
     for (const pack of packs) {
       for (const rule of pack.rules) {
-        // TODO: after-tool phase not yet implemented
+        // This entry point handles the before-tool phase only;
+        // after-tool rules are evaluated by a separate path.
         if (rule.phase !== "before-tool") {
           continue;
         }
