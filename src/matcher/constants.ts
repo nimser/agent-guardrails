@@ -8,8 +8,8 @@
  * is well above any legitimate input length (PATH_MAX on Linux is 4096;
  * shell commands rarely exceed a few hundred bytes).
  *
- * See future-architecture-decisions.md for a discussion of stronger
- * alternatives (safe-regex, re2) that could replace this heuristic
- * with AST-level guarantees.
+ * See docs/adrs/003-matching-strategy.md for the matching-strategy ADR.
+ * Stronger alternatives (safe-regex, re2) to replace this heuristic
+ * with AST-level guarantees remain a future consideration.
  */
 export const MAX_MATCH_INPUT_LENGTH = 4096;

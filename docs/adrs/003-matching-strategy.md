@@ -61,4 +61,5 @@ FILE=.env; cat "$FILE"
 - Rules can opt into any subset of layers
 - New evasion patterns require L3 updates, not L2 regex changes
 - Command splitting doesn't track variable values or substitution — that needs a shell tokenizer (planned post-MVP)
+- Regex-based layers could be hardened further with safe-regex validation or re2 at the AST level, replacing the current input-length heuristic
 - See [how-matching-works.md](../how-matching-works.md) for the detailed layer-by-layer breakdown with examples
