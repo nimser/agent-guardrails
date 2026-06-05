@@ -73,7 +73,11 @@ function resolveSuggest(
   ctx: ResolveContext,
 ): GuardrailAction {
   if (!capabilities.suggest) {
-    return blockWithReason(action.message, "capability unavailable.", ctx);
+    return fallbackBlock(
+      "`suggest` capability is not supported by your harness. Falling back to a `block`.",
+      action.message,
+      ctx,
+    );
   }
   const replacement = action.replacement;
   return {
@@ -104,7 +108,11 @@ function resolveRun(
       message: interpolateMessage(action.message, { ...ctx, replacement }),
     };
   }
-  return blockWithReason(action.message, "no Replacement available.", ctx);
+  return fallbackBlock(
+    "`run` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+    action.message,
+    ctx,
+  );
 }
 
 function resolveRedact(
@@ -115,10 +123,11 @@ function resolveRedact(
   if (capabilities.redact) {
     return { type: "redact", replacement: action.replacement };
   }
-  return {
-    type: "block",
-    message: interpolate(`Blocked: \`${ctx.matched ?? ""}\` — redact capability unavailable.`, ctx),
-  };
+  return fallbackBlock(
+    "`redact` capability is not supported by your harness. Falling back to a `block`.",
+    undefined,
+    ctx,
+  );
 }
 
 function resolveConfirm(
@@ -143,19 +152,23 @@ function resolveConfirm(
       message: interpolate(action.message, ctx),
     };
   }
-  return blockWithReason(action.message, "no Replacement available.", ctx);
+  return fallbackBlock(
+    "`confirm` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+    action.message,
+    ctx,
+  );
 }
 
-function blockWithReason(
+function fallbackBlock(
+  fallbackReason: string,
   message: string | undefined,
-  reason: string,
   ctx: ResolveContext,
 ): GuardrailAction {
   return {
     type: "block",
-    message: interpolate(
-      message ? `Blocked: ${message}` : `Blocked: \`${ctx.matched ?? ""}\` — ${reason}`,
-      ctx,
-    ),
+    message: message
+      ? interpolate(`Blocked: ${message}`, ctx)
+      : interpolate(`Blocked: \`${ctx.matched ?? ""}\``, ctx),
+    fallbackReason,
   };
 }

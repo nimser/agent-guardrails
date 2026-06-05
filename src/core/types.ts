@@ -13,7 +13,7 @@ export type GuardrailBehavior = "block" | "suggest" | "run" | "redact" | "confir
  */
 export type BeforeToolAction =
   | { type: "allow" }
-  | { type: "block"; message: string }
+  | { type: "block"; message: string; fallbackReason?: string }
   | { type: "suggest"; replacement: string; message?: string }
   | { type: "run"; replacement: string; message?: string }
   | { type: "confirm"; message: string; fallback?: BeforeToolAction };

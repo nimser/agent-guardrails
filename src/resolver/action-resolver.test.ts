@@ -204,6 +204,96 @@ describe("resolveAction", () => {
     });
   });
 
+  describe("fallbackReason", () => {
+    it("attaches fallbackReason when suggest falls back to block", () => {
+      const action: GuardrailAction = { type: "suggest", replacement: "safe-cmd" };
+      const result = resolveAction(action, noSuggest, { matched: "dangerous" });
+      expect(result.type).toBe("block");
+      if (result.type === "block") {
+        expect(result.fallbackReason).toBe(
+          "`suggest` capability is not supported by your harness. Falling back to a `block`.",
+        );
+      }
+    });
+
+    it("attaches fallbackReason when run falls back to block (no replacement available)", () => {
+      const action: GuardrailAction = { type: "run", replacement: "safe-cmd" };
+      const noRunNoSuggest: HarnessCapabilities = {
+        block: true,
+        suggest: false,
+        run: false,
+        redact: false,
+        confirm: false,
+      };
+      const result = resolveAction(action, noRunNoSuggest);
+      expect(result.type).toBe("block");
+      if (result.type === "block") {
+        expect(result.fallbackReason).toBe(
+          "`run` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+        );
+      }
+    });
+
+    it("attaches fallbackReason when redact falls back to block", () => {
+      const action: GuardrailAction = { type: "redact", replacement: "[REDACTED]" };
+      const result = resolveAction(action, limitedCapabilities, { matched: "secret" });
+      expect(result.type).toBe("block");
+      if (result.type === "block") {
+        expect(result.fallbackReason).toBe(
+          "`redact` capability is not supported by your harness. Falling back to a `block`.",
+        );
+      }
+    });
+
+    it("attaches fallbackReason when confirm falls back to block (no fallback, no suggest)", () => {
+      const action: GuardrailAction = { type: "confirm", message: "Confirm?" };
+      const noConfirmNoSuggest: HarnessCapabilities = {
+        block: true,
+        suggest: false,
+        run: false,
+        redact: false,
+        confirm: false,
+      };
+      const result = resolveAction(action, noConfirmNoSuggest);
+      expect(result.type).toBe("block");
+      if (result.type === "block") {
+        expect(result.fallbackReason).toBe(
+          "`confirm` capability is not supported by your harness and no replacement is available. Falling back to a `block`.",
+        );
+      }
+    });
+
+    it("preserves the rule author's message in the block message field", () => {
+      const action: GuardrailAction = {
+        type: "suggest",
+        replacement: "safe-cmd",
+        message: "Use safe-cmd instead",
+      };
+      const result = resolveAction(action, noSuggest, { matched: "dangerous" });
+      expect(result.type).toBe("block");
+      if (result.type === "block") {
+        expect(result.message).toBe("Blocked: Use safe-cmd instead");
+        expect(result.fallbackReason).toContain("`suggest` capability");
+      }
+    });
+
+    it("uses the matched value in the block message when the rule author provided no message", () => {
+      const action: GuardrailAction = { type: "suggest", replacement: "safe-cmd" };
+      const result = resolveAction(action, noSuggest, { matched: "dangerous-cmd" });
+      expect(result.type).toBe("block");
+      if (result.type === "block") {
+        expect(result.message).toBe("Blocked: `dangerous-cmd`");
+        expect(result.fallbackReason).toBeDefined();
+      }
+    });
+
+    it("does not attach fallbackReason to a plain block action (no fallback occurred)", () => {
+      const action: GuardrailAction = { type: "block", message: "Plain block" };
+      const result = resolveAction(action, fullCapabilities);
+      expect(result).toEqual({ type: "block", message: "Plain block" });
+    });
+  });
+
   describe("template interpolation", () => {
     it("interpolates {matched} placeholder", () => {
       const action: GuardrailAction = { type: "block", message: "Blocked: {matched}" };
