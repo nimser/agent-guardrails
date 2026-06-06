@@ -28,13 +28,13 @@ describe('file-path matcher', () => {
     expect(filePathHandler.matches(matcher, ctx)).toBe(true)
   })
 
-  it('returns false when filePath exceeds MAX_MATCH_INPUT_LENGTH', () => {
+  it('returns true (blocks) when filePath exceeds MAX_MATCH_INPUT_LENGTH', () => {
     const matcher = { type: 'file-path' as const, pattern: /test/ }
     const ctx: ToolCallContext = {
       toolName: 'read',
       filePath: '/' + 'a'.repeat(MAX_MATCH_INPUT_LENGTH),
     }
-    expect(filePathHandler.matches(matcher, ctx)).toBe(false)
+    expect(filePathHandler.matches(matcher, ctx)).toBe(true)
   })
 
   it('still matches when filePath equals MAX_MATCH_INPUT_LENGTH', () => {

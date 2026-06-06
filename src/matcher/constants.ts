@@ -1,12 +1,16 @@
 /**
  * Maximum input string length (in characters) that regex-based matchers
- * will attempt to match against. Inputs longer than this are not matched.
+ * will attempt to match against. Inputs longer than this are blocked
+ * (fail-closed) rather than allowed through.
  *
  * This bounds worst-case regex evaluation time as a mitigation against
  * community-contributed rule packs that may contain patterns susceptible
  * to catastrophic backtracking. For bash commands and file paths, 4 KB
  * is well above any legitimate input length (PATH_MAX on Linux is 4096;
  * shell commands rarely exceed a few hundred bytes).
+ *
+ * Returning `true` (match/block) when the limit is exceeded prevents an
+ * adversarial LLM from bypassing guardrails by crafting oversized inputs.
  *
  * See docs/adrs/003-matching-strategy.md for the matching-strategy ADR.
  * Stronger alternatives (safe-regex, re2) to replace this heuristic

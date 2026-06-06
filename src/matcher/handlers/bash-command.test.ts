@@ -28,13 +28,13 @@ describe('bash-command matcher', () => {
     expect(bashCommandHandler.matches(matcher, ctx)).toBe(false)
   })
 
-  it('returns false when command exceeds MAX_MATCH_INPUT_LENGTH', () => {
+  it('returns true (blocks) when command exceeds MAX_MATCH_INPUT_LENGTH', () => {
     const matcher = { type: 'bash-command' as const, pattern: /test/ }
     const ctx: ToolCallContext = {
       toolName: 'bash',
       command: 'a'.repeat(MAX_MATCH_INPUT_LENGTH + 1),
     }
-    expect(bashCommandHandler.matches(matcher, ctx)).toBe(false)
+    expect(bashCommandHandler.matches(matcher, ctx)).toBe(true)
   })
 
   it('still matches when command equals MAX_MATCH_INPUT_LENGTH', () => {
