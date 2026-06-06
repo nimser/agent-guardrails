@@ -45,4 +45,37 @@ describe('file-path matcher', () => {
     }
     expect(filePathHandler.matches(matcher, ctx)).toBe(true)
   })
+
+  it('resets lastIndex for global regex', () => {
+    const pattern = /\.env$/g
+    const matcher = { type: 'file-path' as const, pattern }
+    const ctx: ToolCallContext = { toolName: 'read', filePath: '/home/user/.env' }
+
+    // First match advances lastIndex
+    pattern.test('/home/user/.env')
+    expect(pattern.lastIndex).toBeGreaterThan(0)
+
+    // Handler should still match (resets lastIndex internally)
+    expect(filePathHandler.matches(matcher, ctx)).toBe(true)
+  })
+
+  it('resets lastIndex for sticky regex', () => {
+    const pattern = /home/y
+    const matcher = { type: 'file-path' as const, pattern }
+    const ctx: ToolCallContext = { toolName: 'read', filePath: '/home/user/.env' }
+
+    // Advance lastIndex by testing against a matching substring
+    pattern.test('home')
+    expect(pattern.lastIndex).toBeGreaterThan(0)
+
+    // Handler resets lastIndex, so sticky starts from 0 again
+    // (won't match because /home/ has leading slash, but proves reset happened)
+    // Instead, use a pattern that matches at position 0
+    const anchored = /^\/home/y
+    const anchoredMatcher = { type: 'file-path' as const, pattern: anchored }
+    anchored.test('/home/user/.env')
+    expect(anchored.lastIndex).toBeGreaterThan(0)
+
+    expect(filePathHandler.matches(anchoredMatcher, ctx)).toBe(true)
+  })
 })

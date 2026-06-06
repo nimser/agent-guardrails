@@ -45,4 +45,30 @@ describe('bash-command matcher', () => {
     }
     expect(bashCommandHandler.matches(matcher, ctx)).toBe(true)
   })
+
+  it('resets lastIndex for global regex', () => {
+    const pattern = /sops/g
+    const matcher = { type: 'bash-command' as const, pattern }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+
+    // First match advances lastIndex
+    pattern.test('sops decrypt')
+    expect(pattern.lastIndex).toBeGreaterThan(0)
+
+    // Handler should still match (resets lastIndex internally)
+    expect(bashCommandHandler.matches(matcher, ctx)).toBe(true)
+  })
+
+  it('resets lastIndex for sticky regex', () => {
+    const pattern = /sops/y
+    const matcher = { type: 'bash-command' as const, pattern }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+
+    // First match advances lastIndex
+    pattern.test('sops decrypt')
+    expect(pattern.lastIndex).toBeGreaterThan(0)
+
+    // Handler should still match (resets lastIndex internally)
+    expect(bashCommandHandler.matches(matcher, ctx)).toBe(true)
+  })
 })
