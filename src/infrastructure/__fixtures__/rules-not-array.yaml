@@ -1,0 +1,4 @@
+id: test
+name: Test
+description: Test
+rules: not-an-array

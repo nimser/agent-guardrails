@@ -1,0 +1,6 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: r1
+    title: R1

@@ -1,0 +1,17 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: r1
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: foo
+    defaultAction:
+      type: confirm
+      message: Confirm?
+      fallback:
+        type: block
+        message: Cancelled

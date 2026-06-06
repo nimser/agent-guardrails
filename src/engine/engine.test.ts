@@ -2,17 +2,18 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { matchAndResolve, getStats, resetStats } from './engine.js'
 import { initializeMatcherRegistry } from '../matcher/setup.js'
 import { matcherRegistry } from '../matcher/registry.js'
+import { PredicateRegistry } from '../core/predicate-registry.js'
 import type { ToolCallContext, RulePack, HarnessCapabilities } from '../core/types.js'
 
-describe('matchAndResolve', () => {
-  const fullCapabilities: HarnessCapabilities = {
-    block: true,
-    suggest: true,
-    run: true,
-    redact: true,
-    confirm: true,
-  }
+const fullCapabilities: HarnessCapabilities = {
+  block: true,
+  suggest: true,
+  run: true,
+  redact: true,
+  confirm: true,
+}
 
+describe('matchAndResolve', () => {
   beforeEach(() => {
     matcherRegistry.clear()
     initializeMatcherRegistry()
@@ -372,5 +373,141 @@ describe('matchAndResolve — phase handling', () => {
       confirm: true,
     }
     expect(matchAndResolve(ctx, packs, caps)).toBeUndefined()
+  })
+})
+
+describe('matchAndResolve — split commands', () => {
+  beforeEach(() => {
+    matcherRegistry.clear()
+    initializeMatcherRegistry()
+    resetStats()
+  })
+
+  it('matches only the second sub-command in a split', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'ls; sops decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-block',
+            title: 'SOPS Block',
+            description: 'Block sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/ },
+            defaultAction: { type: 'block', message: 'Blocked: {matched}' },
+          },
+        ],
+      },
+    ]
+    const result = matchAndResolve(ctx, packs, fullCapabilities)
+    expect(result?.type).toBe('block')
+    if (result?.type === 'block') {
+      expect(result.message).toBe('Blocked: sops decrypt secret.yaml')
+    }
+  })
+})
+
+describe('matchAndResolve — predicate matcher', () => {
+  beforeEach(() => {
+    matcherRegistry.clear()
+    initializeMatcherRegistry()
+    resetStats()
+  })
+
+  it('matches via predicate matcher end-to-end', () => {
+    const predicateRegistry = new PredicateRegistry()
+    predicateRegistry.register('is-dangerous-rm', (ctx) => {
+      return ctx.toolName === 'bash' && !!ctx.command && ctx.command.includes('rm -rf')
+    })
+
+    matcherRegistry.clear()
+    initializeMatcherRegistry(matcherRegistry, predicateRegistry)
+
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'rm -rf /' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'rm-block',
+            title: 'RM Block',
+            description: 'Block rm -rf',
+            phase: 'before-tool',
+            match: { type: 'predicate', predicateName: 'is-dangerous-rm' },
+            defaultAction: { type: 'block', message: 'Blocked: {matched}' },
+          },
+        ],
+      },
+    ]
+    const result = matchAndResolve(ctx, packs, fullCapabilities)
+    expect(result?.type).toBe('block')
+    if (result?.type === 'block') {
+      expect(result.message).toBe('Blocked: rm -rf /')
+    }
+  })
+})
+
+describe('matchAndResolve — stats tracking', () => {
+  beforeEach(() => {
+    matcherRegistry.clear()
+    initializeMatcherRegistry()
+    resetStats()
+  })
+
+  it('tracks suggest actions in stats', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-suggest',
+            title: 'SOPS Suggest',
+            description: 'Suggest alternative',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'suggest', replacement: 'safe-cmd', message: 'Try this' },
+          },
+        ],
+      },
+    ]
+    matchAndResolve(ctx, packs, fullCapabilities)
+    const stats = getStats()
+    expect(stats.checks).toBe(1)
+    expect(stats.suggests).toBe(1)
+    expect(stats.blocks).toBe(0)
+  })
+
+  it('tracks no-match as check without block or suggest', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'ls -la' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-block',
+            title: 'SOPS Block',
+            description: 'Block sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'block', message: 'Blocked' },
+          },
+        ],
+      },
+    ]
+    matchAndResolve(ctx, packs, fullCapabilities)
+    const stats = getStats()
+    expect(stats.checks).toBe(1)
+    expect(stats.blocks).toBe(0)
+    expect(stats.suggests).toBe(0)
   })
 })

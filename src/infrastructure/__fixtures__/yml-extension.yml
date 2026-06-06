@@ -1,0 +1,14 @@
+id: yml-pack
+name: YML Pack
+description: Uses yml extension
+rules:
+  - id: rule-1
+    title: Rule 1
+    description: Test
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: cmd
+    defaultAction:
+      type: block
+      message: Blocked

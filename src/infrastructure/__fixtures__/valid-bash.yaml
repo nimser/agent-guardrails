@@ -1,0 +1,14 @@
+id: test-pack
+name: Test Pack
+description: A test rule pack
+rules:
+  - id: block-rm
+    title: Block rm command
+    description: Block dangerous rm commands
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: '\brm\s'
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

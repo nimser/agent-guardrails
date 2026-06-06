@@ -1,0 +1,13 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: r1
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      pattern: foo
+    defaultAction:
+      type: block
+      message: Blocked
