@@ -17,6 +17,7 @@ describe('public API surface', () => {
   it('exports engine functions', () => {
     expect(typeof api.initGuardrails).toBe('function')
     expect(typeof api.matchAndResolve).toBe('function')
+    expect(typeof api.processMatch).toBe('function')
     expect(typeof api.getStats).toBe('function')
     expect(typeof api.resetStats).toBe('function')
     expect(api.StatsTracker).toBeDefined()

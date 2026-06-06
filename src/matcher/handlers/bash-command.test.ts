@@ -6,7 +6,7 @@ import type { ToolCallContext } from '../../core/types'
 describe('bash-command matcher', () => {
   it('returns true when pattern matches command', () => {
     const matcher = { type: 'bash-command' as const, pattern: /sops/i }
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt file.yaml' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt file.yaml' }
     expect(bashCommandHandler.matches(matcher, ctx)).toBe(true)
   })
 
@@ -49,10 +49,10 @@ describe('bash-command matcher', () => {
   it('resets lastIndex for global regex', () => {
     const pattern = /sops/g
     const matcher = { type: 'bash-command' as const, pattern }
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
 
     // First match advances lastIndex
-    pattern.test('sops decrypt')
+    pattern.test('sops --decrypt')
     expect(pattern.lastIndex).toBeGreaterThan(0)
 
     // Handler should still match (resets lastIndex internally)
@@ -62,10 +62,10 @@ describe('bash-command matcher', () => {
   it('resets lastIndex for sticky regex', () => {
     const pattern = /sops/y
     const matcher = { type: 'bash-command' as const, pattern }
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
 
     // First match advances lastIndex
-    pattern.test('sops decrypt')
+    pattern.test('sops --decrypt')
     expect(pattern.lastIndex).toBeGreaterThan(0)
 
     // Handler should still match (resets lastIndex internally)

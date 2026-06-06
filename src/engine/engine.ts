@@ -3,6 +3,9 @@ import type {
   RulePack,
   GuardrailAction,
   HarnessCapabilities,
+  MatchResult,
+  DomainEvent,
+  BeforeToolAction,
 } from '../core/types.js'
 import { matcherRegistry, MatcherRegistry } from '../matcher/registry.js'
 import { initializeMatcherRegistry } from '../matcher/setup.js'
@@ -30,6 +33,28 @@ export function initGuardrails(
 const statsTracker = new StatsTracker()
 
 /**
+ * Internal engine entry point. Returns both the resolved action and
+ * the domain events that explain how the decision was reached.
+ * The public `matchAndResolve()` calls this and discards the trace.
+ */
+export function processMatch(
+  ctx: ToolCallContext,
+  packs: RulePack[],
+  capabilities: HarnessCapabilities
+): MatchResult {
+  const { command, filePath } = extractTargets(ctx)
+
+  if (isMissingRequiredFields(ctx, command, filePath)) {
+    return handleMissingTargetsTraced(ctx, statsTracker)
+  }
+
+  const commands = command ? splitCommands(command) : ['']
+  const result = findFirstMatchTraced(ctx, commands, packs, capabilities)
+  statsTracker.record(result.action ?? null)
+  return result
+}
+
+/**
  * Main engine entry point. Evaluates a ToolCallContext against all rules
  * in the given RulePacks and returns the first matching resolved action.
  * Uses the MatcherRegistry for evaluation and resolveAction for fallback chains.
@@ -44,16 +69,7 @@ export function matchAndResolve(
   packs: RulePack[],
   capabilities: HarnessCapabilities
 ): GuardrailAction | undefined {
-  const { command, filePath } = extractTargets(ctx)
-
-  if (isMissingRequiredFields(ctx, command, filePath)) {
-    return handleMissingTargets(ctx, statsTracker)
-  }
-
-  const commands = command ? splitCommands(command) : ['']
-  const action = findFirstMatch(ctx, commands, packs, capabilities)
-  statsTracker.record(action ?? null)
-  return action
+  return processMatch(ctx, packs, capabilities).action
 }
 
 function extractTargets(ctx: ToolCallContext): { command?: string; filePath?: string } {
@@ -65,20 +81,23 @@ function extractTargets(ctx: ToolCallContext): { command?: string; filePath?: st
 
 // Known tools require specific fields (bash→command, read/write→filePath).
 // Fail closed to prevent guardrail bypass via malformed tool call contexts.
-function handleMissingTargets(
-  ctx: ToolCallContext,
-  tracker: StatsTracker
-): GuardrailAction | undefined {
+function handleMissingTargetsTraced(ctx: ToolCallContext, tracker: StatsTracker): MatchResult {
   if (!REQUIRES_KNOWN_FIELDS.has(ctx.toolName)) {
     tracker.record(null)
-    return undefined
+    return { action: undefined, events: [] }
   }
   const action: GuardrailAction = {
     type: 'block',
     message: `Malformed ${ctx.toolName} tool call: missing required fields`,
   }
+  const event: DomainEvent = {
+    type: 'fallback-triggered',
+    from: 'allow',
+    to: 'block',
+    reason: `Malformed ${ctx.toolName} tool call: missing required fields`,
+  }
   tracker.record(action)
-  return action
+  return { action, events: [event] }
 }
 
 const REQUIRES_KNOWN_FIELDS = new Set(['bash', 'read', 'write'])
@@ -100,29 +119,29 @@ function isMissingRequiredFields(
   }
 }
 
-function findFirstMatch(
+function findFirstMatchTraced(
   ctx: ToolCallContext,
   commands: string[],
   packs: RulePack[],
   capabilities: HarnessCapabilities
-): GuardrailAction | undefined {
+): MatchResult {
   for (const cmd of commands) {
     const matchCtx = { ...ctx, command: cmd } as ToolCallContext
     for (const pack of packs) {
-      const action = matchPackRules(pack, matchCtx, capabilities, ctx, cmd)
-      if (action) return action
+      const result = matchPackRulesTraced(pack, matchCtx, capabilities, ctx, cmd)
+      if (result) return result
     }
   }
-  return undefined
+  return { action: undefined, events: [] }
 }
 
-function matchPackRules(
+function matchPackRulesTraced(
   pack: RulePack,
   matchCtx: ToolCallContext,
   capabilities: HarnessCapabilities,
   ctx: ToolCallContext,
   cmd: string
-): GuardrailAction | undefined {
+): MatchResult | undefined {
   for (const rule of pack.rules) {
     if (rule.phase !== 'before-tool') continue
     if (!matcherRegistry.evaluate(rule.match, matchCtx)) continue
@@ -130,9 +149,49 @@ function matchPackRules(
     const matchedValue = cmd || ctx.filePath || ''
     const replacement =
       'replacement' in rule.defaultAction ? rule.defaultAction.replacement : undefined
-    return resolveAction(rule.defaultAction, capabilities, { matched: matchedValue, replacement })
+
+    const ruleEvent: DomainEvent = {
+      type: 'rule-matched',
+      ruleId: rule.id,
+      matched: matchedValue,
+    }
+
+    const resolved = resolveAction(rule.defaultAction, capabilities, {
+      matched: matchedValue,
+      replacement,
+    })
+
+    const fallbackEvent = detectFallback(rule.defaultAction, resolved)
+
+    return {
+      action: resolved,
+      events: fallbackEvent ? [ruleEvent, fallbackEvent] : [ruleEvent],
+    }
   }
   return undefined
+}
+
+/**
+ * Detect whether the resolver walked the fallback chain by comparing
+ * the rule's declared action type against the resolved action type.
+ */
+function detectFallback(
+  original: BeforeToolAction,
+  resolved: GuardrailAction
+): DomainEvent | undefined {
+  if (original.type === resolved.type) return undefined
+
+  const reason =
+    resolved.type === 'block' && 'fallbackReason' in resolved && resolved.fallbackReason
+      ? resolved.fallbackReason
+      : `Capability '${original.type}' not available`
+
+  return {
+    type: 'fallback-triggered',
+    from: original.type,
+    to: resolved.type,
+    reason,
+  }
 }
 
 /** Get a snapshot of current intervention stats. */

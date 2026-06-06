@@ -26,9 +26,16 @@ Engine owners need to know: how many tool calls were checked? How many were bloc
 
 Public API: `getStats()` for snapshots, `resetStats()` to zero counters. Adapters call `getStats()` at session end and log to their harness-native output.
 
-### Domain Events (Planned)
+### Domain Events
 
-Domain events (`RuleMatchedEvent`, `FallbackTriggeredEvent`) are planned but not yet implemented. When added, the engine will produce them internally — `matchAndResolve()` will continue to return only the `GuardrailAction` in its public signature. Events will serve as groundwork for Tier 2/3 observability.
+The engine produces a decision trace alongside every action via `processMatch()`, which returns a `MatchResult` containing both the resolved `action` and an ordered list of `DomainEvent`s.
+
+| Event Type             | When Emitted                                                        |
+| ---------------------- | ------------------------------------------------------------------- |
+| `RuleMatchedEvent`     | A rule's matcher fires against the tool call                        |
+| `FallbackTriggeredEvent` | The resolver walks the fallback chain (e.g., run→suggest→block)   |
+
+`matchAndResolve()` remains the primary public API and returns only the `GuardrailAction`. Adapters that need the trace (audit, telemetry, debugging) call `processMatch()` instead.
 
 ## Rationale
 

@@ -323,8 +323,8 @@ describe('resolveAction', () => {
   describe('template interpolation', () => {
     it('interpolates {matched} placeholder', () => {
       const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' }
-      const result = resolveAction(action, fullCapabilities, { matched: 'sops decrypt' })
-      expect(result).toEqual({ type: 'block', message: 'Blocked: sops decrypt' })
+      const result = resolveAction(action, fullCapabilities, { matched: 'sops --decrypt' })
+      expect(result).toEqual({ type: 'block', message: 'Blocked: sops --decrypt' })
     })
 
     it('interpolates {replacement} placeholder', () => {

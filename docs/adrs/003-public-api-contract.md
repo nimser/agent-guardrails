@@ -23,7 +23,8 @@ import { initGuardrails, matchAndResolve, getStats, resetStats } from "agent-gua
 | Export                      | Layer          | Purpose                                             |
 | --------------------------- | -------------- | --------------------------------------------------- |
 | `initGuardrails`            | engine         | Bootstrap: registers built-in matchers, returns `PredicateRegistry` |
-| `matchAndResolve`           | engine         | Evaluate a tool call against rule packs             |
+| `matchAndResolve`           | engine         | Evaluate a tool call against rule packs (action only) |
+| `processMatch`              | engine         | Evaluate a tool call — returns action + domain event trace |
 | `getStats` / `resetStats`   | engine         | Session-level intervention counters                 |
 | `StatsTracker`              | engine         | Class for adapters that need their own instance     |
 | `loadYamlRulePack`          | infrastructure | Load a single YAML rule pack from disk              |
@@ -33,7 +34,7 @@ import { initGuardrails, matchAndResolve, getStats, resetStats } from "agent-gua
 | `validateRulePack`          | core           | Check if a value is a valid RulePack                |
 | `getRuleErrors`             | core           | Descriptive validation errors for a rule            |
 | `getRulePackErrors`         | core           | Descriptive errors for a rule pack                  |
-| All types                   | core           | `ToolCallContext`, `GuardrailAction`, `RulePack`, etc. |
+| All types                   | core           | `ToolCallContext`, `GuardrailAction`, `RulePack`, `DomainEvent`, `MatchResult`, etc. |
 
 ### Internal (Not Exported)
 
@@ -77,6 +78,8 @@ const packs = loadAllRulePacks("./path/to/packs", predicates);
 
 // 4. On each tool call
 const action = matchAndResolve(ctx, packs, capabilities);
+// — or, for audit/telemetry, use processMatch() to get the event trace:
+// const { action, events } = processMatch(ctx, packs, capabilities);
 
 // 5. On session end
 const stats = getStats();

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { matchAndResolve, getStats, resetStats } from './engine.js'
+import { matchAndResolve, processMatch, getStats, resetStats } from './engine.js'
 import { initializeMatcherRegistry } from '../matcher/setup.js'
 import { matcherRegistry } from '../matcher/registry.js'
 import { PredicateRegistry } from '../core/predicate-registry.js'
@@ -81,7 +81,7 @@ describe('matchAndResolve', () => {
   })
 
   it('returns resolved action when rule matches', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt secret.yaml' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',
@@ -108,7 +108,7 @@ describe('matchAndResolve', () => {
   })
 
   it('returns first match when multiple rules match (priority order)', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt secret.yaml' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',
@@ -194,7 +194,7 @@ describe('matchAndResolve', () => {
   })
 
   it('handles multiple rule packs', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt secret.yaml' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
     const packs: RulePack[] = [
       {
         id: 'pack-1',
@@ -223,7 +223,7 @@ describe('matchAndResolve', () => {
   })
 
   it('applies capability fallback (run → suggest)', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt secret.yaml' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',
@@ -267,7 +267,7 @@ describe('getStats', () => {
   })
 
   it('stats increment after matchAndResolve calls', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',
@@ -307,7 +307,7 @@ describe('resetStats', () => {
   })
 
   it('resets stats to zero', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',
@@ -347,7 +347,7 @@ describe('matchAndResolve — phase handling', () => {
   })
 
   it('ignores after-tool rules (entry point is before-tool only)', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
     const packs: RulePack[] = [
       {
         id: 'after-pack',
@@ -384,7 +384,7 @@ describe('matchAndResolve — split commands', () => {
   })
 
   it('matches only the second sub-command in a split', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'ls; sops decrypt secret.yaml' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'ls; sops --decrypt secret.yaml' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',
@@ -405,7 +405,7 @@ describe('matchAndResolve — split commands', () => {
     const result = matchAndResolve(ctx, packs, fullCapabilities)
     expect(result?.type).toBe('block')
     if (result?.type === 'block') {
-      expect(result.message).toBe('Blocked: sops decrypt secret.yaml')
+      expect(result.message).toBe('Blocked: sops --decrypt secret.yaml')
     }
   })
 })
@@ -452,6 +452,245 @@ describe('matchAndResolve — predicate matcher', () => {
   })
 })
 
+describe('processMatch — domain events', () => {
+  beforeEach(() => {
+    matcherRegistry.clear()
+    initializeMatcherRegistry()
+    resetStats()
+  })
+
+  it('emits rule-matched event when a rule fires', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-block',
+            title: 'SOPS Block',
+            description: 'Block sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'block', message: 'Blocked: {matched}' },
+          },
+        ],
+      },
+    ]
+    const result = processMatch(ctx, packs, fullCapabilities)
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0]).toEqual({
+      type: 'rule-matched',
+      ruleId: 'sops-block',
+      matched: 'sops --decrypt secret.yaml',
+    })
+  })
+
+  it('emits no events when no rule matches', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'ls -la' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-block',
+            title: 'SOPS Block',
+            description: 'Block sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'block', message: 'Blocked' },
+          },
+        ],
+      },
+    ]
+    const result = processMatch(ctx, packs, fullCapabilities)
+    expect(result.events).toHaveLength(0)
+    expect(result.action).toBeUndefined()
+  })
+
+  it('emits fallback-triggered when run falls back to suggest', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-run',
+            title: 'SOPS Run',
+            description: 'Run sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'run', replacement: 'safe-cmd', message: 'Running' },
+          },
+        ],
+      },
+    ]
+    const noRun: HarnessCapabilities = {
+      block: true,
+      suggest: true,
+      run: false,
+      redact: false,
+      confirm: false,
+    }
+    const result = processMatch(ctx, packs, noRun)
+    expect(result.action?.type).toBe('suggest')
+    expect(result.events).toHaveLength(2)
+    expect(result.events[0].type).toBe('rule-matched')
+    expect(result.events[1]).toEqual({
+      type: 'fallback-triggered',
+      from: 'run',
+      to: 'suggest',
+      reason: expect.stringContaining('run'),
+    })
+  })
+
+  it('emits fallback-triggered when suggest has no replacement and caps lack suggest', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-suggest',
+            title: 'SOPS Suggest',
+            description: 'Suggest alternative',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'suggest', replacement: 'safe-cmd', message: 'Try this' },
+          },
+        ],
+      },
+    ]
+    const noSuggest: HarnessCapabilities = {
+      block: true,
+      suggest: false,
+      run: false,
+      redact: false,
+      confirm: false,
+    }
+    const result = processMatch(ctx, packs, noSuggest)
+    expect(result.action?.type).toBe('block')
+    expect(result.events).toHaveLength(2)
+    expect(result.events[1]).toEqual({
+      type: 'fallback-triggered',
+      from: 'suggest',
+      to: 'block',
+      reason: expect.stringContaining('suggest'),
+    })
+  })
+
+  it('emits fallback-triggered when run falls all the way to block', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-run',
+            title: 'SOPS Run',
+            description: 'Run sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'run', replacement: 'safe-cmd', message: 'Running' },
+          },
+        ],
+      },
+    ]
+    const blockOnly: HarnessCapabilities = {
+      block: true,
+      suggest: false,
+      run: false,
+      redact: false,
+      confirm: false,
+    }
+    const result = processMatch(ctx, packs, blockOnly)
+    expect(result.action?.type).toBe('block')
+    expect(result.events[1]).toEqual({
+      type: 'fallback-triggered',
+      from: 'run',
+      to: 'block',
+      reason: expect.any(String),
+    })
+  })
+
+  it('does not emit fallback event when action resolves without fallback', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-block',
+            title: 'SOPS Block',
+            description: 'Block sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'block', message: 'Blocked' },
+          },
+        ],
+      },
+    ]
+    const result = processMatch(ctx, packs, fullCapabilities)
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0].type).toBe('rule-matched')
+  })
+
+  it('emits fallback-triggered on malformed bash tool call', () => {
+    const ctx = { toolName: 'bash' } as ToolCallContext
+    const result = processMatch(ctx, [], fullCapabilities)
+    expect(result.action?.type).toBe('block')
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0].type).toBe('fallback-triggered')
+    expect(result.events[0]).toMatchObject({
+      from: 'allow',
+      to: 'block',
+    })
+  })
+
+  it('emits no events for unknown tool with no fields (early exit)', () => {
+    const ctx: ToolCallContext = { toolName: 'custom-tool' }
+    const result = processMatch(ctx, [], fullCapabilities)
+    expect(result.action).toBeUndefined()
+    expect(result.events).toHaveLength(0)
+  })
+
+  it('matchAndResolve still returns only the action (backward compatible)', () => {
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt secret.yaml' }
+    const packs: RulePack[] = [
+      {
+        id: 'test-pack',
+        name: 'Test Pack',
+        description: 'Test',
+        rules: [
+          {
+            id: 'sops-block',
+            title: 'SOPS Block',
+            description: 'Block sops',
+            phase: 'before-tool',
+            match: { type: 'bash-command', pattern: /sops/i },
+            defaultAction: { type: 'block', message: 'Blocked' },
+          },
+        ],
+      },
+    ]
+    const action = matchAndResolve(ctx, packs, fullCapabilities)
+    expect(action?.type).toBe('block')
+    // matchAndResolve returns GuardrailAction, not MatchResult
+    expect(action).not.toHaveProperty('events')
+  })
+})
+
 describe('matchAndResolve — stats tracking', () => {
   beforeEach(() => {
     matcherRegistry.clear()
@@ -460,7 +699,7 @@ describe('matchAndResolve — stats tracking', () => {
   })
 
   it('tracks suggest actions in stats', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops decrypt' }
+    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
     const packs: RulePack[] = [
       {
         id: 'test-pack',

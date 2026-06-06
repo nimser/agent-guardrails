@@ -21,6 +21,14 @@ export type {
   AfterToolAction,
   /** A named collection of guardrail rules. */
   RulePack,
+  /** Emitted when a rule's matcher fires against a tool call. */
+  RuleMatchedEvent,
+  /** Emitted when the resolver walks the fallback chain. */
+  FallbackTriggeredEvent,
+  /** Union of all domain events the engine can produce. */
+  DomainEvent,
+  /** Engine output: the resolved action plus the trace of how it was decided. */
+  MatchResult,
 } from './core/types.js'
 
 // ── Predicate Registry ──────────────────────────────────
@@ -56,6 +64,11 @@ export {
    * return the resolved GuardrailAction (or undefined if no rule matched).
    */
   matchAndResolve,
+  /**
+   * Internal engine entry point. Returns both the resolved action and
+   * the domain events that explain how the decision was reached.
+   */
+  processMatch,
   /** Get a snapshot of current intervention stats. */
   getStats,
   /** Reset intervention stats to zero. */

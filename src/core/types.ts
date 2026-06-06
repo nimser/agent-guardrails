@@ -70,6 +70,32 @@ export interface AfterToolRule {
 /** Union of rules from both phases. */
 export type GuardrailRule = BeforeToolRule | AfterToolRule
 
+// ── Domain Events ───────────────────────────────────────
+
+/** Emitted when a rule's matcher fires against a tool call. */
+export interface RuleMatchedEvent {
+  readonly type: 'rule-matched'
+  readonly ruleId: string
+  readonly matched: string
+}
+
+/** Emitted when the resolver walks the fallback chain. */
+export interface FallbackTriggeredEvent {
+  readonly type: 'fallback-triggered'
+  readonly from: GuardrailAction['type']
+  readonly to: GuardrailAction['type']
+  readonly reason: string
+}
+
+/** Union of all domain events the engine can produce. */
+export type DomainEvent = RuleMatchedEvent | FallbackTriggeredEvent
+
+/** Engine output: the resolved action plus the trace of how it was decided. */
+export interface MatchResult {
+  readonly action: GuardrailAction | undefined
+  readonly events: readonly DomainEvent[]
+}
+
 /**
  * A named collection of guardrail rules. Rule packs are the unit of
  * extensibility — load them from YAML or define them in TypeScript.
