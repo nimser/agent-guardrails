@@ -8,6 +8,7 @@
   "plugins": ["eslint", "typescript", "unicorn"],
   "rules": {
     "no-console": "error",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     "typescript/no-explicit-any": "error"
   }
 }

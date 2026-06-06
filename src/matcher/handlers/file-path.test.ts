@@ -61,7 +61,6 @@ describe('file-path matcher', () => {
 
   it('resets lastIndex for sticky regex', () => {
     const pattern = /home/y
-    const matcher = { type: 'file-path' as const, pattern }
     const ctx: ToolCallContext = { toolName: 'read', filePath: '/home/user/.env' }
 
     // Advance lastIndex by testing against a matching substring

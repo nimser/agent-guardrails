@@ -91,7 +91,7 @@ describe('validateRule', () => {
   })
 
   it('fails when match is missing', () => {
-    const { match, ...ruleWithoutMatch } = validRule()
+    const { match: _match, ...ruleWithoutMatch } = validRule()
     expect(validateRule(ruleWithoutMatch)).toBe(false)
     expect(getRuleErrors(ruleWithoutMatch)).toEqual(
       expect.arrayContaining([expect.stringContaining('match')])
