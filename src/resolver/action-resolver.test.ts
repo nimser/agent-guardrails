@@ -30,7 +30,7 @@ describe('resolveAction', () => {
   describe('allow action', () => {
     it('returns allow action directly', () => {
       const action: GuardrailAction = { type: 'allow' }
-      const result = resolveAction(action, fullCapabilities)
+      const result = resolveAction(action, fullCapabilities, { matched: 'anything' })
       expect(result).toEqual({ type: 'allow' })
     })
   })
@@ -50,7 +50,7 @@ describe('resolveAction', () => {
         replacement: 'ls -la',
         message: 'Try: {replacement}',
       }
-      const result = resolveAction(action, fullCapabilities)
+      const result = resolveAction(action, fullCapabilities, { matched: 'anything' })
       expect(result).toEqual({
         type: 'suggest',
         replacement: 'ls -la',
@@ -90,7 +90,7 @@ describe('resolveAction', () => {
         replacement: 'safe-command',
         message: 'Running: {replacement}',
       }
-      const result = resolveAction(action, fullCapabilities)
+      const result = resolveAction(action, fullCapabilities, { matched: 'anything' })
       expect(result).toEqual({
         type: 'run',
         replacement: 'safe-command',
@@ -103,7 +103,7 @@ describe('resolveAction', () => {
         type: 'run',
         replacement: 'safe-cmd',
       }
-      const result = resolveAction(action, limitedCapabilities)
+      const result = resolveAction(action, limitedCapabilities, { matched: 'anything' })
       expect(result.type).toBe('suggest')
       if (result.type === 'suggest') {
         expect(result.replacement).toBe('safe-cmd')
@@ -115,7 +115,7 @@ describe('resolveAction', () => {
         type: 'run',
         replacement: 'safe-cmd',
       }
-      const result = resolveAction(action, noSuggest)
+      const result = resolveAction(action, noSuggest, { matched: 'dangerous-cmd' })
       expect(result.type).toBe('block')
     })
   })
@@ -129,7 +129,7 @@ describe('resolveAction', () => {
 
     it('falls back to block when redact capability unavailable', () => {
       const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' }
-      const result = resolveAction(action, limitedCapabilities)
+      const result = resolveAction(action, limitedCapabilities, { matched: 'secret' })
       expect(result.type).toBe('block')
     })
   })
@@ -159,6 +159,29 @@ describe('resolveAction', () => {
       expect(result.type).toBe('suggest')
     })
 
+    it('falls back to suggest via ctx.replacement when confirm unavailable and no fallback defined', () => {
+      const action: GuardrailAction = {
+        type: 'confirm',
+        message: 'Confirm: {matched}',
+      }
+      const suggestOnly: HarnessCapabilities = {
+        block: true,
+        suggest: true,
+        run: false,
+        redact: false,
+        confirm: false,
+      }
+      const result = resolveAction(action, suggestOnly, {
+        matched: 'test',
+        replacement: 'safe-cmd',
+      })
+      expect(result).toEqual({
+        type: 'suggest',
+        replacement: 'safe-cmd',
+        message: 'Confirm: test',
+      })
+    })
+
     it('falls back to block when confirm capability unavailable, no fallback, and no suggest', () => {
       const action: GuardrailAction = {
         type: 'confirm',
@@ -186,7 +209,7 @@ describe('resolveAction', () => {
         redact: false,
         confirm: false,
       }
-      const result = resolveAction(action, noRunNoSuggest)
+      const result = resolveAction(action, noRunNoSuggest, { matched: 'dangerous-cmd' })
       expect(result.type).toBe('block')
     })
 
@@ -199,7 +222,7 @@ describe('resolveAction', () => {
         redact: false,
         confirm: false,
       }
-      const result = resolveAction(action, noConfirmNoSuggest)
+      const result = resolveAction(action, noConfirmNoSuggest, { matched: 'dangerous-cmd' })
       expect(result.type).toBe('block')
     })
   })
@@ -225,7 +248,7 @@ describe('resolveAction', () => {
         redact: false,
         confirm: false,
       }
-      const result = resolveAction(action, noRunNoSuggest)
+      const result = resolveAction(action, noRunNoSuggest, { matched: 'dangerous-cmd' })
       expect(result.type).toBe('block')
       if (result.type === 'block') {
         expect(result.fallbackReason).toBe(
@@ -254,7 +277,7 @@ describe('resolveAction', () => {
         redact: false,
         confirm: false,
       }
-      const result = resolveAction(action, noConfirmNoSuggest)
+      const result = resolveAction(action, noConfirmNoSuggest, { matched: 'dangerous-cmd' })
       expect(result.type).toBe('block')
       if (result.type === 'block') {
         expect(result.fallbackReason).toBe(
@@ -289,7 +312,7 @@ describe('resolveAction', () => {
 
     it('does not attach fallbackReason to a plain block action (no fallback occurred)', () => {
       const action: GuardrailAction = { type: 'block', message: 'Plain block' }
-      const result = resolveAction(action, fullCapabilities)
+      const result = resolveAction(action, fullCapabilities, { matched: 'anything' })
       expect(result).toEqual({ type: 'block', message: 'Plain block' })
     })
   })
@@ -307,14 +330,8 @@ describe('resolveAction', () => {
         replacement: 'safe-cmd',
         message: 'Use {replacement}',
       }
-      const result = resolveAction(action, fullCapabilities)
+      const result = resolveAction(action, fullCapabilities, { matched: 'anything' })
       expect(result).toEqual({ type: 'suggest', replacement: 'safe-cmd', message: 'Use safe-cmd' })
-    })
-
-    it('handles missing context values gracefully', () => {
-      const action: GuardrailAction = { type: 'block', message: 'Blocked: {matched}' }
-      const result = resolveAction(action, fullCapabilities)
-      expect(result).toEqual({ type: 'block', message: 'Blocked: {matched}' })
     })
 
     it('interpolates multiple {matched} occurrences', () => {

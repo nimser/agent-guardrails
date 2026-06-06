@@ -6,15 +6,13 @@ import type { GuardrailAction, HarnessCapabilities } from '../core/types.js'
  * `{replacement}` is replaced with the suggested/replacement command.
  */
 export interface ResolveContext {
-  matched?: string
+  matched: string
   replacement?: string
 }
 
 function interpolate(message: string, ctx: ResolveContext): string {
   let result = message
-  if (ctx.matched !== undefined) {
-    result = result.replaceAll('{matched}', ctx.matched)
-  }
+  result = result.replaceAll('{matched}', ctx.matched)
   if (ctx.replacement !== undefined) {
     result = result.replaceAll('{replacement}', ctx.replacement)
   }
@@ -39,7 +37,7 @@ function interpolateMessage(message: string | undefined, ctx: ResolveContext): s
 export function resolveAction(
   action: GuardrailAction,
   capabilities: HarnessCapabilities,
-  ctx: ResolveContext = {}
+  ctx: ResolveContext
 ): GuardrailAction {
   switch (action.type) {
     case 'allow':
@@ -168,7 +166,7 @@ function fallbackBlock(
     type: 'block',
     message: message
       ? interpolate(`Blocked: ${message}`, ctx)
-      : interpolate(`Blocked: \`${ctx.matched ?? ''}\``, ctx),
+      : interpolate(`Blocked: \`${ctx.matched}\``, ctx),
     fallbackReason,
   }
 }
