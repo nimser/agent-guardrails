@@ -83,6 +83,66 @@ describe('validateRule', () => {
     const errors = getRuleErrors(rule)
     expect(errors.length).toBeGreaterThan(1)
   })
+
+  it('fails on invalid phase value', () => {
+    const rule = { ...validRule(), phase: 'during-tool' }
+    expect(validateRule(rule)).toBe(false)
+    expect(getRuleErrors(rule)).toEqual(expect.arrayContaining([expect.stringContaining('phase')]))
+  })
+
+  it('fails when match is missing', () => {
+    const { match, ...ruleWithoutMatch } = validRule()
+    expect(validateRule(ruleWithoutMatch)).toBe(false)
+    expect(getRuleErrors(ruleWithoutMatch)).toEqual(
+      expect.arrayContaining([expect.stringContaining('match')])
+    )
+  })
+
+  it('fails when matcher has unknown type', () => {
+    const rule = { ...validRule(), match: { type: 'custom', pattern: /x/ } }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when suggest action has non-string replacement', () => {
+    const rule = {
+      ...validRule(),
+      defaultAction: { type: 'suggest', replacement: 42, message: 'try' },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when run action has non-string message', () => {
+    const rule = {
+      ...validRule(),
+      defaultAction: { type: 'run', replacement: 'cmd', message: 123 },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when confirm has invalid nested fallback', () => {
+    const rule = {
+      ...validRule(),
+      defaultAction: { type: 'confirm', message: 'ok?', fallback: { type: 'invalid' } },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('validates confirm with valid nested fallback', () => {
+    const rule = {
+      ...validRule(),
+      defaultAction: {
+        type: 'confirm',
+        message: 'ok?',
+        fallback: { type: 'block', message: 'cancelled' },
+      },
+    }
+    expect(validateRule(rule)).toBe(true)
+  })
+
+  it('fails when predicate matcher has empty predicateName', () => {
+    const rule = { ...validRule(), match: { type: 'predicate', predicateName: '' } }
+    expect(validateRule(rule)).toBe(false)
+  })
 })
 
 describe('validateRulePack', () => {
@@ -132,5 +192,21 @@ describe('validateRulePack', () => {
   it('rejects non-object input', () => {
     expect(validateRulePack(null)).toBe(false)
     expect(validateRulePack('string')).toBe(false)
+  })
+
+  it('fails when rules is not an array', () => {
+    const pack = { id: 'p', name: 'P', description: 'D', rules: 'not-an-array' }
+    expect(validateRulePack(pack)).toBe(false)
+    expect(getRulePackErrors(pack)).toEqual(
+      expect.arrayContaining([expect.stringContaining('rules')])
+    )
+  })
+
+  it('fails when rules contains a non-object', () => {
+    const pack = { id: 'p', name: 'P', description: 'D', rules: ['not-an-object', 42] }
+    expect(validateRulePack(pack)).toBe(false)
+    expect(getRulePackErrors(pack)).toEqual(
+      expect.arrayContaining([expect.stringContaining('non-object')])
+    )
   })
 })
