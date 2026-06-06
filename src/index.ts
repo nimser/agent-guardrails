@@ -31,6 +31,16 @@ export type {
   MatchResult,
 } from './core/types.js'
 
+// ── Normalizer ─────────────────────────────────────────
+export {
+  /** Well-known tool names that require specific fields. */
+  KNOWN_TOOLS,
+  /** Extract command and filePath from a ToolCallContext. */
+  extractTargets,
+  /** Check whether a ToolCallContext is missing required fields. */
+  isMissingRequiredFields,
+} from './core/normalizer.js'
+
 // ── Predicate Registry ──────────────────────────────────
 export {
   /** Registry for named predicate matchers referenced by YAML configs. */

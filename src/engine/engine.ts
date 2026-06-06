@@ -7,6 +7,7 @@ import type {
   DomainEvent,
   BeforeToolAction,
 } from '../core/types.js'
+import { KNOWN_TOOLS, extractTargets, isMissingRequiredFields } from '../core/normalizer.js'
 import { matcherRegistry, MatcherRegistry } from '../matcher/registry.js'
 import { initializeMatcherRegistry } from '../matcher/setup.js'
 import { splitCommands } from '../matcher/command-splitter.js'
@@ -72,17 +73,10 @@ export function matchAndResolve(
   return processMatch(ctx, packs, capabilities).action
 }
 
-function extractTargets(ctx: ToolCallContext): { command?: string; filePath?: string } {
-  return {
-    command: 'command' in ctx ? ctx.command : undefined,
-    filePath: 'filePath' in ctx ? ctx.filePath : undefined,
-  }
-}
-
 // Known tools require specific fields (bash→command, read/write→filePath).
 // Fail closed to prevent guardrail bypass via malformed tool call contexts.
 function handleMissingTargetsTraced(ctx: ToolCallContext, tracker: StatsTracker): MatchResult {
-  if (!REQUIRES_KNOWN_FIELDS.has(ctx.toolName)) {
+  if (!KNOWN_TOOLS.has(ctx.toolName)) {
     tracker.record(null)
     return { action: null, events: [] }
   }
@@ -98,25 +92,6 @@ function handleMissingTargetsTraced(ctx: ToolCallContext, tracker: StatsTracker)
   }
   tracker.record(action)
   return { action, events: [event] }
-}
-
-const REQUIRES_KNOWN_FIELDS = new Set(['bash', 'read', 'write'])
-
-/** Fail-closed: known tools must have their required fields. */
-function isMissingRequiredFields(
-  ctx: ToolCallContext,
-  command: string | undefined,
-  filePath: string | undefined
-): boolean {
-  switch (ctx.toolName) {
-    case 'bash':
-      return !command
-    case 'read':
-    case 'write':
-      return !filePath
-    default:
-      return !command && !filePath
-  }
 }
 
 function findFirstMatchTraced(

@@ -14,6 +14,12 @@ describe('public API surface', () => {
     expect(typeof api.getRulePackErrors).toBe('function')
   })
 
+  it('exports normalizer functions', () => {
+    expect(api.KNOWN_TOOLS).toBeInstanceOf(Set)
+    expect(typeof api.extractTargets).toBe('function')
+    expect(typeof api.isMissingRequiredFields).toBe('function')
+  })
+
   it('exports engine functions', () => {
     expect(typeof api.initGuardrails).toBe('function')
     expect(typeof api.matchAndResolve).toBe('function')
