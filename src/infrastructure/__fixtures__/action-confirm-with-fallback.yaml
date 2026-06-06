@@ -2,7 +2,7 @@ id: test
 name: Test
 description: Test
 rules:
-  - id: r1
+  - id: test.confirm-fallback
     title: R1
     description: D1
     phase: before-tool

@@ -2,7 +2,7 @@ id: test
 name: Test
 description: Test
 rules:
-  - id: r1
+  - id: test.file-path-not-string
     title: R1
     description: D1
     phase: before-tool
@@ -11,4 +11,4 @@ rules:
       pattern: 42
     defaultAction:
       type: block
-      message: Blocked
+      message: 'Blocked: {matched}'

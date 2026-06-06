@@ -2,7 +2,7 @@ id: test
 name: Test
 description: Test
 rules:
-  - id: r1
+  - id: test.missing-type
     title: R1
     description: D1
     phase: before-tool
@@ -10,4 +10,4 @@ rules:
       type: bash-command
       pattern: foo
     defaultAction:
-      message: Blocked
+      message: 'Blocked: {matched}'

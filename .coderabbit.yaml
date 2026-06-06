@@ -52,7 +52,7 @@ reviews:
     - path: 'src/index.ts'
       instructions: |-
         Flag if: default exports; re-exports from layers other than core/ and engine/; new exports without corresponding documentation.
-    - path: '**/*.yml'
+    - path: '**/*.{yml,yaml}'
       instructions: |-
         YAML rule pack files. Flag if: non-kebab-case pack id; non-dotted rule id; phase/action mismatch (before-tool: block/suggest/run/confirm, after-tool: redact only); missing {matched} template in messages; suggest action without replacement.
     - path: 'docs/**/*.md'

@@ -2,7 +2,7 @@ id: invalid-pack
 name: Invalid Pack
 description: Pack with duplicate rule IDs
 rules:
-  - id: dup-rule
+  - id: test.dup-rule
     title: Rule 1
     description: First
     phase: before-tool
@@ -11,8 +11,8 @@ rules:
       pattern: test
     defaultAction:
       type: block
-      message: 'Blocked'
-  - id: dup-rule
+      message: 'Blocked: {matched}'
+  - id: test.dup-rule
     title: Rule 2
     description: Second
     phase: before-tool
@@ -21,4 +21,4 @@ rules:
       pattern: test2
     defaultAction:
       type: block
-      message: 'Blocked'
+      message: 'Blocked: {matched}'

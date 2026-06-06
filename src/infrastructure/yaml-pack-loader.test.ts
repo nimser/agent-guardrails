@@ -32,7 +32,7 @@ describe('loadYamlRulePack', () => {
     expect(pack.id).toBe('test-pack')
     expect(pack.name).toBe('Test Pack')
     expect(pack.rules).toHaveLength(1)
-    expect(pack.rules[0].id).toBe('block-rm')
+    expect(pack.rules[0].id).toBe('test.block-rm')
     expect(pack.rules[0].match.type).toBe('bash-command')
     if (pack.rules[0].match.type === 'bash-command') {
       expect(pack.rules[0].match.pattern).toBeInstanceOf(RegExp)

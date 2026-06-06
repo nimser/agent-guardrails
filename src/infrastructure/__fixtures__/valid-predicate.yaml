@@ -2,7 +2,7 @@ id: ssh-rules
 name: SSH Rules
 description: SSH key rules
 rules:
-  - id: protect-ssh-key
+  - id: ssh.protect-key
     title: Protect SSH private key
     description: Block access to SSH private keys
     phase: before-tool

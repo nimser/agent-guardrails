@@ -2,7 +2,7 @@ id: test
 name: Test
 description: Test
 rules:
-  - id: r1
+  - id: test.run-minimal
     title: R1
     description: D1
     phase: before-tool

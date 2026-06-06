@@ -2,7 +2,7 @@ id: multi-rules
 name: Multi Rules
 description: Multiple rules
 rules:
-  - id: rule-1
+  - id: test.rule-1
     title: Rule 1
     description: First
     phase: before-tool
@@ -11,8 +11,8 @@ rules:
       pattern: cmd1
     defaultAction:
       type: block
-      message: 'Blocked 1'
-  - id: rule-2
+      message: 'Blocked 1: {matched}'
+  - id: test.rule-2
     title: Rule 2
     description: Second
     phase: before-tool
@@ -21,4 +21,4 @@ rules:
       pattern: cmd2
     defaultAction:
       type: block
-      message: 'Blocked 2'
+      message: 'Blocked 2: {matched}'

@@ -2,7 +2,7 @@ id: test
 name: Test
 description: Test
 rules:
-  - id: r1
+  - id: test.unknown-matcher
     title: R1
     description: D1
     phase: before-tool
@@ -11,4 +11,4 @@ rules:
       pattern: foo
     defaultAction:
       type: block
-      message: Blocked
+      message: 'Blocked: {matched}'

@@ -2,7 +2,7 @@ id: file-rules
 name: File Rules
 description: File path rules
 rules:
-  - id: protect-env
+  - id: file.protect-env
     title: Protect .env files
     description: Block access to .env files
     phase: before-tool

@@ -2,5 +2,5 @@ id: test
 name: Test
 description: Test
 rules:
-  - id: r1
+  - id: test.missing-fields
     title: R1

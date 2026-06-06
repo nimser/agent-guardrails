@@ -2,7 +2,7 @@ id: pack1
 name: Pack 1
 description: First
 rules:
-  - id: rule-1
+  - id: test.rule-1
     title: Rule 1
     description: Test
     phase: before-tool
@@ -11,4 +11,4 @@ rules:
       pattern: cmd1
     defaultAction:
       type: block
-      message: 'Blocked'
+      message: 'Blocked: {matched}'
