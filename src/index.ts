@@ -61,7 +61,7 @@ export {
   initGuardrails,
   /**
    * The main entry point: evaluate a ToolCallContext against RulePacks and
-   * return the resolved GuardrailAction (or undefined if no rule matched).
+   * return the resolved GuardrailAction (or null if no rule matched).
    */
   matchAndResolve,
   /**

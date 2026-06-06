@@ -92,7 +92,7 @@ export type DomainEvent = RuleMatchedEvent | FallbackTriggeredEvent
 
 /** Engine output: the resolved action plus the trace of how it was decided. */
 export interface MatchResult {
-  readonly action: GuardrailAction | undefined
+  readonly action: GuardrailAction | null
   readonly events: readonly DomainEvent[]
 }
 

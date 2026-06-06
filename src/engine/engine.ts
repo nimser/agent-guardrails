@@ -50,7 +50,7 @@ export function processMatch(
 
   const commands = command ? splitCommands(command) : ['']
   const result = findFirstMatchTraced(ctx, commands, packs, capabilities)
-  statsTracker.record(result.action ?? null)
+  statsTracker.record(result.action)
   return result
 }
 
@@ -62,13 +62,13 @@ export function processMatch(
  * @param ctx - Normalized tool call context
  * @param packs - Rule packs to evaluate against
  * @param capabilities - Harness capability flags
- * @returns The resolved action, or undefined if no rule matched
+ * @returns The resolved action, or null if no rule matched
  */
 export function matchAndResolve(
   ctx: ToolCallContext,
   packs: RulePack[],
   capabilities: HarnessCapabilities
-): GuardrailAction | undefined {
+): GuardrailAction | null {
   return processMatch(ctx, packs, capabilities).action
 }
 
@@ -84,7 +84,7 @@ function extractTargets(ctx: ToolCallContext): { command?: string; filePath?: st
 function handleMissingTargetsTraced(ctx: ToolCallContext, tracker: StatsTracker): MatchResult {
   if (!REQUIRES_KNOWN_FIELDS.has(ctx.toolName)) {
     tracker.record(null)
-    return { action: undefined, events: [] }
+    return { action: null, events: [] }
   }
   const action: GuardrailAction = {
     type: 'block',
@@ -132,7 +132,7 @@ function findFirstMatchTraced(
       if (result) return result
     }
   }
-  return { action: undefined, events: [] }
+  return { action: null, events: [] }
 }
 
 function matchPackRulesTraced(

@@ -20,11 +20,11 @@ describe('matchAndResolve', () => {
     resetStats()
   })
 
-  it('returns undefined when no command and no filePath (early exit)', () => {
+  it('returns null when no command and no filePath (early exit)', () => {
     const ctx: ToolCallContext = { toolName: 'custom-tool' }
     const packs: RulePack[] = []
     const result = matchAndResolve(ctx, packs, fullCapabilities)
-    expect(result).toBeUndefined()
+    expect(result).toBeNull()
   })
 
   it('fails closed (block) when bash context is missing required command', () => {
@@ -57,7 +57,7 @@ describe('matchAndResolve', () => {
     })
   })
 
-  it('returns undefined when no rules match', () => {
+  it('returns null when no rules match', () => {
     const ctx: ToolCallContext = { toolName: 'bash', command: 'ls -la' }
     const packs: RulePack[] = [
       {
@@ -77,7 +77,7 @@ describe('matchAndResolve', () => {
       },
     ]
     const result = matchAndResolve(ctx, packs, fullCapabilities)
-    expect(result).toBeUndefined()
+    expect(result).toBeNull()
   })
 
   it('returns resolved action when rule matches', () => {
@@ -372,7 +372,7 @@ describe('matchAndResolve — phase handling', () => {
       redact: true,
       confirm: true,
     }
-    expect(matchAndResolve(ctx, packs, caps)).toBeUndefined()
+    expect(matchAndResolve(ctx, packs, caps)).toBeNull()
   })
 })
 
@@ -508,7 +508,7 @@ describe('processMatch — domain events', () => {
     ]
     const result = processMatch(ctx, packs, fullCapabilities)
     expect(result.events).toHaveLength(0)
-    expect(result.action).toBeUndefined()
+    expect(result.action).toBeNull()
   })
 
   it('emits fallback-triggered when run falls back to suggest', () => {
@@ -661,7 +661,7 @@ describe('processMatch — domain events', () => {
   it('emits no events for unknown tool with no fields (early exit)', () => {
     const ctx: ToolCallContext = { toolName: 'custom-tool' }
     const result = processMatch(ctx, [], fullCapabilities)
-    expect(result.action).toBeUndefined()
+    expect(result.action).toBeNull()
     expect(result.events).toHaveLength(0)
   })
 
