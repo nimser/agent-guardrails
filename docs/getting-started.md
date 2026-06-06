@@ -61,7 +61,7 @@ if (action?.type === "block") {
 }
 ```
 
-See the [API docs](api/) for the full reference.
+Run `npm run docs` to generate the full API reference locally (outputs to `docs/api/`).
 
 ### 🔴 Deeper: Engine Improvements
 
