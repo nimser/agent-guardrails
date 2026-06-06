@@ -12,4 +12,4 @@
  * Stronger alternatives (safe-regex, re2) to replace this heuristic
  * with AST-level guarantees remain a future consideration.
  */
-export const MAX_MATCH_INPUT_LENGTH = 4096;
+export const MAX_MATCH_INPUT_LENGTH = 4096

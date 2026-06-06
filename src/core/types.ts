@@ -6,25 +6,25 @@
  * - `redact`: allow the call but sanitize its output before the LLM sees it
  * - `confirm`: ask the user for approval (or fall back to suggest)
  */
-export type GuardrailBehavior = "block" | "suggest" | "run" | "redact" | "confirm";
+export type GuardrailBehavior = 'block' | 'suggest' | 'run' | 'redact' | 'confirm'
 
 /**
  * Actions available in the `before-tool` phase.
  */
 export type BeforeToolAction =
-  | { type: "allow" }
-  | { type: "block"; message: string; fallbackReason?: string }
-  | { type: "suggest"; replacement: string; message?: string }
-  | { type: "run"; replacement: string; message?: string }
-  | { type: "confirm"; message: string; fallback?: BeforeToolAction };
+  | { type: 'allow' }
+  | { type: 'block'; message: string; fallbackReason?: string }
+  | { type: 'suggest'; replacement: string; message?: string }
+  | { type: 'run'; replacement: string; message?: string }
+  | { type: 'confirm'; message: string; fallback?: BeforeToolAction }
 
 /**
  * Actions available in the `after-tool` phase.
  */
-export type AfterToolAction = { type: "redact"; replacement: string };
+export type AfterToolAction = { type: 'redact'; replacement: string }
 
 /** Union of all possible guardrail actions across both phases. */
-export type GuardrailAction = BeforeToolAction | AfterToolAction;
+export type GuardrailAction = BeforeToolAction | AfterToolAction
 
 /**
  * How a rule identifies a matching tool call.
@@ -33,52 +33,52 @@ export type GuardrailAction = BeforeToolAction | AfterToolAction;
  * - `predicate`: named function registered in the PredicateRegistry
  */
 export type GuardrailMatcher =
-  | { type: "bash-command"; pattern: RegExp }
-  | { type: "file-path"; pattern: RegExp }
-  | { type: "predicate"; predicateName: string };
+  | { type: 'bash-command'; pattern: RegExp }
+  | { type: 'file-path'; pattern: RegExp }
+  | { type: 'predicate'; predicateName: string }
 
 /**
  * Normalized context for a tool call, consumed by matchers and the engine.
  * Discriminated union on `toolName` — required fields differ per variant.
  */
 export type ToolCallContext =
-  | { toolName: "bash"; command: string; filePath?: string }
-  | { toolName: "read"; filePath: string }
-  | { toolName: "write"; filePath: string }
-  | { toolName: string; command?: string; filePath?: string };
+  | { toolName: 'bash'; command: string; filePath?: string }
+  | { toolName: 'read'; filePath: string }
+  | { toolName: 'write'; filePath: string }
+  | { toolName: string; command?: string; filePath?: string }
 
 /** A single guardrail rule evaluated in the before-tool phase. */
 export interface BeforeToolRule {
-  id: string;
-  title: string;
-  description: string;
-  phase: "before-tool";
-  match: GuardrailMatcher;
-  defaultAction: BeforeToolAction;
+  id: string
+  title: string
+  description: string
+  phase: 'before-tool'
+  match: GuardrailMatcher
+  defaultAction: BeforeToolAction
 }
 
 /** A single guardrail rule evaluated in the after-tool phase. */
 export interface AfterToolRule {
-  id: string;
-  title: string;
-  description: string;
-  phase: "after-tool";
-  match: GuardrailMatcher;
-  defaultAction: AfterToolAction;
+  id: string
+  title: string
+  description: string
+  phase: 'after-tool'
+  match: GuardrailMatcher
+  defaultAction: AfterToolAction
 }
 
 /** Union of rules from both phases. */
-export type GuardrailRule = BeforeToolRule | AfterToolRule;
+export type GuardrailRule = BeforeToolRule | AfterToolRule
 
 /**
  * A named collection of guardrail rules. Rule packs are the unit of
  * extensibility — load them from YAML or define them in TypeScript.
  */
 export interface RulePack {
-  id: string;
-  name: string;
-  description: string;
-  rules: GuardrailRule[];
+  id: string
+  name: string
+  description: string
+  rules: GuardrailRule[]
 }
 
 /**
@@ -86,9 +86,9 @@ export interface RulePack {
  * When a behavior is unsupported, the engine walks the fallback chain.
  */
 export interface HarnessCapabilities {
-  block: boolean;
-  suggest: boolean;
-  run: boolean;
-  redact: boolean;
-  confirm: boolean;
+  block: boolean
+  suggest: boolean
+  run: boolean
+  redact: boolean
+  confirm: boolean
 }

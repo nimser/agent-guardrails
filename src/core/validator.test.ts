@@ -1,138 +1,136 @@
-import { describe, it, expect } from "vitest";
-import { validateRule, validateRulePack, getRuleErrors, getRulePackErrors } from "./validator.js";
-import type { GuardrailRule, RulePack } from "./types.js";
+import { describe, it, expect } from 'vitest'
+import { validateRule, validateRulePack, getRuleErrors, getRulePackErrors } from './validator.js'
+import type { GuardrailRule, RulePack } from './types.js'
 
 function validRule(overrides: Partial<GuardrailRule> = {}): GuardrailRule {
   return {
-    id: "test.rule",
-    title: "Test Rule",
-    description: "A test rule",
-    phase: "before-tool",
-    match: { type: "bash-command", pattern: /test/i },
-    defaultAction: { type: "block", message: "Blocked: {matched}" },
+    id: 'test.rule',
+    title: 'Test Rule',
+    description: 'A test rule',
+    phase: 'before-tool',
+    match: { type: 'bash-command', pattern: /test/i },
+    defaultAction: { type: 'block', message: 'Blocked: {matched}' },
     ...overrides,
-  };
+  }
 }
 
-describe("validateRule", () => {
-  it("validates a valid before-tool rule", () => {
-    const rule = validRule();
-    expect(validateRule(rule)).toBe(true);
-    expect(getRuleErrors(rule)).toHaveLength(0);
-  });
+describe('validateRule', () => {
+  it('validates a valid before-tool rule', () => {
+    const rule = validRule()
+    expect(validateRule(rule)).toBe(true)
+    expect(getRuleErrors(rule)).toHaveLength(0)
+  })
 
-  it("fails on missing id", () => {
-    const rule = { ...validRule(), id: "" };
-    expect(validateRule(rule)).toBe(false);
-    expect(getRuleErrors(rule)).toEqual(expect.arrayContaining([expect.stringContaining("id")]));
-  });
+  it('fails on missing id', () => {
+    const rule = { ...validRule(), id: '' }
+    expect(validateRule(rule)).toBe(false)
+    expect(getRuleErrors(rule)).toEqual(expect.arrayContaining([expect.stringContaining('id')]))
+  })
 
-  it("fails on missing title", () => {
-    const rule = { ...validRule(), title: "" };
-    expect(validateRule(rule)).toBe(false);
-  });
+  it('fails on missing title', () => {
+    const rule = { ...validRule(), title: '' }
+    expect(validateRule(rule)).toBe(false)
+  })
 
-  it("fails on missing description", () => {
-    const rule = { ...validRule(), description: "" };
-    expect(validateRule(rule)).toBe(false);
-  });
+  it('fails on missing description', () => {
+    const rule = { ...validRule(), description: '' }
+    expect(validateRule(rule)).toBe(false)
+  })
 
-  it("fails when after-tool has block action", () => {
+  it('fails when after-tool has block action', () => {
     const rule = {
       ...validRule(),
-      phase: "after-tool" as const,
-      defaultAction: { type: "block" as const, message: "nope" },
-    };
-    expect(validateRule(rule)).toBe(false);
-    expect(getRuleErrors(rule)).toEqual(
-      expect.arrayContaining([expect.stringContaining("redact")]),
-    );
-  });
+      phase: 'after-tool' as const,
+      defaultAction: { type: 'block' as const, message: 'nope' },
+    }
+    expect(validateRule(rule)).toBe(false)
+    expect(getRuleErrors(rule)).toEqual(expect.arrayContaining([expect.stringContaining('redact')]))
+  })
 
-  it("validates when after-tool has redact action", () => {
+  it('validates when after-tool has redact action', () => {
     const rule = {
       ...validRule(),
-      phase: "after-tool" as const,
-      defaultAction: { type: "redact" as const, replacement: "[REDACTED]" },
-    };
-    expect(validateRule(rule)).toBe(true);
-  });
+      phase: 'after-tool' as const,
+      defaultAction: { type: 'redact' as const, replacement: '[REDACTED]' },
+    }
+    expect(validateRule(rule)).toBe(true)
+  })
 
-  it("fails when before-tool has redact action", () => {
+  it('fails when before-tool has redact action', () => {
     const rule = {
       ...validRule(),
-      defaultAction: { type: "redact" as const, replacement: "[REDACTED]" },
-    };
-    expect(validateRule(rule)).toBe(false);
-  });
+      defaultAction: { type: 'redact' as const, replacement: '[REDACTED]' },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
 
-  it("validates when before-tool has allow action", () => {
+  it('validates when before-tool has allow action', () => {
     const rule = {
       ...validRule(),
-      defaultAction: { type: "allow" as const },
-    };
-    expect(validateRule(rule)).toBe(true);
-  });
+      defaultAction: { type: 'allow' as const },
+    }
+    expect(validateRule(rule)).toBe(true)
+  })
 
-  it("rejects non-object input", () => {
-    expect(validateRule(null)).toBe(false);
-    expect(validateRule(undefined)).toBe(false);
-    expect(validateRule("string")).toBe(false);
-  });
+  it('rejects non-object input', () => {
+    expect(validateRule(null)).toBe(false)
+    expect(validateRule(undefined)).toBe(false)
+    expect(validateRule('string')).toBe(false)
+  })
 
-  it("reports all errors at once", () => {
-    const rule = { id: "", title: "", description: "" };
-    const errors = getRuleErrors(rule);
-    expect(errors.length).toBeGreaterThan(1);
-  });
-});
+  it('reports all errors at once', () => {
+    const rule = { id: '', title: '', description: '' }
+    const errors = getRuleErrors(rule)
+    expect(errors.length).toBeGreaterThan(1)
+  })
+})
 
-describe("validateRulePack", () => {
+describe('validateRulePack', () => {
   function validPack(overrides: Partial<RulePack> = {}): RulePack {
     return {
-      id: "test-pack",
-      name: "Test Pack",
-      description: "A test pack",
+      id: 'test-pack',
+      name: 'Test Pack',
+      description: 'A test pack',
       rules: [validRule()],
       ...overrides,
-    };
+    }
   }
 
-  it("validates a valid pack", () => {
-    expect(validateRulePack(validPack())).toBe(true);
-    expect(getRulePackErrors(validPack())).toHaveLength(0);
-  });
+  it('validates a valid pack', () => {
+    expect(validateRulePack(validPack())).toBe(true)
+    expect(getRulePackErrors(validPack())).toHaveLength(0)
+  })
 
-  it("fails on duplicate rule IDs", () => {
+  it('fails on duplicate rule IDs', () => {
     const pack = validPack({
-      rules: [validRule({ id: "dup" }), validRule({ id: "dup" })],
-    });
-    expect(validateRulePack(pack)).toBe(false);
+      rules: [validRule({ id: 'dup' }), validRule({ id: 'dup' })],
+    })
+    expect(validateRulePack(pack)).toBe(false)
     expect(getRulePackErrors(pack)).toEqual(
-      expect.arrayContaining([expect.stringContaining("duplicate")]),
-    );
-  });
+      expect.arrayContaining([expect.stringContaining('duplicate')])
+    )
+  })
 
-  it("fails when a rule is invalid", () => {
+  it('fails when a rule is invalid', () => {
     const badRule = {
       ...validRule(),
-      phase: "after-tool" as const,
-      defaultAction: { type: "block" as const, message: "x" },
-    };
-    const pack = validPack({ rules: [badRule] });
-    expect(validateRulePack(pack)).toBe(false);
-  });
+      phase: 'after-tool' as const,
+      defaultAction: { type: 'block' as const, message: 'x' },
+    }
+    const pack = validPack({ rules: [badRule] })
+    expect(validateRulePack(pack)).toBe(false)
+  })
 
-  it("fails on missing pack id", () => {
-    expect(validateRulePack(validPack({ id: "" }))).toBe(false);
-  });
+  it('fails on missing pack id', () => {
+    expect(validateRulePack(validPack({ id: '' }))).toBe(false)
+  })
 
-  it("fails on missing pack name", () => {
-    expect(validateRulePack(validPack({ name: "" }))).toBe(false);
-  });
+  it('fails on missing pack name', () => {
+    expect(validateRulePack(validPack({ name: '' }))).toBe(false)
+  })
 
-  it("rejects non-object input", () => {
-    expect(validateRulePack(null)).toBe(false);
-    expect(validateRulePack("string")).toBe(false);
-  });
-});
+  it('rejects non-object input', () => {
+    expect(validateRulePack(null)).toBe(false)
+    expect(validateRulePack('string')).toBe(false)
+  })
+})

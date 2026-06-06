@@ -6,9 +6,9 @@ early_access: true
 reviews:
   profile: assertive
   request_changes_workflow: true
-  high_level_summary_placeholder: "@rab summary"
+  high_level_summary_placeholder: '@rab summary'
   high_level_summary_in_walkthrough: true
-  auto_title_placeholder: "@rab"
+  auto_title_placeholder: '@rab'
   review_details: true
   fail_commit_status: true
   changed_files_summary: false
@@ -23,39 +23,39 @@ reviews:
   disable_cache: true
 
   path_filters:
-    - "!pnpm-lock.yaml"
-    - "!docs/api/**"
-    - "!node_modules/**"
+    - '!pnpm-lock.yaml'
+    - '!docs/api/**'
+    - '!node_modules/**'
   path_instructions:
-    - path: "src/core/**/*.ts"
+    - path: 'src/core/**/*.ts'
       instructions: |-
         Flag if: imports from matcher/, resolver/, engine/, or infrastructure/; use of `any` or `!` non-null assertion; default exports.
         Do NOT flag: the five-value GuardrailBehavior union, the phase-behavior matrix, or fail-at-load-time validation — these are intentional design decisions documented in README.md.
-    - path: "src/matcher/**/*.ts"
+    - path: 'src/matcher/**/*.ts'
       instructions: |-
         Flag if: imports from resolver/, engine/, or infrastructure/; impure handler logic (side effects, global state); missing adversarial test cases for new regex patterns.
         Do NOT flag: command-splitting limitations (variable tracking is explicitly out of scope); the singleton MatcherRegistry pattern.
-    - path: "src/resolver/**/*.ts"
+    - path: 'src/resolver/**/*.ts'
       instructions: |-
         Flag if: imports from matcher/, engine/, or infrastructure/; missing GuardrailAction variant in switch/exhaustive check; new behavior added without updating both core/types.ts and resolveAction().
         Do NOT flag: the confirm→suggest→block fallback chain — it is correct as implemented. Do NOT suggest changing the `yaml` package to `js-yaml` — this project uses the `yaml` package (v2.4.0).
-    - path: "src/engine/**/*.ts"
+    - path: 'src/engine/**/*.ts'
       instructions: |-
         Flag if: imports from infrastructure/; orchestration growing beyond ~80 lines (business logic belongs in resolver/ or matcher/); non-fail-closed handling of malformed ToolCallContext.
-    - path: "src/infrastructure/**/*.ts"
+    - path: 'src/infrastructure/**/*.ts'
       instructions: |-
         Flag if: imports from matcher/, resolver/, or engine/; missing schema validation on loaded packs; importing any package not already in package.json.
         Do NOT flag: the `yaml` npm package as a "wrong package name" — this project uses `yaml` (not `js-yaml`).
-    - path: "src/**/*.test.ts"
+    - path: 'src/**/*.test.ts'
       instructions: |-
         Flag if: snapshot tests for regex patterns (use inline values); missing adversarial/edge-case coverage for matchers; jest imports (this project uses vitest).
-    - path: "src/index.ts"
+    - path: 'src/index.ts'
       instructions: |-
         Flag if: default exports; re-exports from layers other than core/ and engine/; new exports without corresponding documentation.
-    - path: "**/*.yml"
+    - path: '**/*.yml'
       instructions: |-
         YAML rule pack files. Flag if: non-kebab-case pack id; non-dotted rule id; phase/action mismatch (before-tool: block/suggest/run/confirm, after-tool: redact only); missing {matched} template in messages; suggest action without replacement.
-    - path: "docs/**/*.md"
+    - path: 'docs/**/*.md'
       instructions: |-
         Flag if: broken relative links; code examples that don't match actual API signatures; incorrect vocabulary usage (see README.md vocabulary table — Behavior≠Action, RulePack≠package, Harness≠Agent).
 
@@ -65,10 +65,10 @@ reviews:
   auto_review:
     auto_pause_after_reviewed_commits: 0
     ignore_title_keywords:
-      - "#no-rabbit"
-      - "#no-review"
-      - "#no-auto-review"
-      - "#no-ai-review"
+      - '#no-rabbit'
+      - '#no-review'
+      - '#no-auto-review'
+      - '#no-ai-review'
     drafts: true
 
   finishing_touches:
@@ -145,4 +145,4 @@ knowledge_base:
   code_guidelines:
     enabled: true
     filePatterns:
-      - "**/README.md"
+      - '**/README.md'
