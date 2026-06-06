@@ -28,7 +28,7 @@ export function matchAndResolve(
 ): GuardrailAction | undefined {
   const { command, filePath } = extractTargets(ctx)
 
-  if (!command && !filePath) {
+  if (isMissingRequiredFields(ctx, command, filePath)) {
     return handleMissingTargets(ctx, statsTracker)
   }
 
@@ -64,6 +64,23 @@ function handleMissingTargets(
 }
 
 const REQUIRES_KNOWN_FIELDS = new Set(['bash', 'read', 'write'])
+
+/** Fail-closed: known tools must have their required fields. */
+function isMissingRequiredFields(
+  ctx: ToolCallContext,
+  command: string | undefined,
+  filePath: string | undefined
+): boolean {
+  switch (ctx.toolName) {
+    case 'bash':
+      return !command
+    case 'read':
+    case 'write':
+      return !filePath
+    default:
+      return !command && !filePath
+  }
+}
 
 function findFirstMatch(
   ctx: ToolCallContext,

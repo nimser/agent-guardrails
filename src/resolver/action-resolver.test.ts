@@ -123,7 +123,7 @@ describe('resolveAction', () => {
   describe('redact action', () => {
     it('returns redact action when capability available', () => {
       const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' }
-      const result = resolveAction(action, fullCapabilities)
+      const result = resolveAction(action, fullCapabilities, { matched: 'secret' })
       expect(result).toEqual({ type: 'redact', replacement: '[REDACTED]' })
     })
 

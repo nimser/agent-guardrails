@@ -15,8 +15,9 @@ describe('PredicateRegistry', () => {
 
     const resolved = registry.resolve('is-bash')
     expect(resolved).toBeDefined()
-    expect(resolved!({ toolName: 'bash', command: 'ls' })).toBe(true)
-    expect(resolved!({ toolName: 'read', filePath: '/tmp' })).toBe(false)
+    if (!resolved) throw new Error('resolved should be defined')
+    expect(resolved({ toolName: 'bash', command: 'ls' })).toBe(true)
+    expect(resolved({ toolName: 'read', filePath: '/tmp' })).toBe(false)
   })
 
   it('returns undefined for unknown predicate name', () => {
