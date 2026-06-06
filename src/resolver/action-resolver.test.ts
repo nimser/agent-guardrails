@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { resolveAction } from './action-resolver.js'
+import type { ResolveContext } from './action-resolver.js'
 import type { GuardrailAction, HarnessCapabilities } from '../core/types.js'
 
 describe('resolveAction', () => {
@@ -123,7 +124,8 @@ describe('resolveAction', () => {
   describe('redact action', () => {
     it('returns redact action when capability available', () => {
       const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' }
-      const result = resolveAction(action, fullCapabilities, { matched: 'secret' })
+      const ctx: ResolveContext = { matched: 'secret' }
+      const result = resolveAction(action, fullCapabilities, ctx)
       expect(result).toEqual({ type: 'redact', replacement: '[REDACTED]' })
     })
 
