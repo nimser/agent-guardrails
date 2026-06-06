@@ -14,26 +14,10 @@ describe('public API surface', () => {
     expect(typeof api.getRulePackErrors).toBe('function')
   })
 
-  it('exports matcher registry and setup', () => {
-    expect(api.MatcherRegistry).toBeDefined()
-    expect(api.matcherRegistry).toBeDefined()
-    expect(typeof api.initializeMatcherRegistry).toBe('function')
-    expect(typeof api.splitCommands).toBe('function')
-  })
-
-  it('exports resolver', () => {
-    expect(typeof api.resolveAction).toBe('function')
-  })
-
   it('exports engine functions', () => {
     expect(typeof api.matchAndResolve).toBe('function')
     expect(typeof api.getStats).toBe('function')
     expect(typeof api.resetStats).toBe('function')
     expect(api.StatsTracker).toBeDefined()
-  })
-
-  it('exports yaml loader functions', () => {
-    expect(typeof api.loadYamlRulePack).toBe('function')
-    expect(typeof api.loadAllRulePacks).toBe('function')
   })
 })

@@ -42,27 +42,6 @@ export {
   getRulePackErrors,
 } from './core/validator.js'
 
-// ── Matcher Registry ────────────────────────────────────
-export type { MatcherHandler } from './matcher/registry.js'
-export {
-  /** Registry of matcher handlers for extensible matching. */
-  MatcherRegistry,
-  /** Default singleton matcher registry. */
-  matcherRegistry,
-} from './matcher/registry.js'
-export {
-  /** Populate the matcher registry with built-in handlers. Call once at startup. */
-  initializeMatcherRegistry,
-} from './matcher/setup.js'
-export {
-  /** Split a shell command string on `;`, `&&`, `||`, and newlines (respects quotes). */
-  splitCommands,
-} from './matcher/command-splitter.js'
-
-// ── Resolver ────────────────────────────────────────────
-export { resolveAction } from './resolver/action-resolver.js'
-export type { ResolveContext } from './resolver/action-resolver.js'
-
 // ── Engine ──────────────────────────────────────────────
 export type { Stats } from './engine/stats-tracker.js'
 export {
@@ -80,11 +59,3 @@ export {
   /** Accumulator for intervention stats (checks, blocks, suggests). */
   StatsTracker,
 } from './engine/stats-tracker.js'
-
-// ── Infrastructure ──────────────────────────────────────
-export {
-  /** Load a single YAML rule pack from disk. */
-  loadYamlRulePack,
-  /** Load all YAML rule packs from a directory. */
-  loadAllRulePacks,
-} from './infrastructure/yaml-pack-loader.js'
