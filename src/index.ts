@@ -46,6 +46,12 @@ export {
 export type { Stats } from './engine/stats-tracker.js'
 export {
   /**
+   * Bootstrap the guardrail system. Registers built-in matcher handlers
+   * (bash-command, file-path, predicate). Call once at startup.
+   * Returns the PredicateRegistry so adapters can register custom predicates.
+   */
+  initGuardrails,
+  /**
    * The main entry point: evaluate a ToolCallContext against RulePacks and
    * return the resolved GuardrailAction (or undefined if no rule matched).
    */

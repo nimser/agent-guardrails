@@ -4,10 +4,28 @@ import type {
   GuardrailAction,
   HarnessCapabilities,
 } from '../core/types.js'
-import { matcherRegistry } from '../matcher/registry.js'
+import { matcherRegistry, MatcherRegistry } from '../matcher/registry.js'
+import { initializeMatcherRegistry } from '../matcher/setup.js'
 import { splitCommands } from '../matcher/command-splitter.js'
 import { resolveAction } from '../resolver/action-resolver.js'
 import { StatsTracker } from './stats-tracker.js'
+import { PredicateRegistry } from '../core/predicate-registry.js'
+
+/**
+ * Bootstrap the guardrail system. Registers built-in matcher handlers
+ * (bash-command, file-path, predicate). Call once at startup.
+ *
+ * @param registry - MatcherRegistry to populate (defaults to the singleton)
+ * @param predicateRegistry - PredicateRegistry for predicate matchers
+ * @returns The PredicateRegistry so adapters can register custom predicates
+ */
+export function initGuardrails(
+  registry: MatcherRegistry = matcherRegistry,
+  predicateRegistry = new PredicateRegistry()
+): PredicateRegistry {
+  initializeMatcherRegistry(registry, predicateRegistry)
+  return predicateRegistry
+}
 
 const statsTracker = new StatsTracker()
 
