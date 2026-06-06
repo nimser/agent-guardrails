@@ -84,6 +84,13 @@ describe('initializeMatcherRegistry', () => {
     )
   })
 
+  it('calling initializeMatcherRegistry() twice on the singleton throws', () => {
+    matcherRegistry.clear()
+    initializeMatcherRegistry()
+    expect(() => initializeMatcherRegistry()).toThrow(/already registered/)
+    matcherRegistry.clear()
+  })
+
   it('default parameters use the singleton matcherRegistry and a fresh PredicateRegistry', () => {
     // Clear the singleton to avoid interference from other tests
     matcherRegistry.clear()
