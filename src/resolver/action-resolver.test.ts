@@ -28,6 +28,8 @@ describe('resolveAction', () => {
     confirm: false,
   }
 
+  const ctx: ResolveContext = { matched: 'secret' }
+
   describe('allow action', () => {
     it('returns allow action directly', () => {
       const action: GuardrailAction = { type: 'allow' }
@@ -124,7 +126,6 @@ describe('resolveAction', () => {
   describe('redact action', () => {
     it('returns redact action when capability available', () => {
       const action: GuardrailAction = { type: 'redact', replacement: '[REDACTED]' }
-      const ctx: ResolveContext = { matched: 'secret' }
       const result = resolveAction(action, fullCapabilities, ctx)
       expect(result).toEqual({ type: 'redact', replacement: '[REDACTED]' })
     })
