@@ -2,7 +2,7 @@
 status: accepted
 ---
 
-# ADR-004: YAML Rule Packs
+# ADR-005: YAML Rule Packs
 
 ## Context
 

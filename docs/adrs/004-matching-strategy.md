@@ -2,7 +2,7 @@
 status: accepted
 ---
 
-# ADR-003: Multi-Layer Matching Strategy
+# ADR-004: Multi-Layer Matching Strategy
 
 ## Context
 

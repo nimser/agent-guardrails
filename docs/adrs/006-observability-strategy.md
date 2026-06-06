@@ -2,7 +2,7 @@
 status: accepted
 ---
 
-# ADR-005: Observability Strategy
+# ADR-006: Observability Strategy
 
 ## Context
 
@@ -22,14 +22,13 @@ Engine owners need to know: how many tool calls were checked? How many were bloc
 
 `StatsTracker` (`src/engine/stats-tracker.ts`) accumulates counts in memory:
 
-- Total checks, blocks, suggests, run actions
-- Optional per-rule match counts
+- Total checks, blocks, and suggests
 
 Public API: `getStats()` for snapshots, `resetStats()` to zero counters. Adapters call `getStats()` at session end and log to their harness-native output.
 
-### Domain Events (Internal Only)
+### Domain Events (Planned)
 
-The engine produces events internally (`RuleMatchedEvent`, `FallbackTriggeredEvent`) but doesn't expose them yet. `matchAndResolve()` returns only the `GuardrailAction`. Events are consumed internally as groundwork for future observability.
+Domain events (`RuleMatchedEvent`, `FallbackTriggeredEvent`) are planned but not yet implemented. When added, the engine will produce them internally — `matchAndResolve()` will continue to return only the `GuardrailAction` in its public signature. Events will serve as groundwork for Tier 2/3 observability.
 
 ## Rationale
 

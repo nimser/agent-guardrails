@@ -2,7 +2,7 @@
 
 Rule packs are YAML files that tell Agent Guardrails what to watch for and what to do when a match is found. They're the primary way to contribute — no TypeScript required.
 
-This guide covers the format. For the _why_ behind rule packs, see [ADR-004](adrs/004-yaml-rule-packs.md).
+This guide covers the format. For the _why_ behind rule packs, see [ADR-005](adrs/005-yaml-rule-packs.md).
 
 ## Quick Start
 

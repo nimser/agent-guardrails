@@ -37,12 +37,11 @@ Adapters are thin shims between a harness (Pi, OpenCode, Codex, Claude Code) and
 Adapters use the engine's public API to match and resolve actions:
 
 ```typescript
-import { matchAndResolve, initializeMatcherRegistry, loadAllRulePacks } from "agent-guardrails";
+import { initGuardrails, matchAndResolve, loadAllRulePacks } from "agent-guardrails";
 
 // One-time setup
-initializeMatcherRegistry();
-
-const packs = loadAllRulePacks();
+const predicates = initGuardrails();
+const packs = loadAllRulePacks("./packs", predicates);
 
 const capabilities = {
   block: true,
@@ -75,9 +74,10 @@ Agent Guardrails is built on five core architectural decisions. Read these in or
 | --- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | 1   | [Layered Architecture](adrs/001-layered-architecture.md) | Package structure, dependency direction, module responsibilities                              |
 | 2   | [Behavior Model](adrs/002-behavior-model.md)             | What the engine can do (block/suggest/run/redact/confirm), phase constraints, fallback chains |
-| 3   | [Matching Strategy](adrs/003-matching-strategy.md)       | Three-layer defense-in-depth, risk escalation, command splitting                              |
-| 4   | [YAML Rule Packs](adrs/004-yaml-rule-packs.md)           | Why YAML, built-in packs, predicate limitations                                               |
-| 5   | [Observability](adrs/005-observability-strategy.md)      | In-memory stats, tiered roadmap                                                               |
+| 3   | [Public API Contract](adrs/003-public-api-contract.md)   | What's exported, what's internal, adapter bootstrap pattern                                   |
+| 4   | [Matching Strategy](adrs/004-matching-strategy.md)       | Three-layer defense-in-depth, risk escalation, command splitting                              |
+| 5   | [YAML Rule Packs](adrs/005-yaml-rule-packs.md)           | Why YAML, built-in packs, predicate limitations                                               |
+| 6   | [Observability](adrs/006-observability-strategy.md)      | In-memory stats, tiered roadmap                                                               |
 
 ### Practical Guides
 
