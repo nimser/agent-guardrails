@@ -143,6 +143,41 @@ describe('validateRule', () => {
     const rule = { ...validRule(), match: { type: 'predicate', predicateName: '' } }
     expect(validateRule(rule)).toBe(false)
   })
+
+  it('fails when block action has empty message', () => {
+    const rule = { ...validRule(), defaultAction: { type: 'block', message: '' } }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when suggest action has empty replacement', () => {
+    const rule = {
+      ...validRule(),
+      defaultAction: { type: 'suggest', replacement: '', message: 'try' },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when run action has empty replacement', () => {
+    const rule = {
+      ...validRule(),
+      defaultAction: { type: 'run', replacement: '', message: 'run' },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when confirm action has empty message', () => {
+    const rule = { ...validRule(), defaultAction: { type: 'confirm', message: '' } }
+    expect(validateRule(rule)).toBe(false)
+  })
+
+  it('fails when redact action has empty replacement', () => {
+    const rule = {
+      ...validRule(),
+      phase: 'after-tool' as const,
+      defaultAction: { type: 'redact', replacement: '' },
+    }
+    expect(validateRule(rule)).toBe(false)
+  })
 })
 
 describe('validateRulePack', () => {

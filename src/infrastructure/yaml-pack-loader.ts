@@ -180,29 +180,43 @@ function parseAction(raw: RawAction): GuardrailAction {
     case 'allow':
       return { type: 'allow' }
     case 'block':
-      return { type: 'block', message: raw.message || '' }
+      requireString(raw, 'message', 'block')
+      return { type: 'block', message: raw.message as string }
     case 'suggest':
+      requireString(raw, 'replacement', 'suggest')
       return {
         type: 'suggest',
-        replacement: raw.replacement || '',
+        replacement: raw.replacement as string,
         message: raw.message,
       }
     case 'run':
+      requireString(raw, 'replacement', 'run')
       return {
         type: 'run',
-        replacement: raw.replacement || '',
+        replacement: raw.replacement as string,
         message: raw.message,
       }
     case 'redact':
-      return { type: 'redact', replacement: raw.replacement || '' }
+      requireString(raw, 'replacement', 'redact')
+      return { type: 'redact', replacement: raw.replacement as string }
     case 'confirm':
+      requireString(raw, 'message', 'confirm')
       return {
         type: 'confirm',
-        message: raw.message || '',
+        message: raw.message as string,
         fallback: raw.fallback ? parseBeforeToolAction(raw.fallback) : undefined,
       }
     default:
       throw new Error(`Unknown action type "${raw.type}"`)
+  }
+}
+
+function requireString(raw: RawAction, field: 'message' | 'replacement', actionType: string): void {
+  const value = raw[field]
+  if (typeof value !== 'string' || value === '') {
+    throw new Error(
+      `Action "${actionType}" requires a non-empty "${field}" field (got ${JSON.stringify(value)})`
+    )
   }
 }
 

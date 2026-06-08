@@ -159,9 +159,10 @@ describe('loadYamlRulePack', () => {
     expect(pack.rules[0].defaultAction).toEqual({ type: 'allow' })
   })
 
-  it('loads block action without message', () => {
-    const pack = loadYamlRulePack(fixture('action-block-no-message.yaml'), predicateRegistry)
-    expect(pack.rules[0].defaultAction).toEqual({ type: 'block', message: '' })
+  it('throws when block action is missing a message', () => {
+    expect(() =>
+      loadYamlRulePack(fixture('action-block-no-message.yaml'), predicateRegistry)
+    ).toThrow(/block.*requires a non-empty "message"/)
   })
 
   it('loads rule with suggest action', () => {
@@ -173,13 +174,10 @@ describe('loadYamlRulePack', () => {
     })
   })
 
-  it('loads suggest action without replacement or message', () => {
-    const pack = loadYamlRulePack(fixture('action-suggest-minimal.yaml'), predicateRegistry)
-    expect(pack.rules[0].defaultAction).toEqual({
-      type: 'suggest',
-      replacement: '',
-      message: undefined,
-    })
+  it('throws when suggest action is missing a replacement', () => {
+    expect(() =>
+      loadYamlRulePack(fixture('action-suggest-minimal.yaml'), predicateRegistry)
+    ).toThrow(/suggest.*requires a non-empty "replacement"/)
   })
 
   it('loads rule with run action', () => {
@@ -191,27 +189,22 @@ describe('loadYamlRulePack', () => {
     })
   })
 
-  it('loads run action without replacement', () => {
-    const pack = loadYamlRulePack(fixture('action-run-minimal.yaml'), predicateRegistry)
-    expect(pack.rules[0].defaultAction).toEqual({
-      type: 'run',
-      replacement: '',
-      message: undefined,
-    })
+  it('throws when run action is missing a replacement', () => {
+    expect(() => loadYamlRulePack(fixture('action-run-minimal.yaml'), predicateRegistry)).toThrow(
+      /run.*requires a non-empty "replacement"/
+    )
   })
 
-  it('loads redact action without replacement', () => {
-    const pack = loadYamlRulePack(fixture('action-redact-minimal.yaml'), predicateRegistry)
-    expect(pack.rules[0].defaultAction).toEqual({ type: 'redact', replacement: '' })
+  it('throws when redact action is missing a replacement', () => {
+    expect(() =>
+      loadYamlRulePack(fixture('action-redact-minimal.yaml'), predicateRegistry)
+    ).toThrow(/redact.*requires a non-empty "replacement"/)
   })
 
-  it('loads confirm action without message or fallback', () => {
-    const pack = loadYamlRulePack(fixture('action-confirm-minimal.yaml'), predicateRegistry)
-    expect(pack.rules[0].defaultAction).toEqual({
-      type: 'confirm',
-      message: '',
-      fallback: undefined,
-    })
+  it('throws when confirm action is missing a message', () => {
+    expect(() =>
+      loadYamlRulePack(fixture('action-confirm-minimal.yaml'), predicateRegistry)
+    ).toThrow(/confirm.*requires a non-empty "message"/)
   })
 
   it('loads rule with confirm action having valid block fallback', () => {
@@ -221,6 +214,20 @@ describe('loadYamlRulePack', () => {
       message: 'Confirm?',
       fallback: { type: 'block', message: 'Cancelled' },
     })
+  })
+
+  it('loads rule with block action having a message', () => {
+    const pack = loadYamlRulePack(fixture('action-block-with-message.yaml'), predicateRegistry)
+    expect(pack.rules[0].defaultAction).toEqual({
+      type: 'block',
+      message: 'Cancelled: {matched}',
+    })
+  })
+
+  it('throws when block action has empty message', () => {
+    expect(() =>
+      loadYamlRulePack(fixture('action-block-empty-message.yaml'), predicateRegistry)
+    ).toThrow(/requires a non-empty "message"/)
   })
 
   it('throws on unknown action type', () => {

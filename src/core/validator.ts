@@ -35,16 +35,18 @@ function isBeforeToolAction(v: unknown): v is BeforeToolAction {
     case 'block':
       return (
         typeof v.message === 'string' &&
+        v.message.length > 0 &&
         (v.fallbackReason === undefined || typeof v.fallbackReason === 'string')
       )
     case 'suggest':
     case 'run':
       return (
         typeof v.replacement === 'string' &&
+        v.replacement.length > 0 &&
         (v.message === undefined || typeof v.message === 'string')
       )
     case 'confirm': {
-      if (typeof v.message !== 'string') return false
+      if (typeof v.message !== 'string' || v.message.length === 0) return false
       if (v.fallback !== undefined && !isBeforeToolAction(v.fallback)) return false
       return true
     }
@@ -54,7 +56,12 @@ function isBeforeToolAction(v: unknown): v is BeforeToolAction {
 }
 
 function isAfterToolAction(v: unknown): v is AfterToolAction {
-  return isObject(v) && v.type === 'redact' && typeof v.replacement === 'string'
+  return (
+    isObject(v) &&
+    v.type === 'redact' &&
+    typeof v.replacement === 'string' &&
+    v.replacement.length > 0
+  )
 }
 
 /**
