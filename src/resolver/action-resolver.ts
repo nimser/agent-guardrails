@@ -77,6 +77,13 @@ function resolveSuggest(
       ctx
     )
   }
+  if (!action.replacement) {
+    return fallbackBlock(
+      '`suggest` action has no `replacement` available. Falling back to a `block`.',
+      `\`${ctx.matched}\` — no Replacement available.`,
+      ctx
+    )
+  }
   const replacement = action.replacement
   return {
     type: 'suggest',

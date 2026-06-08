@@ -108,17 +108,3 @@ export {
   /** Maximum input length before regex matchers fail-closed. */
   MAX_MATCH_INPUT_LENGTH,
 } from './matcher/matchers.js'
-
-// ── Infrastructure ──────────────────────────────────────
-export {
-  /**
-   * Load and parse a single YAML rule pack file. Validates structure
-   * and returns a typed `RulePack`, or throws on error.
-   */
-  loadYamlRulePack,
-  /**
-   * Load all `.yaml` / `.yml` files from a directory as rule packs.
-   * Non-YAML files are silently skipped. Throws if any pack fails validation.
-   */
-  loadAllRulePacks,
-} from './infrastructure/yaml-pack-loader.js'

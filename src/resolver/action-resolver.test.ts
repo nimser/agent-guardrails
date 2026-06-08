@@ -84,6 +84,17 @@ describe('resolveAction', () => {
       const result = resolveAction(action, noSuggest, { matched: 'dangerous-cmd' })
       expect(result.type).toBe('block')
     })
+
+    it('falls back to block when suggest has no replacement', () => {
+      const action: GuardrailAction = { type: 'suggest', replacement: '' }
+      const result = resolveAction(action, fullCapabilities, { matched: 'dangerous-cmd' })
+      expect(result).toEqual({
+        type: 'block',
+        message: 'Blocked: `dangerous-cmd` — no Replacement available.',
+        fallbackReason:
+          '`suggest` action has no `replacement` available. Falling back to a `block`.',
+      })
+    })
   })
 
   describe('run action', () => {
