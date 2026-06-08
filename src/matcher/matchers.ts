@@ -48,7 +48,10 @@ export function matchesMatcher(
     case 'predicate': {
       const fn = predicateRegistry.resolve(matcher.predicateName)
       if (!fn) {
-        throw new Error(`Predicate "${matcher.predicateName}" is not registered`)
+        throw new Error(
+          `Predicate "${matcher.predicateName}" is not registered. ` +
+            'Register it via predicateRegistry.register() before loading rule packs that reference it.'
+        )
       }
       return fn(ctx)
     }
