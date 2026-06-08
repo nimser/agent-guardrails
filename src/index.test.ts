@@ -28,4 +28,9 @@ describe('public API surface', () => {
     expect(typeof api.resetStats).toBe('function')
     expect(api.StatsTracker).toBeDefined()
   })
+
+  it('exports YAML rule pack loaders', () => {
+    expect(typeof api.loadYamlRulePack).toBe('function')
+    expect(typeof api.loadAllRulePacks).toBe('function')
+  })
 })
