@@ -97,7 +97,7 @@ export class GuardrailEngine {
     capabilities: HarnessCapabilities
   ): MatchResult {
     for (const cmd of commands) {
-      const matchCtx = { ...ctx, command: cmd } as ToolCallContext
+      const matchCtx: ToolCallContext = 'command' in ctx ? { ...ctx, command: cmd } : ctx
       for (const pack of packs) {
         const result = this.matchPackRulesTraced(pack, matchCtx, capabilities, ctx, cmd)
         if (result) return result
