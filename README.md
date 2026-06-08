@@ -71,10 +71,10 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 
 ### Adapters
 
-- ✅ **Pi** — native plugin for [Pi](https://github.com/earendil-works/pi)
-- ✅ **OpenCode** — native plugin for [OpenCode](https://github.com/anomalyco/opencode)
-- 🚧 **Codex** — coming soon
-- 🚧 **Claude Code** — coming soon
+- 🚧 **Pi** — native plugin for [Pi](https://github.com/earendil-works/pi) — WIP
+- 🚧 **OpenCode** — native plugin for [OpenCode](https://github.com/anomalyco/opencode) — WIP
+- 🚧 **Codex** — coming later
+- 🚧 **Claude Code** — coming later
 - 🔌 **Community adapters welcome** — from v0.2.0 onwards, any harness can integrate by implementing a thin adapter shim
 
 ## Quick Start
