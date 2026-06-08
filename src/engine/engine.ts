@@ -113,6 +113,9 @@ export class GuardrailEngine {
     cmd: string
   ): MatchResult | undefined {
     for (const rule of pack.rules) {
+      // eslint-disable-next-line no-warning-comments
+      // TODO(after-tool): Evaluate after-tool rules in a second pass for redact behavior.
+      // Currently unimplemented — after-tool phase is reserved for output redaction.
       if (rule.phase !== 'before-tool') continue
       if (!matchesMatcher(rule.match, matchCtx, this.predicateRegistry)) continue
 
