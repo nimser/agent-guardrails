@@ -15,7 +15,9 @@ describe('public API surface', () => {
   })
 
   it('exports normalizer functions', () => {
-    expect(api.KNOWN_TOOLS).toBeInstanceOf(Set)
+    expect(typeof api.isKnownTool).toBe('function')
+    expect(api.isKnownTool('bash')).toBe(true)
+    expect(api.isKnownTool('nope')).toBe(false)
     expect(typeof api.extractTargets).toBe('function')
     expect(typeof api.isMissingRequiredFields).toBe('function')
   })

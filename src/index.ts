@@ -33,8 +33,8 @@ export type {
 
 // ── Normalizer ─────────────────────────────────────────
 export {
-  /** Well-known tool names that require specific fields. */
-  KNOWN_TOOLS,
+  /** Check whether a tool name is one of the well-known tools with required fields. */
+  isKnownTool,
   /** Extract command and filePath from a ToolCallContext. */
   extractTargets,
   /** Check whether a ToolCallContext is missing required fields. */

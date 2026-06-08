@@ -6,8 +6,23 @@ import type { ToolCallContext } from './types.js'
  * - read/write require `filePath`
  *
  * Unknown tool names are allowed through with whatever fields are present.
+ *
+ * The membership data is held in a private `Set`; external code must use
+ * `isKnownTool` to check membership so the engine's enforcement behavior
+ * cannot be mutated at runtime.
  */
-export const KNOWN_TOOLS = new Set(['bash', 'read', 'write'])
+export const KNOWN_TOOLS = ['bash', 'read', 'write'] as const
+
+const KNOWN_TOOLS_SET: ReadonlySet<string> = new Set(KNOWN_TOOLS)
+
+/**
+ * Check whether a tool name is a known tool that requires specific fields
+ * in ToolCallContext. Prefer this over importing the membership data
+ * directly so the underlying set stays immutable from outside the module.
+ */
+export function isKnownTool(toolName: string): boolean {
+  return KNOWN_TOOLS_SET.has(toolName)
+}
 
 /**
  * Extract the target fields from a ToolCallContext.

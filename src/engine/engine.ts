@@ -7,7 +7,7 @@ import type {
   DomainEvent,
   BeforeToolAction,
 } from '../core/types.js'
-import { KNOWN_TOOLS, extractTargets, isMissingRequiredFields } from '../core/normalizer.js'
+import { extractTargets, isKnownTool, isMissingRequiredFields } from '../core/normalizer.js'
 import { matchesMatcher } from '../matcher/matchers.js'
 import { splitCommands } from '../matcher/command-splitter.js'
 import { resolveAction } from '../resolver/action-resolver.js'
@@ -71,7 +71,7 @@ export class GuardrailEngine {
   }
 
   private handleMissingTargetsTraced(ctx: ToolCallContext): MatchResult {
-    if (!KNOWN_TOOLS.has(ctx.toolName)) {
+    if (!isKnownTool(ctx.toolName)) {
       this.statsTracker.record(null)
       return { action: null, events: [] }
     }

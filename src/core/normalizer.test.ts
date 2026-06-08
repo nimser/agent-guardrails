@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import type { ToolCallContext } from './types.js'
-import { KNOWN_TOOLS, extractTargets, isMissingRequiredFields } from './normalizer.js'
+import { extractTargets, isKnownTool, isMissingRequiredFields } from './normalizer.js'
 
-describe('KNOWN_TOOLS', () => {
-  it('contains bash, read, write', () => {
-    expect(KNOWN_TOOLS.has('bash')).toBe(true)
-    expect(KNOWN_TOOLS.has('read')).toBe(true)
-    expect(KNOWN_TOOLS.has('write')).toBe(true)
+describe('isKnownTool', () => {
+  it('recognizes bash, read, write', () => {
+    expect(isKnownTool('bash')).toBe(true)
+    expect(isKnownTool('read')).toBe(true)
+    expect(isKnownTool('write')).toBe(true)
   })
 
-  it('does not contain arbitrary tool names', () => {
-    expect(KNOWN_TOOLS.has('grep')).toBe(false)
-    expect(KNOWN_TOOLS.has('unknown')).toBe(false)
+  it('rejects arbitrary tool names', () => {
+    expect(isKnownTool('grep')).toBe(false)
+    expect(isKnownTool('unknown')).toBe(false)
   })
 })
 
