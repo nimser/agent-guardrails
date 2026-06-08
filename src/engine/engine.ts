@@ -75,15 +75,16 @@ export class GuardrailEngine {
       this.statsTracker.record(null)
       return { action: null, events: [] }
     }
+    const msg = `Blocked malformed ${ctx.toolName} tool call: missing required fields. Your adapter may need updating or your harness may be compromised.`
     const action: GuardrailAction = {
       type: 'block',
-      message: `Malformed ${ctx.toolName} tool call: missing required fields`,
+      message: msg,
     }
     const event: DomainEvent = {
       type: 'fallback-triggered',
       from: 'allow',
       to: 'block',
-      reason: `Malformed ${ctx.toolName} tool call: missing required fields`,
+      reason: msg,
     }
     this.statsTracker.record(action)
     return { action, events: [event] }

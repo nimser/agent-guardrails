@@ -29,7 +29,8 @@ describe('matchAndResolve', () => {
     const result = matchAndResolve(ctx, packs, fullCapabilities)
     expect(result).toEqual({
       type: 'block',
-      message: 'Malformed bash tool call: missing required fields',
+      message:
+        'Blocked malformed bash tool call: missing required fields. Your adapter may need updating or your harness may be compromised.',
     })
   })
 
@@ -39,7 +40,8 @@ describe('matchAndResolve', () => {
     const result = matchAndResolve(ctx, packs, fullCapabilities)
     expect(result).toEqual({
       type: 'block',
-      message: 'Malformed read tool call: missing required fields',
+      message:
+        'Blocked malformed read tool call: missing required fields. Your adapter may need updating or your harness may be compromised.',
     })
   })
 
@@ -49,7 +51,8 @@ describe('matchAndResolve', () => {
     const result = matchAndResolve(ctx, packs, fullCapabilities)
     expect(result).toEqual({
       type: 'block',
-      message: 'Malformed write tool call: missing required fields',
+      message:
+        'Blocked malformed write tool call: missing required fields. Your adapter may need updating or your harness may be compromised.',
     })
   })
 
