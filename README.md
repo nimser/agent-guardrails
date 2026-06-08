@@ -61,13 +61,13 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 
 ### Built-in Rule Packs
 
-- **env** — Block `.env` file reads (both file-path and bash commands)
-- **private-key** — Block private key access, including SSH directory files
-- **secret-managers** — Block 1Password, gopass, pass, and Bitwarden secret retrieval
-- **encryption-tools** — Block `age`, `gpg`, and `openssl` decrypt commands
-- **sops** — Block SOPS decrypt operations
-- **hardening** — Detect shell wrappers (`eval`, `bash -c`, `$()`) and redirects to sensitive paths
-- **direnv**, **kubernetes**, **gh-cli** — Platform-specific guardrails
+- **env** — Block `.env` file reads (both file-path and bash commands) (_upcoming_)
+- **private-key** — Block private key access, including SSH directory files (_upcoming_)
+- **secret-managers** — Block 1Password, gopass, pass, and Bitwarden secret retrieval (_upcoming_)
+- **encryption-tools** — Block `age`, `gpg`, and `openssl` decrypt commands (_upcoming_)
+- **sops** — Block SOPS decrypt operations (_upcoming_)
+- **hardening** — Detect shell wrappers (`eval`, `bash -c`, `$()`) and redirects to sensitive paths (_upcoming_)
+- **direnv**, **kubernetes**, **gh-cli** — Platform-specific guardrails (_upcoming_)
 
 ### Adapters
 

@@ -133,7 +133,7 @@ Not every action works in every phase:
 
 ## Built-in Rule Packs
 
-Agent Guardrails ships with these packs out of the box:
+Agent Guardrails will ship with these packs (_all upcoming_):
 
 | Pack ID            | What it catches                                      |
 | ------------------ | ---------------------------------------------------- |
