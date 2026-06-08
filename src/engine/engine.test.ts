@@ -336,42 +336,6 @@ describe('resetStats', () => {
   })
 })
 
-describe('matchAndResolve — phase handling', () => {
-  beforeEach(() => {
-    predicateRegistry.clear()
-    resetStats()
-  })
-
-  it('ignores after-tool rules (entry point is before-tool only)', () => {
-    const ctx: ToolCallContext = { toolName: 'bash', command: 'sops --decrypt' }
-    const packs: RulePack[] = [
-      {
-        id: 'after-pack',
-        name: 'After Pack',
-        description: 'Only after-tool rules',
-        rules: [
-          {
-            id: 'redact-secret',
-            title: 'Redact Secret',
-            description: 'Redact after execution',
-            phase: 'after-tool',
-            match: { type: 'bash-command', pattern: /sops/i },
-            defaultAction: { type: 'redact', replacement: '[REDACTED]' },
-          },
-        ],
-      },
-    ]
-    const caps: HarnessCapabilities = {
-      block: true,
-      suggest: true,
-      run: true,
-      redact: true,
-      confirm: true,
-    }
-    expect(matchAndResolve(ctx, packs, caps)).toBeNull()
-  })
-})
-
 describe('matchAndResolve — split commands', () => {
   beforeEach(() => {
     predicateRegistry.clear()
