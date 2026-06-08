@@ -27,12 +27,13 @@ export type AfterToolAction = { type: 'redact'; replacement: string }
 export type GuardrailAction = BeforeToolAction | AfterToolAction
 
 /**
- * How a rule identifies a matching tool call.
+ * A declarative condition that describes when a rule fires.
+ * Evaluated by `matchesMatcher()` against a `ToolCallContext`.
  * - `bash-command`: regex against the command string
  * - `file-path`: regex against the file path
  * - `predicate`: named function registered in the PredicateRegistry
  */
-export type GuardrailMatcher =
+export type MatchCondition =
   | { type: 'bash-command'; pattern: RegExp }
   | { type: 'file-path'; pattern: RegExp }
   | { type: 'predicate'; predicateName: string }
@@ -53,7 +54,7 @@ export interface BeforeToolRule {
   title: string
   description: string
   phase: 'before-tool'
-  match: GuardrailMatcher
+  match: MatchCondition
   defaultAction: BeforeToolAction
 }
 
@@ -63,7 +64,7 @@ export interface AfterToolRule {
   title: string
   description: string
   phase: 'after-tool'
-  match: GuardrailMatcher
+  match: MatchCondition
   defaultAction: AfterToolAction
 }
 
@@ -72,7 +73,7 @@ export type GuardrailRule = BeforeToolRule | AfterToolRule
 
 // ── Domain Events ───────────────────────────────────────
 
-/** Emitted when a rule's matcher fires against a tool call. */
+/** Emitted when a rule's condition matches a tool call. */
 export interface RuleMatchedEvent {
   readonly type: 'rule-matched'
   readonly ruleId: string

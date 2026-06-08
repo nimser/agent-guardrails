@@ -32,7 +32,7 @@ The engine produces a decision trace alongside every action via `processMatch()`
 
 | Event Type             | When Emitted                                                        |
 | ---------------------- | ------------------------------------------------------------------- |
-| `RuleMatchedEvent`     | A rule's matcher fires against the tool call                        |
+| `RuleMatchedEvent`     | A rule's match condition fires against the tool call                |
 | `FallbackTriggeredEvent` | The resolver walks the fallback chain (e.g., run→suggest→block)   |
 
 `matchAndResolve()` remains the primary public API and returns only the `GuardrailAction`. Adapters that need the trace (audit, telemetry, debugging) call `processMatch()` instead.

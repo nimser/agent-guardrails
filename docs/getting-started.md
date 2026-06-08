@@ -14,7 +14,7 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 ```
 
 1. **ToolCallContext** — the adapter normalizes harness-specific events into this common shape
-2. **Rule Packs** — matchers (regex, file-path) and default actions that define what to watch for
+2. **Rule Packs** — match conditions (regex, file-path, predicate) and default actions that define what to watch for
 3. **GuardrailAction** — the engine evaluates rules and resolves the action through a fallback chain
 4. **Behaviour** — the adapter translates the resolved behaviour (`block`, `suggest`, `run`, `redact`, `confirm`) into harness-specific enforcement
 
@@ -39,9 +39,12 @@ Adapters use the engine's public API to match and resolve actions:
 ```typescript
 import { initGuardrails, matchAndResolve, loadAllRulePacks } from "agent-guardrails";
 
-// One-time setup
-const predicates = initGuardrails();
-const packs = loadAllRulePacks("./packs", predicates);
+// One-time setup — returns a GuardrailEngine; the engine owns the predicate registry
+const engine = initGuardrails();
+const packs = loadAllRulePacks("./packs", engine.predicateRegistry);
+
+// Register adapter-specific predicates (if any)
+engine.predicateRegistry.register("my-check", (ctx) => /* ... */);
 
 const capabilities = {
   block: true,
@@ -64,7 +67,7 @@ Run `npm run docs` to generate the full API reference locally (outputs to `docs/
 
 ### 🔴 Deeper: Engine Improvements
 
-Changes to the matcher registry, resolver, or type system. Read the architecture docs first (below), then open an issue to discuss your approach.
+Changes to the match conditions, resolver, or type system. Read the architecture docs first (below), then open an issue to discuss your approach.
 
 ## Architecture at a Glance
 
@@ -99,7 +102,7 @@ Agent Guardrails uses precise terms. Here's what you need to know:
 | **ToolCallContext** | The normalized input from a harness (command string, file path, etc.)                                                     |
 | **Adapter**         | Integration code for a specific harness (Pi, OpenCode, etc.)                                                              |
 | **Fallback chain**  | What happens when a harness can't do what a rule asks (e.g., `run → suggest → block`)                                     |
-| **Matcher**         | The pattern specification: bash-command (regex on command), file-path (regex on path), or predicate (TypeScript function) |
+| **Matcher**         | User-facing name for a match condition: bash-command (regex on command), file-path (regex on path), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union. |
 
 ### Don't Confuse These
 

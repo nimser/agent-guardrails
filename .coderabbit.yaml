@@ -33,8 +33,8 @@ reviews:
         Do NOT flag: the five-value GuardrailBehavior union, the phase-behavior matrix, or fail-at-load-time validation — these are intentional design decisions documented in README.md.
     - path: 'src/matcher/**/*.ts'
       instructions: |-
-        Flag if: imports from resolver/, engine/, or infrastructure/; impure handler logic (side effects, global state); missing adversarial test cases for new regex patterns.
-        Do NOT flag: command-splitting limitations (variable tracking is explicitly out of scope); the singleton MatcherRegistry pattern.
+        Flag if: imports from resolver/, engine/, or infrastructure/; side effects or global state in matching logic; missing adversarial test cases for new regex patterns; reintroducing a registry/handler split.
+        Do NOT flag: command-splitting limitations (variable tracking is explicitly out of scope); the `MatchCondition` discriminated union being a closed set evaluated by a single `matchesMatcher()` function.
     - path: 'src/resolver/**/*.ts'
       instructions: |-
         Flag if: imports from matcher/, engine/, or infrastructure/; missing GuardrailAction variant in switch/exhaustive check; new behavior added without updating both core/types.ts and resolveAction().

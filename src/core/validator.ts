@@ -1,7 +1,7 @@
 import type {
   AfterToolAction,
   BeforeToolAction,
-  GuardrailMatcher,
+  MatchCondition,
   GuardrailRule,
   RulePack,
 } from './types.js'
@@ -12,7 +12,7 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object'
 }
 
-function isGuardrailMatcher(v: unknown): v is GuardrailMatcher {
+function isMatchCondition(v: unknown): v is MatchCondition {
   if (!isObject(v)) return false
 
   switch (v.type) {
@@ -102,7 +102,7 @@ function checkPhase(input: Record<string, unknown>): string[] {
 }
 
 function checkMatcher(input: Record<string, unknown>): string[] {
-  if (!isGuardrailMatcher(input.match)) {
+  if (!isMatchCondition(input.match)) {
     return ['Rule "match" is invalid or malformed']
   }
   return []

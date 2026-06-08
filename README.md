@@ -35,7 +35,7 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 ```
 
 1. **ToolCallContext** — the adapter normalizes harness-specific events into this common shape
-2. **Rule Packs** — matchers (regex, file-path) and default actions that define what to watch for
+2. **Rule Packs** — match conditions (regex, file-path, predicate) and default actions that define what to watch for
 3. **GuardrailAction** — the engine evaluates rules and resolves the action through a fallback chain
 4. **Behaviour** — the adapter translates the resolved behaviour (`block`, `suggest`, `run`, `redact`, `confirm`) into harness-specific enforcement
 
@@ -96,7 +96,7 @@ Single package with strict layered directories. Dependency direction flows downw
 ```
 src/
   core/           Types, validation. ZERO runtime dependencies.
-  matcher/        Rule matching (handlers + registry). Imports core/ only.
+  matcher/        Rule matching (match conditions + command splitter). Imports core/ only.
   resolver/       Action resolution, fallback chains. Imports core/ only.
   engine/         Orchestration (~60 lines). Imports core/, matcher/, resolver/.
   infrastructure/ → I/O boundary (YAML loading). The ONLY layer with external deps.
@@ -144,7 +144,8 @@ L1+L3 match = force-block regardless of L2 (adversarial pattern detected).
 | Adapter         | Integration shim for a specific harness (Pi, OpenCode, etc.)                   |
 | Harness         | The platform (Pi, OpenCode). NOT the agent (the AI model).                     |
 | Fallback Chain  | Deterministic degradation when a harness lacks a capability                    |
-| Matcher         | Pattern spec: bash-command (regex), file-path (regex), or predicate (function) |
+| Matcher         | User-facing name for a match condition: bash-command (regex), file-path (regex), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union. |
+| Match Condition | A rule's `match` field — a declarative spec that the engine evaluates via `matchesMatcher()`. Type alias: `MatchCondition`. |
 
 Do not confuse: Behavior (category) vs Action (concrete object); RulePack (domain concept) vs package (npm artifact); Harness (platform) vs Agent (AI model).
 

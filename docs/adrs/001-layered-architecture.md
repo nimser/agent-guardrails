@@ -15,7 +15,7 @@ Agent Guardrails needs an internal structure that's easy to understand on first 
 ```
 src/
   core/           Types, validation. Zero runtime dependencies.
-  matcher/        Rule matching (handlers + registry).
+  matcher/        Rule matching (match conditions + command splitter).
   resolver/       Action resolution, fallback chains, template interpolation.
   engine/         Orchestration — composes the above layers.
   infrastructure/ I/O boundary — YAML loading, config (depends on `yaml` package).
@@ -32,8 +32,7 @@ Adapters depend on `engine`.
 | ------------------------------------ | ------------------------------------ | ----------------------- |
 | `core/types.ts`                      | Type definitions                     | Pure                    |
 | `core/validator.ts`                  | Rule & pack validation               | Pure                    |
-| `matcher/registry.ts`                | Matcher handler lookup               | Stateful (singleton)    |
-| `matcher/handlers/*`                 | Pattern matching logic               | Pure                    |
+| `matcher/matchers.ts`                | Evaluates `MatchCondition`s via `matchesMatcher()` | Pure |
 | `matcher/command-splitter.ts`        | Shell command splitting              | Pure                    |
 | `resolver/action-resolver.ts`        | Fallback chain, interpolation        | Pure                    |
 | `engine/engine.ts`                   | Orchestrates match → resolve → stats | Pure                    |

@@ -7,8 +7,8 @@ export type {
   GuardrailAction,
   /** Normalized context for a tool call. */
   ToolCallContext,
-  /** How a rule identifies a matching tool call. */
-  GuardrailMatcher,
+  /** A declarative condition that describes when a rule fires. */
+  MatchCondition,
   /** Union of rules from both phases. */
   GuardrailRule,
   /** A single guardrail rule evaluated in the before-tool phase. */
@@ -64,9 +64,13 @@ export {
 export type { Stats } from './engine/stats-tracker.js'
 export {
   /**
-   * Bootstrap the guardrail system. Registers built-in matcher handlers
-   * (bash-command, file-path, predicate). Call once at startup.
-   * Returns the PredicateRegistry so adapters can register custom predicates.
+   * The engine class. Create your own instance for isolated state,
+   * or use the module-level functions which delegate to a default singleton.
+   */
+  GuardrailEngine,
+  /**
+   * Initialize the default engine singleton. No-op currently (engine
+   * self-initializes) but kept for API stability and future bootstrap hooks.
    */
   initGuardrails,
   /**
@@ -79,12 +83,28 @@ export {
    * the domain events that explain how the decision was reached.
    */
   processMatch,
-  /** Get a snapshot of current intervention stats. */
+  /** Get a snapshot of current intervention stats from the default engine. */
   getStats,
-  /** Reset intervention stats to zero. */
+  /** Reset intervention stats to zero on the default engine. */
   resetStats,
+  /**
+   * The default engine's PredicateRegistry, exposed for adapter-side
+   * registration of named predicate functions.
+   */
+  predicateRegistry,
 } from './engine/engine.js'
 export {
   /** Accumulator for intervention stats (checks, blocks, suggests). */
   StatsTracker,
 } from './engine/stats-tracker.js'
+
+// ── Matcher ─────────────────────────────────────────────
+export {
+  /**
+   * The single entry point for evaluating a MatchCondition against a
+   * ToolCallContext. Replaces the old registry/handler split.
+   */
+  matchesMatcher,
+  /** Maximum input length before regex matchers fail-closed. */
+  MAX_MATCH_INPUT_LENGTH,
+} from './matcher/matchers.js'

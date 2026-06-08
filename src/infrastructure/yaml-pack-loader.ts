@@ -3,12 +3,7 @@ import { parse as parseYaml } from 'yaml'
 import { join } from 'node:path'
 import { PredicateRegistry } from '../core/predicate-registry.js'
 import { validateRulePack, getRulePackErrors } from '../core/validator.js'
-import type {
-  GuardrailMatcher,
-  GuardrailAction,
-  BeforeToolAction,
-  RulePack,
-} from '../core/types.js'
+import type { MatchCondition, GuardrailAction, BeforeToolAction, RulePack } from '../core/types.js'
 
 interface RawMatcher {
   type: string
@@ -135,7 +130,7 @@ function parseMatcher(
   raw: RawMatcher,
   predicateRegistry: PredicateRegistry,
   filePath: string
-): GuardrailMatcher {
+): MatchCondition {
   if (!raw.type) {
     throw new Error(`Matcher missing "type" field in ${filePath}`)
   }

@@ -20,9 +20,9 @@ This means no dual-maintenance: built-in packs and community packs use identical
 
 The `yaml` npm package lives in `infrastructure/` only. `core/` remains zero-dependency. Adapters that don't need YAML loading can omit this dependency entirely.
 
-### Predicate Matchers Require a TypeScript Add-On
+### Predicate Match Conditions Require a TypeScript Add-On
 
-`predicate` matchers execute JavaScript functions for complex conditions. YAML can't embed functions, so predicates are registered in TypeScript code via the `PredicateRegistry` and referenced by name in YAML. A YAML pack using a predicate depends on the adapter (or bootstrap code) having registered that predicate under the matching `predicateName`.
+`predicate` match conditions execute JavaScript functions for complex logic. YAML can't embed functions, so predicates are registered in TypeScript code via the `PredicateRegistry` and referenced by name in YAML. A YAML pack using a predicate depends on the adapter (or bootstrap code) having registered that predicate under the matching `predicateName`.
 
 ## Rationale
 

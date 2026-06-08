@@ -4,7 +4,7 @@ import type { ToolCallContext } from './types'
 export type PredicateFunction = (ctx: ToolCallContext) => boolean
 
 /**
- * Registry for named predicate matchers used by `predicate`-type GuardrailMatchers.
+ * Registry for named predicate matchers used by `predicate`-type MatchConditions.
  * Adapters and rule packs register predicates here so YAML configs can reference
  * them by name.
  */

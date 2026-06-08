@@ -1,8 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { matchAndResolve, processMatch, getStats, resetStats } from './engine.js'
-import { initializeMatcherRegistry } from '../matcher/setup.js'
-import { matcherRegistry } from '../matcher/registry.js'
-import { PredicateRegistry } from '../core/predicate-registry.js'
+import { matchAndResolve, processMatch, getStats, resetStats, predicateRegistry } from './engine.js'
 import type { ToolCallContext, RulePack, HarnessCapabilities } from '../core/types.js'
 
 const fullCapabilities: HarnessCapabilities = {
@@ -15,8 +12,7 @@ const fullCapabilities: HarnessCapabilities = {
 
 describe('matchAndResolve', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
@@ -255,8 +251,7 @@ describe('matchAndResolve', () => {
 
 describe('getStats', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
@@ -301,8 +296,7 @@ describe('getStats', () => {
 
 describe('resetStats', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
@@ -341,8 +335,7 @@ describe('resetStats', () => {
 
 describe('matchAndResolve — phase handling', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
@@ -378,8 +371,7 @@ describe('matchAndResolve — phase handling', () => {
 
 describe('matchAndResolve — split commands', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
@@ -412,19 +404,14 @@ describe('matchAndResolve — split commands', () => {
 
 describe('matchAndResolve — predicate matcher', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
   it('matches via predicate matcher end-to-end', () => {
-    const predicateRegistry = new PredicateRegistry()
     predicateRegistry.register('is-dangerous-rm', (ctx) => {
       return ctx.toolName === 'bash' && !!ctx.command && ctx.command.includes('rm -rf')
     })
-
-    matcherRegistry.clear()
-    initializeMatcherRegistry(matcherRegistry, predicateRegistry)
 
     const ctx: ToolCallContext = { toolName: 'bash', command: 'rm -rf /' }
     const packs: RulePack[] = [
@@ -454,8 +441,7 @@ describe('matchAndResolve — predicate matcher', () => {
 
 describe('processMatch — domain events', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
@@ -693,8 +679,7 @@ describe('processMatch — domain events', () => {
 
 describe('matchAndResolve — stats tracking', () => {
   beforeEach(() => {
-    matcherRegistry.clear()
-    initializeMatcherRegistry()
+    predicateRegistry.clear()
     resetStats()
   })
 
