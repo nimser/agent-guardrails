@@ -51,7 +51,8 @@ reviews:
         Flag if: snapshot tests for regex patterns (use inline values); missing adversarial/edge-case coverage for matchers; jest imports (this project uses vitest).
     - path: 'src/index.ts'
       instructions: |-
-        Flag if: default exports; re-exports from layers other than core/ and engine/; new exports without corresponding documentation.
+        Flag if: default exports; new exports without corresponding documentation.
+        Do NOT flag: re-exports from infrastructure/. The barrel may re-export from any layer.
     - path: 'src/**/*.yaml'
       instructions: |-
         YAML rule pack files. Flag if: non-kebab-case pack id; non-dotted rule id; phase/action mismatch (before-tool: block/suggest/run/confirm, after-tool: redact only); missing {matched} template in messages; suggest action without replacement.
