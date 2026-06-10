@@ -33,8 +33,8 @@ export function matchAndResolve(
 }
 
 /**
- * Internal engine entry point. Returns both the resolved action and
- * the domain events that explain how the decision was reached.
+ * Evaluate a tool call — returns the resolved action plus the
+ * domain events that explain how the decision was reached.
  */
 export function processMatch(
   ctx: ToolCallContext,
