@@ -53,7 +53,7 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 
 | Behavior  | What it does                                       | Phase                   |
 | --------- | -------------------------------------------------- | ----------------------- |
-| `block`   | Stop the tool call, no alternative                 | before-tool, after-tool |
+| `block`   | Stop the tool call, no alternative                 | before-tool             |
 | `suggest` | Stop the call, offer a safer replacement           | before-tool             |
 | `run`     | Execute the replacement in the hook, return output | before-tool             |
 | `redact`  | Allow the call, sanitize output before LLM sees it | after-tool              |

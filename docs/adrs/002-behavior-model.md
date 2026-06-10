@@ -14,7 +14,7 @@ Different AI coding harnesses (Pi, OpenCode, Claude Code, Codex) support differe
 
 | Behavior  | Phase         | What it does                                             | Capability required |
 | --------- | ------------- | -------------------------------------------------------- | ------------------- |
-| `block`   | before, after | Stops tool call with a message                           | None (universal)    |
+| `block`   | before        | Stops tool call with a message                           | None (universal)    |
 | `suggest` | before        | Stops call, offers a safer replacement                   | None (universal)    |
 | `run`     | before        | Stops call, executes replacement in-hook, returns output | `run`               |
 | `redact`  | after         | Allows call, sanitizes output before LLM sees it         | `redact`            |
