@@ -1,0 +1,14 @@
+id: pack1
+name: Pack 1
+description: First
+rules:
+  - id: test.rule-1
+    title: Rule 1
+    description: Test
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: cmd1
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

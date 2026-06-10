@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Self-contained config — no inheritance. Forks get the full setup out of the box.
+
+early_access: true
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary_placeholder: '@rab summary'
+  high_level_summary_in_walkthrough: true
+  auto_title_placeholder: '@rab'
+  review_details: true
+  fail_commit_status: true
+  changed_files_summary: false
+  sequence_diagrams: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  auto_apply_labels: true
+  suggested_reviewers: false
+  auto_assign_reviewers: true
+  poem: false
+  disable_cache: true
+
+  path_filters:
+    - '!pnpm-lock.yaml'
+    - '!docs/api/**'
+    - '!node_modules/**'
+    - '!**/__fixtures__/**'
+  path_instructions:
+    - path: 'src/core/**/*.ts'
+      instructions: |-
+        Flag if: imports from matcher/, resolver/, engine/, or infrastructure/; use of `any` or `!` non-null assertion; default exports.
+        Do NOT flag: the five-value GuardrailBehavior union, the phase-behavior matrix, or fail-at-load-time validation — these are intentional design decisions documented in README.md.
+    - path: 'src/matcher/**/*.ts'
+      instructions: |-
+        Flag if: imports from resolver/, engine/, or infrastructure/; side effects or global state in matching logic; missing adversarial test cases for new regex patterns; reintroducing a registry/handler split.
+        Do NOT flag: command-splitting limitations (variable tracking is explicitly out of scope); the `MatchCondition` discriminated union being a closed set evaluated by a single `matchesMatcher()` function.
+    - path: 'src/resolver/**/*.ts'
+      instructions: |-
+        Flag if: imports from matcher/, engine/, or infrastructure/; missing GuardrailAction variant in switch/exhaustive check; new behavior added without updating both core/types.ts and resolveAction().
+        Do NOT flag: the confirm→suggest→block fallback chain — it is correct as implemented. Do NOT suggest changing the `yaml` package to `js-yaml` — this project uses the `yaml` package (v2.4.0).
+    - path: 'src/engine/**/*.ts'
+      instructions: |-
+        Flag if: imports from infrastructure/; orchestration growing beyond ~80 lines (business logic belongs in resolver/ or matcher/); non-fail-closed handling of malformed ToolCallContext.
+    - path: 'src/infrastructure/**/*.ts'
+      instructions: |-
+        Flag if: imports from matcher/, resolver/, or engine/; missing schema validation on loaded packs; importing any package not already in package.json.
+        Do NOT flag: the `yaml` npm package as a "wrong package name" — this project uses `yaml` (not `js-yaml`).
+    - path: 'src/**/*.test.ts'
+      instructions: |-
+        Flag if: snapshot tests for regex patterns (use inline values); missing adversarial/edge-case coverage for matchers; jest imports (this project uses vitest).
+    - path: 'src/index.ts'
+      instructions: |-
+        Flag if: default exports; new exports without corresponding documentation.
+        Do NOT flag: re-exports from infrastructure/. The barrel may re-export from any layer.
+    - path: 'src/**/*.yaml'
+      instructions: |-
+        YAML rule pack files. Flag if: non-kebab-case pack id; non-dotted rule id; phase/action mismatch (before-tool: block/suggest/run/confirm, after-tool: redact only); missing {matched} template in messages; suggest action without replacement.
+    - path: 'docs/**/*.md'
+      instructions: |-
+        Flag if: broken relative links; code examples that don't match actual API signatures; incorrect vocabulary usage (see README.md vocabulary table — Behavior≠Action, RulePack≠package, Harness≠Agent).
+
+  slop_detection:
+    label: slop
+
+  auto_review:
+    auto_pause_after_reviewed_commits: 0
+    ignore_title_keywords:
+      - '#no-rabbit'
+      - '#no-review'
+      - '#no-auto-review'
+      - '#no-ai-review'
+    drafts: true
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: true
+
+  pre_merge_checks:
+    docstrings:
+      mode: off
+    title:
+      mode: off
+
+  tools:
+    # --- Enabled (relevant to this project) ---
+    eslint: { enabled: true }
+    oxc: { enabled: true }
+    actionlint: { enabled: true }
+    zizmor: { enabled: true }
+    yamllint: { enabled: true }
+    gitleaks: { enabled: true }
+    trufflehog: { enabled: true }
+    languagetool: { enabled: true }
+
+    # --- Disabled (not relevant — TS-only project, defaults are all true) ---
+    shellcheck: { enabled: false }
+    ruff: { enabled: false }
+    flake8: { enabled: false }
+    pylint: { enabled: false }
+    swiftlint: { enabled: false }
+    phpstan: { enabled: false }
+    phpmd: { enabled: false }
+    phpcs: { enabled: false }
+    golangci-lint: { enabled: false }
+    detekt: { enabled: false }
+    rubocop: { enabled: false }
+    clippy: { enabled: false }
+    pmd: { enabled: false }
+    clang: { enabled: false }
+    cppcheck: { enabled: false }
+    fbinfer: { enabled: false }
+    fortitudeLint: { enabled: false }
+    buf: { enabled: false }
+    regal: { enabled: false }
+    luacheck: { enabled: false }
+    shopifyThemeCheck: { enabled: false }
+    brakeman: { enabled: false }
+    htmlhint: { enabled: false }
+    checkmake: { enabled: false }
+    blinter: { enabled: false }
+    smartyLint: { enabled: false }
+    emberTemplateLint: { enabled: false }
+    psscriptanalyzer: { enabled: false }
+    checkov: { enabled: false }
+    tflint: { enabled: false }
+    circleci: { enabled: false }
+    hadolint: { enabled: false }
+    dotenvLint: { enabled: false }
+    biome: { enabled: false }
+    sqlfluff: { enabled: false }
+    stylelint: { enabled: false }
+    semgrep: { enabled: false }
+    opengrep: { enabled: false }
+    trivy: { enabled: false }
+    prismaLint: { enabled: false }
+    osvScanner: { enabled: false }
+    markdownlint: { enabled: false }
+
+knowledge_base:
+  opt_out: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - '**/README.md'

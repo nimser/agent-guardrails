@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.bash-pattern-not-string
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: 123
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

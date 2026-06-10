@@ -1,0 +1,13 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.block-no-message
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: foo
+    defaultAction:
+      type: block

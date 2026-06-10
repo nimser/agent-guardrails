@@ -1,0 +1,14 @@
+id: ssh-rules
+name: SSH Rules
+description: SSH key rules
+rules:
+  - id: ssh.protect-key
+    title: Protect SSH private key
+    description: Block access to SSH private keys
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: has-private-key
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

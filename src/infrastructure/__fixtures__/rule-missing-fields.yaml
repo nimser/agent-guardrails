@@ -1,0 +1,6 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.missing-fields
+    title: R1

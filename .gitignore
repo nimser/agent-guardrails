@@ -1,9 +1,18 @@
+# Container config
+.devcontainer
+
 # Harnesses directories
 .agents
 .opencode
 .pi
 .claude
 
-# TSDoc
+# Built artifacts
+node_modules
 docs/api
+*.tsbuildinfo
+dist
+coverage
 
+# Misc
+.env

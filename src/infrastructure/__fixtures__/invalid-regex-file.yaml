@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.invalid-regex-file
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: file-path
+      pattern: '(unclosed'
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

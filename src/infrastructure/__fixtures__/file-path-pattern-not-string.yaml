@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.file-path-not-string
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: file-path
+      pattern: 42
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

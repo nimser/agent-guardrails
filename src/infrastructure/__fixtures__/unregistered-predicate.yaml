@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.unregistered-predicate
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: unknown-predicate
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.unknown-matcher
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: custom-matcher
+      pattern: foo
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

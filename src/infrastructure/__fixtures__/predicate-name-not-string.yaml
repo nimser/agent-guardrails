@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.predicate-not-string
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: 42
+    defaultAction:
+      type: block
+      message: 'Blocked: {matched}'

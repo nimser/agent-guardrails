@@ -1,0 +1,14 @@
+id: test
+name: Test
+description: Test
+rules:
+  - id: test.unknown-action
+    title: R1
+    description: D1
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: foo
+    defaultAction:
+      type: explode
+      message: Boom
