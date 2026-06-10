@@ -64,18 +64,12 @@ export {
 export type { Stats } from './engine/stats-tracker.js'
 export {
   /**
-   * The engine class. Create your own instance for isolated state,
-   * or use the module-level functions which delegate to a default singleton.
-   */
-  GuardrailEngine,
-  /**
-   * Initialize the default engine singleton. No-op currently (engine
-   * self-initializes) but kept for API stability and future bootstrap hooks.
-   */
-  initGuardrails,
-  /**
    * The main entry point: evaluate a ToolCallContext against RulePacks and
    * return the resolved GuardrailAction (or null if no rule matched).
+   *
+   * `registry` and `stats` are explicit collaborators — the engine does not
+   * own their lifecycle. Construct fresh ones (or share between calls)
+   * however fits the caller's use case.
    */
   matchAndResolve,
   /**
@@ -83,15 +77,6 @@ export {
    * the domain events that explain how the decision was reached.
    */
   processMatch,
-  /** Get a snapshot of current intervention stats from the default engine. */
-  getStats,
-  /** Reset intervention stats to zero on the default engine. */
-  resetStats,
-  /**
-   * The default engine's PredicateRegistry, exposed for adapter-side
-   * registration of named predicate functions.
-   */
-  predicateRegistry,
 } from './engine/engine.js'
 export {
   /** Accumulator for intervention stats (checks, blocks, suggests). */

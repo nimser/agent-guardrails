@@ -24,7 +24,7 @@ Engine owners need to know: how many tool calls were checked? How many were bloc
 
 - Total checks, blocks, and suggests
 
-Public API: `getStats()` for snapshots, `resetStats()` to zero counters. Adapters call `getStats()` at session end and log to their harness-native output.
+Public API: `stats.getStats()` for snapshots, `stats.resetStats()` to zero counters. Adapters own a `StatsTracker` instance (constructed at startup), pass it to every `matchAndResolve` / `processMatch` call, and call `stats.getStats()` at session end to log to their harness-native output.
 
 ### Domain Events
 

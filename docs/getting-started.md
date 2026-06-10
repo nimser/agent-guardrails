@@ -37,14 +37,16 @@ Adapters are thin shims between a harness (Pi, OpenCode, Codex, Claude Code) and
 Adapters use the engine's public API to match and resolve actions:
 
 ```typescript
-import { initGuardrails, matchAndResolve, loadAllRulePacks } from "agent-guardrails";
+import { matchAndResolve, loadAllRulePacks, PredicateRegistry, StatsTracker } from "agent-guardrails";
 
-// One-time setup — returns a GuardrailEngine; the engine owns the predicate registry
-const engine = initGuardrails();
-const packs = loadAllRulePacks("./packs", engine.predicateRegistry);
+// Construct collaborators — the caller owns their lifecycle
+const registry = new PredicateRegistry();
+const stats = new StatsTracker();
 
 // Register adapter-specific predicates (if any)
-engine.predicateRegistry.register("my-check", (ctx) => /* ... */);
+registry.register("my-check", (ctx) => /* ... */);
+
+const packs = loadAllRulePacks("./packs", registry);
 
 const capabilities = {
   block: true,
@@ -55,7 +57,13 @@ const capabilities = {
 };
 
 // On each tool call:
-const action = matchAndResolve({ toolName: "bash", command: "cat .env" }, packs, capabilities);
+const action = matchAndResolve(
+  { toolName: "bash", command: "cat .env" },
+  packs,
+  capabilities,
+  registry,
+  stats,
+);
 
 if (action?.type === "block") {
   console.log(action.message);

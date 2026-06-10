@@ -98,7 +98,7 @@ src/
   core/           Types, validation. ZERO runtime dependencies.
   matcher/        Rule matching (match conditions + command splitter). Imports core/ only.
   resolver/       Action resolution, fallback chains. Imports core/ only.
-  engine/         Orchestration (~60 lines). Imports core/, matcher/, resolver/.
+  engine/         Pure-function orchestrator. Imports core/, matcher/, resolver/. The `PredicateRegistry` and `StatsTracker` are passed as arguments.
   infrastructure/ → I/O boundary (YAML loading). The ONLY layer with external deps.
 ```
 
