@@ -42,8 +42,9 @@ export function matchesMatcher(
     case 'file-path': {
       if (!ctx.filePath) return false
       if (ctx.filePath.length > MAX_MATCH_INPUT_LENGTH) return true
-      matcher.pattern.lastIndex = 0
-      return matcher.pattern.test(ctx.filePath)
+      // Local copy defends against shared-state regex (global / sticky flags).
+      const re = new RegExp(matcher.pattern.source, matcher.pattern.flags)
+      return re.test(ctx.filePath)
     }
     case 'predicate': {
       const fn = predicateRegistry.resolve(matcher.predicateName)
