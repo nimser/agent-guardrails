@@ -12,11 +12,16 @@ Engine owners need to know: how many tool calls were checked? How many were bloc
 
 ### Tiered Approach
 
-| Tier   | Description                                      | Status              |
-| ------ | ------------------------------------------------ | ------------------- |
-| Tier 1 | In-memory stats, session-end logging             | ✅ Shipped in 0.1.0 |
-| Tier 2 | Persistent daily JSON stats + `npx ag stats` CLI | Deferred            |
-| Tier 3 | Real-time event stream for audit/telemetry       | Deferred            |
+| Tier   | Description                                                     | Status              |
+| ------ | ---------------------------------------------------------------- | ------------------- |
+| Tier 1 | In-memory stats, session-end logging                             | ✅ Shipped in 0.1.0 |
+| Tier 2 | Persisted `DomainEvent` log + `npx ag stats` CLI query/replay     | Deferred            |
+| Tier 3 | Streaming consumers of the same persisted log (real-time)        | Deferred            |
+
+Tier 2 persists the same `DomainEvent` trace the engine already produces via
+`processMatch()` (below), rather than maintaining a separate counter structure — one
+source of truth, not two. Tier 3 is an extension of that same persisted log
+(streaming consumers), not an independent mechanism.
 
 ### Tier 1: In-Memory Stats (MVP)
 
@@ -37,6 +42,29 @@ The engine produces a decision trace alongside every action via `processMatch()`
 
 `matchAndResolve()` remains the primary public API and returns only the `GuardrailAction`. Adapters that need the trace (audit, telemetry, debugging) call `processMatch()` instead.
 
+### Tier 2: Persisted `DomainEvent` Log (design, deferred)
+
+Append the `DomainEvent[]` trace `processMatch()` already produces to a local event
+log, one entry per call. `npx ag stats` becomes a query/aggregation over this log
+instead of a separately-maintained counter file — one source of truth, not two.
+
+- **Redaction at write time.** Sensitive values in `matched` fields MUST be redacted
+  before persisting, mirroring the engine's own redact-before-store posture for tool
+  input. The event log is a durable artifact on disk; it must not become a second
+  place secrets leak to.
+- **Retention: age-capped, default 30 days.** Oldest entries are dropped on write past
+  the cutoff. This matches what a "why was this blocked last week" replay use case
+  needs without adding a size-based rotation mechanism. Configurable, but MVP scope
+  does not need an unbounded or size-capped mode.
+- **Near-zero new instrumentation.** The trace already exists (Domain Events, above);
+  only the write path is new.
+
+### Tier 3: Streaming Consumers (design, deferred)
+
+An extension of Tier 2's log, not a separate mechanism — a streaming consumer
+subscribes to the same `DomainEvent` writes Tier 2 persists, for real-time
+audit/telemetry use cases. Deferred until a concrete consumer is requested.
+
 ## Rationale
 
 - **Zero overhead:** In-memory counters are ~20 lines, no I/O
@@ -47,4 +75,9 @@ The engine produces a decision trace alongside every action via `processMatch()`
 
 - Stats are lost on process restart — Tier 2 needed for historical analysis
 - Domain events are not exposed yet — the public API returns only actions
-- Tier 2 requires file I/O infrastructure; Tier 3 requires an event system
+- Tier 2 requires file I/O infrastructure (append-only writer, age-capped retention,
+  redaction-at-write reusing the same redaction logic as `redact` — see
+  `change-10-redact-output`); a persisted, replayable event store is low-cost
+  follow-on work since the trace already exists
+- Tier 3 is a streaming extension of Tier 2's log, not an independent design — no
+  separate event system needs to be built

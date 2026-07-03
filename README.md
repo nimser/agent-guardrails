@@ -1,8 +1,8 @@
 # Agent Guardrails
 
-> **⚠️ Heavy development:** Agent Guardrails is under active development and not yet published to npm. Expect things to break so far. The quick start below shows the expected workflow once the package is available.
+> **⚠️ Heavy development:** Not yet published to npm. Expect breakage. The quick start below shows the expected workflow once the package is available.
 >
-> **Security disclaimer:** Agent Guardrails is a pattern-based policy engine, not a security audit tool. It provides defense-in-depth for AI coding agent workflows but should not be treated as a complete security boundary. Deterministic regex matching cannot catch every adversarial payload. Combine with network controls, credential scanning, and human review for sensitive environments. See [SECURITY.md](SECURITY.md) for details.
+> **What this is:** A pattern-based steering engine for AI coding agent workflows, not a security audit tool or sandbox. See [SECURITY.md](SECURITY.md) for details.
 
 ---
 
@@ -21,9 +21,22 @@
 
 <!-- /SonarCloud -->
 
-**Policy engine for AI coding agents.** Intercept tool calls before they execute, match them against rule packs, and enforce guardrails — block, suggest safer alternatives, or redact output.
+**Keep your agent shipping — not spilling secrets no one's watching for.**
 
-Your agent shouldn't read `.env` files, decrypt secrets, or exfiltrate private keys. Agent Guardrails stops it before it happens.
+Agent Guardrails steers agents away from costly mistakes instead of just stopping them cold.
+
+### Is this just a set of guards to block bad behaviour?
+
+Blocking is in the toolkit, but it isn't the focus: `suggest` offers a safer command, `run` executes it for the agent, `redact` scrubs a secret before it's ever seen — the agent adapts and keeps working. A hard `block` is still there for when nothing else fits.
+
+### Scenarios
+
+| Agent tries to... | Without | With |
+| --- | --- | --- |
+| `cat .env` "just to see the setup" | Secret leaks into context | `redact` scrubs it first |
+| `git push --force` | Rewrites shared history | `suggest` offers `--force-with-lease` |
+| `sops -d secrets.yaml` | Full decrypted secret reaches the LLM | `redact`/`run` returns a sanitized result |
+| Reads an untracked `credentials.json` | Silent leak, no rule covers it | Content sniffing catches the secret shape anyway |
 
 ## How It Works
 
@@ -57,7 +70,7 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 | `suggest` | Stop the call, offer a safer replacement           | before-tool             |
 | `run`     | Execute the replacement in the hook, return output | before-tool             |
 | `redact`  | Allow the call, sanitize output before LLM sees it | after-tool              |
-| `confirm` | Ask the user (native UI or fallback to suggest)    | before-tool             |
+| `confirm` | Ask the user (native UI, falls back to `block`)    | before-tool             |
 
 ### Built-in Rule Packs
 
@@ -76,6 +89,37 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 - 🚧 **Codex** — coming later
 - 🚧 **Claude Code** — coming later
 - 🔌 **Community adapters welcome** — from v0.2.0 onwards, any harness can integrate by implementing a thin adapter shim
+
+### Per-Adapter Capability Table (design target)
+
+Source-verified per [ADR-002](docs/adrs/002-behavior-model.md) /
+[ADR-007](docs/adrs/007-trust-and-self-protection.md). Unsupported behaviors degrade
+via the [fallback chain](#fallback-chains).
+
+| Harness | `run` | `redact` | `confirm` | `tamperResistant` | `haltTurnBeforeTool` | `haltTurnAfterTool` |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| Pi | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| OpenCode | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Claude Code | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Codex | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+
+### Harness Authors: Embed the Engine
+
+The engine (`matchAndResolve` / `processMatch`) is a pure function with a stable
+public API ([ADR-003](docs/adrs/003-public-api-contract.md)). Import it directly as
+your harness's permission-system implementation instead of writing rule matching from
+scratch:
+
+```typescript
+import { matchAndResolve, PredicateRegistry, StatsTracker } from "agent-guardrails";
+
+const registry = new PredicateRegistry();
+const stats = new StatsTracker();
+const action = matchAndResolve(ctx, packs, myHarnessCapabilities, registry, stats);
+```
+
+You own the adapter glue; the engine owns matching, resolution, and fallback. See
+ADR-003's Adapter Bootstrap Pattern for the full pattern.
 
 ## Quick Start
 
@@ -115,7 +159,7 @@ src/
 When a harness lacks a capability, the engine walks a deterministic chain:
 
 - `run → suggest → block`
-- `confirm → suggest → block` (or via `action.fallback` if defined)
+- `confirm → block` (or via `action.fallback` if defined — see [ADR-002](docs/adrs/002-behavior-model.md))
 - `redact → block`
 - `suggest → block` (when no replacement available)
 
@@ -146,6 +190,10 @@ L1+L3 match = force-block regardless of L2 (adversarial pattern detected).
 | Fallback Chain  | Deterministic degradation when a harness lacks a capability                    |
 | Matcher         | User-facing name for a match condition: bash-command (regex), file-path (regex), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union. |
 | Match Condition | A rule's `match` field — a declarative spec that the engine evaluates via `matchesMatcher()`. Type alias: `MatchCondition`. |
+| Default Decision | The default action of the implicit catch-all rule that fires when nothing else matches (`allow \| suggest \| confirm \| block`, default `allow`). See [ADR-007](docs/adrs/007-trust-and-self-protection.md). |
+| Overridable | Rule-level flag; `false` locks a built-in rule against user config overrides. Not available to community packs. See [ADR-007](docs/adrs/007-trust-and-self-protection.md). |
+| Tamper-Resistant | Adapter capability declaring whether it runs as an external hook process (harder to tamper with) vs. an in-process plugin. See [ADR-007](docs/adrs/007-trust-and-self-protection.md). |
+| Turn Halt | `haltTurn` modifier on `block`/`redact` actions that stops the agent's current turn, not the session. See [ADR-002](docs/adrs/002-behavior-model.md). |
 
 Do not confuse: Behavior (category) vs Action (concrete object); RulePack (domain concept) vs package (npm artifact); Harness (platform) vs Agent (AI model).
 
