@@ -99,15 +99,46 @@ Changes to the match conditions, resolver, or type system. Read the architecture
 
 ## Architecture
 
-Single package with strict layered directories. Dependency direction flows downward only:
+Single package built around a dependency-free core. This is a hub-and-spoke layout, not
+a linear stack: `core/` has zero outgoing imports, and `matcher/`, `resolver/`, and
+`infrastructure/` each import *only* `core/` — they don't depend on each other. `engine/`
+is the sole module that reaches beyond `core/`, importing `matcher/` and `resolver/` too.
+Nothing ever imports `engine/` or `infrastructure/` — those are the outermost layers,
+consumed by adapters, never by other internal modules.
 
 ```
-src/
-  core/           Types, validation. ZERO runtime dependencies.
-  matcher/        Rule matching (match conditions + command splitter). Imports core/ only.
-  resolver/       Action resolution, fallback chains. Imports core/ only.
-  engine/         Pure-function orchestrator. Imports core/, matcher/, resolver/. The `PredicateRegistry` and `StatsTracker` are passed as arguments.
-  infrastructure/ → I/O boundary (YAML loading). The ONLY layer with external deps.
+                      ┌─────────────┐
+                      │   matcher/  │
+                      └─────────────┘
+                             │
+                             ▼
+┌─────────────────┐   ┌─────────────┐   ┌─────────────────┐
+│ infrastructure/ │──▶│    core/    │◀──│    resolver/    │
+│                 │   │  zero deps  │   │                 │
+└─────────────────┘   └─────────────┘   └─────────────────┘
+     (→ core)                                (→ core)
+                             ▲
+                             │ (→ core)
+                    ┌─────────────────┐
+                    │     engine/     │
+                    │   also imports  │
+                    │    matcher/ +   │
+                    │    resolver/    │
+                    └─────────────────┘
+```
+
+This mirrors the classic **Ports & Adapters (Hexagonal Architecture)** convention — pure
+domain logic in the middle, everything else plugged in around it, nothing reaching back
+into the center's dependents. Rendered as a graph:
+
+```mermaid
+flowchart TD
+    matcher{{matcher/}} --> core{{"core/\nzero deps"}}
+    resolver{{resolver/}} --> core
+    infra{{infrastructure/}} --> core
+    engine{{engine/}} --> core
+    engine --> matcher
+    engine --> resolver
 ```
 
 **Import rules** (hard constraints):

@@ -60,6 +60,7 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 - **Harness capability model** — each adapter declares what behaviors its harness supports
 - **YAML rule packs** — author guardrails without writing TypeScript
 - **Zero runtime dependencies** — the engine itself is pure logic
+- **Hub-and-spoke architecture** — a dependency-free `core/` sits at the center; every other module imports into it and never back out, keeping the domain logic trivially testable ([details](docs/getting-started.md#architecture))
 
 ### Behaviors
 
@@ -100,24 +101,6 @@ npx agent-guardrails install pi
 That's it. Try `cat .env` in your agent — it should be blocked.
 
 To build from source today, see [Getting Started](docs/getting-started.md).
-
-## Architecture
-
-Single package, strict layered directories, dependencies flow downward only:
-
-```
-core/  →  matcher/ + resolver/  →  engine/  →  infrastructure/
-```
-
-`core/` has zero runtime dependencies and sits at the bottom of the stack;
-`infrastructure/` is the only layer allowed to touch I/O (YAML rule pack loading). The
-`engine/` is a pure-function orchestrator — adapters supply a `ToolCallContext` and
-their harness's capabilities, and get back a resolved `GuardrailAction`. When a harness
-lacks a capability (e.g. no `run`), the engine degrades it through a deterministic
-fallback chain (`run → suggest → block`) instead of failing.
-
-See [Architecture in Getting Started](docs/getting-started.md#architecture) for the
-full layer breakdown, import rules, fallback chains, and matching layers.
 
 ## What this is NOT
 
