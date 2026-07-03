@@ -1,8 +1,6 @@
 # Agent Guardrails
 
 > **⚠️ Heavy development:** Not yet published to npm. Expect breakage. The quick start below shows the expected workflow once the package is available.
->
-> **What this is:** A pattern-based steering engine for AI coding agent workflows, not a security audit tool or sandbox. See [SECURITY.md](SECURITY.md) for details.
 
 ---
 
@@ -21,9 +19,10 @@
 
 <!-- /SonarCloud -->
 
-**Keep your agent shipping — not spilling secrets no one's watching for.**
+### What is this?
 
-Agent Guardrails steers agents away from costly mistakes instead of just stopping them cold.
+A pattern-based steering engine for AI coding agent workflows.
+**Keep your agent shipping — not spilling secrets no one's watching for.** Agent Guardrails steers agents away from costly mistakes instead of just stopping them cold.
 
 ### Is this just a set of guards to block bad behaviour?
 
@@ -31,12 +30,12 @@ Blocking is in the toolkit, but it isn't the focus: `suggest` offers a safer com
 
 ### Scenarios
 
-| Agent tries to... | Without | With |
-| --- | --- | --- |
-| `cat .env` "just to see the setup" | Secret leaks into context | `redact` scrubs it first |
-| `git push --force` | Rewrites shared history | `suggest` offers `--force-with-lease` |
-| `sops -d secrets.yaml` | Full decrypted secret reaches the LLM | `redact`/`run` returns a sanitized result |
-| Reads an untracked `credentials.json` | Silent leak, no rule covers it | Content sniffing catches the secret shape anyway |
+| Agent tries to...                     | Without                               | With                                             |
+| ------------------------------------- | ------------------------------------- | ------------------------------------------------ |
+| `cat .env` "just to see the setup"    | Secret leaks into context             | `redact` scrubs it first                         |
+| `git push --force`                    | Rewrites shared history               | `suggest` offers `--force-with-lease`            |
+| `sops -d secrets.yaml`                | Full decrypted secret reaches the LLM | `redact`/`run` returns a sanitized result        |
+| Reads an untracked `credentials.json` | Silent leak, no rule covers it        | Content sniffing catches the secret shape anyway |
 
 ## How It Works
 
@@ -64,13 +63,13 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 
 ### Behaviors
 
-| Behavior  | What it does                                       | Phase                   |
-| --------- | -------------------------------------------------- | ----------------------- |
-| `block`   | Stop the tool call, no alternative                 | before-tool             |
-| `suggest` | Stop the call, offer a safer replacement           | before-tool             |
-| `run`     | Execute the replacement in the hook, return output | before-tool             |
-| `redact`  | Allow the call, sanitize output before LLM sees it | after-tool              |
-| `confirm` | Ask the user (native UI, falls back to `block`)    | before-tool             |
+| Behavior  | What it does                                       | Phase       |
+| --------- | -------------------------------------------------- | ----------- |
+| `block`   | Stop the tool call, no alternative                 | before-tool |
+| `suggest` | Stop the call, offer a safer replacement           | before-tool |
+| `run`     | Execute the replacement in the hook, return output | before-tool |
+| `redact`  | Allow the call, sanitize output before LLM sees it | after-tool  |
+| `confirm` | Ask the user (native UI, falls back to `block`)    | before-tool |
 
 ### Built-in Rule Packs
 
@@ -90,37 +89,6 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 - 🚧 **Claude Code** — coming later
 - 🔌 **Community adapters welcome** — from v0.2.0 onwards, any harness can integrate by implementing a thin adapter shim
 
-### Per-Adapter Capability Table (design target)
-
-Source-verified per [ADR-002](docs/adrs/002-behavior-model.md) /
-[ADR-007](docs/adrs/007-trust-and-self-protection.md). Unsupported behaviors degrade
-via the [fallback chain](#fallback-chains).
-
-| Harness | `run` | `redact` | `confirm` | `tamperResistant` | `haltTurnBeforeTool` | `haltTurnAfterTool` |
-| --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Pi | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
-| OpenCode | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Claude Code | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Codex | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
-
-### Harness Authors: Embed the Engine
-
-The engine (`matchAndResolve` / `processMatch`) is a pure function with a stable
-public API ([ADR-003](docs/adrs/003-public-api-contract.md)). Import it directly as
-your harness's permission-system implementation instead of writing rule matching from
-scratch:
-
-```typescript
-import { matchAndResolve, PredicateRegistry, StatsTracker } from "agent-guardrails";
-
-const registry = new PredicateRegistry();
-const stats = new StatsTracker();
-const action = matchAndResolve(ctx, packs, myHarnessCapabilities, registry, stats);
-```
-
-You own the adapter glue; the engine owns matching, resolution, and fallback. See
-ADR-003's Adapter Bootstrap Pattern for the full pattern.
-
 ## Quick Start
 
 > Not yet published. The workflow below shows the expected v0.1.0 experience.
@@ -135,71 +103,29 @@ To build from source today, see [Getting Started](docs/getting-started.md).
 
 ## Architecture
 
-Single package with strict layered directories. Dependency direction flows downward only:
+Single package, strict layered directories, dependencies flow downward only:
 
 ```
-src/
-  core/           Types, validation. ZERO runtime dependencies.
-  matcher/        Rule matching (match conditions + command splitter). Imports core/ only.
-  resolver/       Action resolution, fallback chains. Imports core/ only.
-  engine/         Pure-function orchestrator. Imports core/, matcher/, resolver/. The `PredicateRegistry` and `StatsTracker` are passed as arguments.
-  infrastructure/ → I/O boundary (YAML loading). The ONLY layer with external deps.
+core/  →  matcher/ + resolver/  →  engine/  →  infrastructure/
 ```
 
-**Import rules** (hard constraints):
+`core/` has zero runtime dependencies and sits at the bottom of the stack;
+`infrastructure/` is the only layer allowed to touch I/O (YAML rule pack loading). The
+`engine/` is a pure-function orchestrator — adapters supply a `ToolCallContext` and
+their harness's capabilities, and get back a resolved `GuardrailAction`. When a harness
+lacks a capability (e.g. no `run`), the engine degrades it through a deterministic
+fallback chain (`run → suggest → block`) instead of failing.
 
-- `core/` imports nothing
-- `matcher/` and `resolver/` import `core/` only
-- `engine/` imports `core/`, `matcher/`, `resolver/` (never `infrastructure/`)
-- `infrastructure/` imports `core/` only
-- The `yaml` npm package (v2.4.0) is used ONLY in `infrastructure/yaml-pack-loader.ts`
+See [Architecture in Getting Started](docs/getting-started.md#architecture) for the
+full layer breakdown, import rules, fallback chains, and matching layers.
 
-### Fallback Chains
+## What this is NOT
 
-When a harness lacks a capability, the engine walks a deterministic chain:
-
-- `run → suggest → block`
-- `confirm → block` (or via `action.fallback` if defined — see [ADR-002](docs/adrs/002-behavior-model.md))
-- `redact → block`
-- `suggest → block` (when no replacement available)
-
-Implemented in `src/resolver/action-resolver.ts`. Adapters declare `HarnessCapabilities`; the engine handles the rest.
-
-### Matching Layers
-
-Three-layer defense-in-depth:
-
-- **L1** Substring pre-filter — fast scan, catches wrappers
-- **L2** Structural regex — precise, configured behavior
-- **L3** Wrapper detection (`eval`, `bash -c`, `$()`) — triggers force-block
-
-L1+L3 match = force-block regardless of L2 (adversarial pattern detected).
-
-## Vocabulary
-
-| Term            | Meaning                                                                        |
-| --------------- | ------------------------------------------------------------------------------ |
-| Rule            | Detection pattern + phase + default action                                     |
-| Rule Pack       | Named collection of rules (YAML or TypeScript)                                 |
-| Behavior        | Category: block/suggest/run/redact/confirm                                     |
-| Action          | Concrete response object (e.g., a suggest action with replacement + message)   |
-| Phase           | When a rule fires: before-tool or after-tool                                   |
-| ToolCallContext | Normalized input from a harness (discriminated union on `toolName`)            |
-| Adapter         | Integration shim for a specific harness (Pi, OpenCode, etc.)                   |
-| Harness         | The platform (Pi, OpenCode). NOT the agent (the AI model).                     |
-| Fallback Chain  | Deterministic degradation when a harness lacks a capability                    |
-| Matcher         | User-facing name for a match condition: bash-command (regex), file-path (regex), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union. |
-| Match Condition | A rule's `match` field — a declarative spec that the engine evaluates via `matchesMatcher()`. Type alias: `MatchCondition`. |
-| Default Decision | The default action of the implicit catch-all rule that fires when nothing else matches (`allow \| suggest \| confirm \| block`, default `allow`). See [ADR-007](docs/adrs/007-trust-and-self-protection.md). |
-| Overridable | Rule-level flag; `false` locks a built-in rule against user config overrides. Not available to community packs. See [ADR-007](docs/adrs/007-trust-and-self-protection.md). |
-| Tamper-Resistant | Adapter capability declaring whether it runs as an external hook process (harder to tamper with) vs. an in-process plugin. See [ADR-007](docs/adrs/007-trust-and-self-protection.md). |
-| Turn Halt | `haltTurn` modifier on `block`/`redact` actions that stops the agent's current turn, not the session. See [ADR-002](docs/adrs/002-behavior-model.md). |
-
-Do not confuse: Behavior (category) vs Action (concrete object); RulePack (domain concept) vs package (npm artifact); Harness (platform) vs Agent (AI model).
+Not a security audit tool or sandbox. See [SECURITY.md](SECURITY.md) for details.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — contributor gateway, architecture overview, key vocabulary
+- [Getting Started](docs/getting-started.md) — contributor gateway, full architecture deep dive, adapter capability table, vocabulary
 - [Architecture Decisions (ADRs)](docs/adrs/) — the _why_ behind core design choices
 - [How Matching Works](docs/how-matching-works.md) — layer-by-layer walkthrough with real examples
 - [Rule Pack Guide](docs/rule-pack-guide.md) — complete YAML format spec, action types, defense-in-depth tips

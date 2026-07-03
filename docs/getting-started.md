@@ -32,6 +32,12 @@ No TypeScript required. Write a YAML file describing what to watch for, submit a
 
 Adapters are thin shims between a harness (Pi, OpenCode, Codex, Claude Code) and the engine. If your favorite harness isn't supported yet, this is a high-impact contribution.
 
+The engine (`matchAndResolve` / `processMatch`) is a pure function with a stable public
+API ([ADR-003](adrs/003-public-api-contract.md)). Import it directly as your harness's
+permission-system implementation instead of writing rule matching from scratch. You own
+the adapter glue; the engine owns matching, resolution, and fallback. See ADR-003's
+Adapter Bootstrap Pattern for the full pattern.
+
 #### Programmatic API
 
 Adapters use the engine's public API to match and resolve actions:
@@ -73,13 +79,69 @@ if (action?.type === "block") {
 
 Run `npm run docs` to generate the full API reference locally (outputs to `docs/api/`).
 
+#### Adapter Capabilities (design target)
+
+Not every harness supports every behavior. Source-verified per
+[ADR-002](adrs/002-behavior-model.md) / [ADR-007](adrs/007-trust-and-self-protection.md).
+Unsupported behaviors degrade via the [fallback chain](#fallback-chains). Pi and OpenCode
+adapters are WIP; Codex and Claude Code are planned — see the main [README](../README.md#adapters).
+
+| Harness     | `run` | `redact` | `confirm` | `tamperResistant` | `haltTurnBeforeTool` | `haltTurnAfterTool` |
+| ----------- | :---: | :------: | :-------: | :----------------: | :-------------------: | :--------------------: |
+| Pi          |  ✅   |    ✅    |    ✅     |         ❌          |           ✅           |           ✅            |
+| OpenCode    |  ✅   |    ✅    |    ✅     |         ❌          |           ✅           |           ✅            |
+| Claude Code |  ❌   |    ❌    |    ✅     |         ✅          |           ✅           |           ✅            |
+| Codex       |  ❌   |    ❌    |    ✅     |         ✅          |           ❌           |           ✅            |
+
 ### 🔴 Deeper: Engine Improvements
 
 Changes to the match conditions, resolver, or type system. Read the architecture docs first (below), then open an issue to discuss your approach.
 
-## Architecture at a Glance
+## Architecture
 
-Agent Guardrails is built on five core architectural decisions. Read these in order:
+Single package with strict layered directories. Dependency direction flows downward only:
+
+```
+src/
+  core/           Types, validation. ZERO runtime dependencies.
+  matcher/        Rule matching (match conditions + command splitter). Imports core/ only.
+  resolver/       Action resolution, fallback chains. Imports core/ only.
+  engine/         Pure-function orchestrator. Imports core/, matcher/, resolver/. The `PredicateRegistry` and `StatsTracker` are passed as arguments.
+  infrastructure/ → I/O boundary (YAML loading). The ONLY layer with external deps.
+```
+
+**Import rules** (hard constraints):
+
+- `core/` imports nothing
+- `matcher/` and `resolver/` import `core/` only
+- `engine/` imports `core/`, `matcher/`, `resolver/` (never `infrastructure/`)
+- `infrastructure/` imports `core/` only
+- The `yaml` npm package (v2.4.0) is used ONLY in `infrastructure/yaml-pack-loader.ts`
+
+### Fallback Chains
+
+When a harness lacks a capability, the engine walks a deterministic chain:
+
+- `run → suggest → block`
+- `confirm → block` (or via `action.fallback` if defined — see [ADR-002](adrs/002-behavior-model.md))
+- `redact → block`
+- `suggest → block` (when no replacement available)
+
+Implemented in `src/resolver/action-resolver.ts`. Adapters declare `HarnessCapabilities`; the engine handles the rest.
+
+### Matching Layers
+
+Three-layer defense-in-depth:
+
+- **L1** Substring pre-filter — fast scan, catches wrappers
+- **L2** Structural regex — precise, configured behavior
+- **L3** Wrapper detection (`eval`, `bash -c`, `$()`) — triggers force-block
+
+L1+L3 match = force-block regardless of L2 (adversarial pattern detected).
+
+### Architectural Decisions
+
+Agent Guardrails is built on six core architectural decisions. Read these in order:
 
 | #   | ADR                                                      | What it covers                                                                                |
 | --- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -101,16 +163,23 @@ Agent Guardrails is built on five core architectural decisions. Read these in or
 
 Agent Guardrails uses precise terms. Here's what you need to know:
 
-| Term                | Meaning                                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Rule**            | A detection pattern + phase + default action                                                                              |
-| **Rule Pack**       | A named collection of related rules (e.g., "env", "sops")                                                                 |
-| **Behavior**        | What the engine does: block, suggest, run, redact, or confirm                                                             |
-| **Phase**           | When a rule fires: `before-tool` or `after-tool`                                                                          |
-| **ToolCallContext** | The normalized input from a harness (command string, file path, etc.)                                                     |
-| **Adapter**         | Integration code for a specific harness (Pi, OpenCode, etc.)                                                              |
-| **Fallback chain**  | What happens when a harness can't do what a rule asks (e.g., `run → suggest → block`)                                     |
-| **Matcher**         | User-facing name for a match condition: bash-command (regex on command), file-path (regex on path), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union. |
+| Term              | Meaning                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rule              | Detection pattern + phase + default action                                                                                                                                                                    |
+| Rule Pack         | Named collection of rules (YAML or TypeScript)                                                                                                                                                                |
+| Behavior          | Category: block/suggest/run/redact/confirm                                                                                                                                                                    |
+| Action            | Concrete response object (e.g., a suggest action with replacement + message)                                                                                                                                  |
+| Phase             | When a rule fires: before-tool or after-tool                                                                                                                                                                  |
+| ToolCallContext   | Normalized input from a harness (discriminated union on `toolName`)                                                                                                                                           |
+| Adapter           | Integration shim for a specific harness (Pi, OpenCode, etc.)                                                                                                                                                  |
+| Harness           | The platform (Pi, OpenCode). NOT the agent (the AI model).                                                                                                                                                    |
+| Fallback Chain    | Deterministic degradation when a harness lacks a capability                                                                                                                                                   |
+| Matcher           | User-facing name for a match condition: bash-command (regex), file-path (regex), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union.                       |
+| Match Condition   | A rule's `match` field — a declarative spec that the engine evaluates via `matchesMatcher()`. Type alias: `MatchCondition`.                                                                                  |
+| Default Decision  | The default action of the implicit catch-all rule that fires when nothing else matches (`allow \| suggest \| confirm \| block`, default `allow`). See [ADR-007](adrs/007-trust-and-self-protection.md).      |
+| Overridable       | Rule-level flag; `false` locks a built-in rule against user config overrides. Not available to community packs. See [ADR-007](adrs/007-trust-and-self-protection.md).                                        |
+| Tamper-Resistant  | Adapter capability declaring whether it runs as an external hook process (harder to tamper with) vs. an in-process plugin. See [ADR-007](adrs/007-trust-and-self-protection.md).                             |
+| Turn Halt         | `haltTurn` modifier on `block`/`redact` actions that stops the agent's current turn, not the session. See [ADR-002](adrs/002-behavior-model.md).                                                              |
 
 ### Don't Confuse These
 
