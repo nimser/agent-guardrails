@@ -26,16 +26,19 @@ A pattern-based steering engine for AI coding agent workflows.
 
 ### Is this just a set of guards to block bad behaviour?
 
-Blocking is in the toolkit, but it isn't the focus: `suggest` offers a safer command, `run` executes it for the agent, `redact` scrubs a secret before it's ever seen — the agent adapts and keeps working. A hard `block` is still there for when nothing else fits.
+No — mostly it transforms. Wherever a Safer Alternative exists, that's the default: reading `.env` or decrypting a SOPS file resolves to `suggest`, handing the agent a redacted command it can retry immediately instead of stalling out. `block` is what's left for the cases with nothing safe to transform into — pulling a full secret out of a password manager, an adversarial shell wrapper. `redact` catches what no rule predicted, scrubbing output after the fact. `run` (executing the Safer Alternative for the agent instead of just suggesting it) and `confirm` are supported by the engine for harnesses and rule packs that need them, but nothing ships wired to them by default today.
 
 ### Scenarios
 
-| Agent tries to...                     | Without                               | With                                             |
-| ------------------------------------- | ------------------------------------- | ------------------------------------------------ |
-| `cat .env` "just to see the setup"    | Secret leaks into context             | `redact` scrubs it first                         |
-| `git push --force`                    | Rewrites shared history               | `suggest` offers `--force-with-lease`            |
-| `sops -d secrets.yaml`                | Full decrypted secret reaches the LLM | `redact`/`run` returns a sanitized result        |
-| Reads an untracked `credentials.json` | Silent leak, no rule covers it        | Content sniffing catches the secret shape anyway |
+What ships out of the box — no config, no flags:
+
+| Agent tries to...                     | Without                               | With                                                          |
+| ------------------------------------- | -------------------------------------- | -------------------------------------------------------------- |
+| `cat .env` "just to see the setup"    | Secret leaks into context             | `suggest` swaps in a redacted read — keys visible, values gone |
+| `sops -d secrets.yaml`                | Full decrypted secret reaches the LLM | `suggest` offers a format-aware redacted pipe instead          |
+| `git push --force`                    | Rewrites shared history               | `suggest` offers `--force-with-lease`                         |
+| Reads an untracked `credentials.json` | Silent leak, no rule covers it        | `redact` scrubs the secret shape from the output anyway        |
+| `pass show secret/path`               | Full secret value reaches the LLM     | `block` — no safe partial exists, nothing to transform into    |
 
 ## How It Works
 
@@ -82,6 +85,17 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 - **hardening** — Detect shell wrappers (`eval`, `bash -c`, `$()`) and redirects to sensitive paths (_upcoming_)
 - **direnv**, **kubernetes**, **gh-cli** — Platform-specific guardrails (_upcoming_)
 
+### Trust & Self-Protection
+
+Four questions a security-literate evaluator asks first — answered by design, not convention:
+
+- **Can a locked-down rule be overridden by the user's own config?** No. Built-in rules can be marked `overridable: false`, enforced at the pack loader — no `Configured Action` can soften them. Community packs can't claim this privilege for their own rules; the loader silently downgrades it and warns.
+- **Can I get a stricter default than "allow" with one flag?** Yes — `--strict` sets `defaultDecision: confirm` for the `env`, `private-key`, and `secret-managers` categories, so anything secret-shaped that slips past a named rule still hits a human gate instead of silently passing through, and force-locks the `hardening` pack on.
+- **Does the adapter run somewhere the agent it governs could tamper with it?** Depends on the harness, and it's a declared, checkable fact per adapter (`tamperResistant`), not a hand-wave — external hook processes (Claude Code, Codex) are tamper-resistant, in-process plugins (Pi, OpenCode) aren't.
+- **What happens when nothing matches, or the engine itself breaks?** Two different, deliberate answers. An unmatched call fails **open** (`allow`) by default, since a coding agent that halts on every unmatched call is unusable; `defaultDecision`/`--strict` exist for operators who want to trade that ergonomics away deliberately. An engine crash, timeout, or oversized input (past the matcher's `MAX_MATCH_INPUT_LENGTH` cap) fails **closed** (`block`) instead, unconditionally, on every adapter — never derived from `defaultDecision`, never user-tunable, because a crash means the engine never got far enough to know if the call was even in scope.
+
+See [ADR-007](docs/adrs/007-trust-and-self-protection.md) for the full design.
+
 ### Adapters
 
 - 🚧 **Pi** — native plugin for [Pi](https://github.com/earendil-works/pi) — WIP
@@ -98,7 +112,13 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
 npx agent-guardrails install pi
 ```
 
-That's it. Try `cat .env` in your agent — it should be blocked.
+That's it. Try `cat .env` in your agent — it should come back with a redacted read instead of the raw file.
+
+Want a stricter posture — confirm-gate anything secret-shaped even without a specific rule, and lock `hardening` so no config can disable it?
+
+```bash
+npx agent-guardrails install pi --strict
+```
 
 To build from source today, see [Getting Started](docs/getting-started.md).
 
@@ -111,7 +131,7 @@ Not a security audit tool or sandbox. See [SECURITY.md](SECURITY.md) for details
 - [Getting Started](docs/getting-started.md) — contributor gateway, full architecture deep dive, adapter capability table, vocabulary
 - [Architecture Decisions (ADRs)](docs/adrs/) — the _why_ behind core design choices
 - [How Matching Works](docs/how-matching-works.md) — layer-by-layer walkthrough with real examples
-- [Rule Pack Guide](docs/rule-pack-guide.md) — complete YAML format spec, action types, defense-in-depth tips
+- [Rule Pack Guide](docs/rule-pack-guide.md) — complete YAML format spec, action types, multi-matcher coverage tips
 
 ## Contributing
 

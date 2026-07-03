@@ -2,9 +2,15 @@
 
 ## What Agent Guardrails Is (and Isn't)
 
-Agent Guardrails is a **pattern-based policy engine** for AI coding agent workflows. It provides defense-in-depth by intercepting tool calls and matching them against rule packs before execution.
+Agent Guardrails is a **pattern-based policy engine** for AI coding agent workflows. It intercepts tool calls and matches them against rule packs before execution. Whether that's a genuinely independent security layer or cooperative enforcement depends on the harness: external hook process adapters (Claude Code, Codex) add a boundary the agent can't reach into; in-process plugin adapters (Pi, OpenCode) don't (`tamperResistant`, see [ADR-007](docs/adrs/007-trust-and-self-protection.md)).
 
 It is **not** a security audit tool, a sandbox, or a complete security boundary. Deterministic regex matching cannot catch every adversarial payload.
+
+## Default Posture: Fail-Open, With Fail-Closed Exceptions
+
+An unmatched tool call **allows** by default — a coding agent that halts on every unmatched call is unusable. This is a deliberate trade-off, not an oversight ([ADR-007](docs/adrs/007-trust-and-self-protection.md)). Operators who want a stricter posture can opt in per-category with `defaultDecision`, or wholesale with the `--strict` preset.
+
+The exceptions are unconditional and not configurable: an engine crash or timeout always resolves to `block` on every adapter, and oversized input is rejected by the matcher's `MAX_MATCH_INPUT_LENGTH` cap rather than silently skipped. Neither is derived from `defaultDecision` or any user config — there's no legitimate case for allowing a call the engine failed to evaluate.
 
 Depending on your own security model's needs, you could look into pairing it with (non-exhaustive):
 
