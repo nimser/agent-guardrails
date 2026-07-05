@@ -1,21 +1,21 @@
 # Pi Adapter
 
-Agent Guardrails adapter for [Pi](https://github.com/earendil-works/pi). Hooks every
+Guiderails adapter for [Pi](https://github.com/earendil-works/pi). Hooks every
 `tool_call`, evaluates it against all built-in rule packs, and blocks calls that
 would leak secrets — with a reason that steers the agent toward a safer command.
 
 ## Installation
 
 ```bash
-npm install agent-guardrails
+npm install guiderails
 ```
 
 Register the extension in your Pi configuration:
 
 ```typescript
-import piGuardrails from 'agent-guardrails/adapters/pi'
+import piGuiderails from 'guiderails/adapters/pi'
 
-export default piGuardrails
+export default piGuiderails
 ```
 
 ## Behavior
@@ -31,14 +31,14 @@ export default piGuardrails
 - **`session_shutdown` hook** — notifies a one-line summary when any rule intervened:
 
   ```
-  🛡️ Guardrails: 7 interventions this session (5 blocked, 2 suggested)
+  🛡️ Guiderails: 7 interventions this session (5 blocked, 2 suggested)
   ```
 
 ## Capabilities
 
 The adapter declares `tamperResistant: false`: Pi's adapter is an in-process
 plugin, so the agent process itself could unload or bypass the extension —
-guardrails here protect against mistakes, not a malicious host.
+guiderails here protect against mistakes, not a malicious host.
 
 ## Example
 

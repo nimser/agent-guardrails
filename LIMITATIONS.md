@@ -1,6 +1,6 @@
 # Limitations
 
-Agent Guardrails is a steering layer: it changes what happens on the events that flow through an agent harness's hooks. This document states plainly what that architecture cannot do, so you can decide what to pair it with.
+Guiderails is a steering layer: it changes what happens on the events that flow through an agent harness's hooks. This document states plainly what that architecture cannot do, so you can decide what to pair it with.
 
 ## Not a security boundary
 
@@ -11,7 +11,7 @@ The engine runs wherever the adapter runs, and that placement is a declared, per
 | Pi          | in-process plugin inside the harness   |        ❌         | An agent that can execute code in the harness process can, in principle, disable or bypass the plugin. |
 | Claude Code | external hook subprocess               |        ✅         | The agent can't reach into the hook process — but the hook _configuration_ is a user-editable file the agent may be able to write. |
 
-Even the strongest adapter placement is not containment. If you need a guarantee that an adversarial agent *cannot* perform an action at all, use an OS-level tool built for that — [agentjail](https://github.com/LuD1161/agentjail) (fail-closed daemon, kernel-backed tiers) is the containment companion this project pairs with, not competes with. Division of labor: agentjail answers "can the agent do X at all"; Agent Guardrails changes _what happens_ on the calls that run.
+Even the strongest adapter placement is not containment. If you need a guarantee that an adversarial agent *cannot* perform an action at all, use an OS-level tool built for that — [agentjail](https://github.com/LuD1161/agentjail) (fail-closed daemon, kernel-backed tiers) is the containment companion this project pairs with, not competes with. Division of labor: agentjail answers "can the agent do X at all"; Guiderails changes _what happens_ on the calls that run.
 
 ## Fail-open by default, and what `--strict` trades
 
@@ -27,7 +27,7 @@ Rules are deterministic — substring pre-filters, structural regex, wrapper det
 
 ## Prompt injection is out of scope
 
-Agent Guardrails mediates events, not the model's reasoning. If the agent's context is compromised by injected instructions, the rules still apply to what it *does* — but steering a compromised agent is containment work (see above), and detecting the injection itself is a different product category entirely.
+Guiderails mediates events, not the model's reasoning. If the agent's context is compromised by injected instructions, the rules still apply to what it *does* — but steering a compromised agent is containment work (see above), and detecting the injection itself is a different product category entirely.
 
 ## Redaction vs. never-inject
 

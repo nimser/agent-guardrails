@@ -27,7 +27,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Agent Guardrails version
+      label: Guiderails version
       placeholder: 'commit hash or version tag'
     validations:
       required: false

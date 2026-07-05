@@ -13,7 +13,7 @@ import type { PredicateRegistry } from '../core/predicate-registry.js'
  * shell commands rarely exceed a few hundred bytes).
  *
  * Returning `true` (match/block) when the limit is exceeded prevents an
- * adversarial LLM from bypassing guardrails by crafting oversized inputs.
+ * adversarial LLM from bypassing guiderails by crafting oversized inputs.
  */
 export const MAX_MATCH_INPUT_LENGTH = 4096
 

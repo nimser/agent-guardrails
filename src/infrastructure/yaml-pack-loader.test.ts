@@ -13,7 +13,7 @@ describe('loadYamlRulePack', () => {
   let predicateRegistry: PredicateRegistry
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `guardrails-test-${Date.now()}`)
+    testDir = join(tmpdir(), `guiderails-test-${Date.now()}`)
     mkdirSync(testDir, { recursive: true })
     predicateRegistry = new PredicateRegistry()
   })
@@ -254,7 +254,7 @@ describe('loadAllRulePacks', () => {
   let predicateRegistry: PredicateRegistry
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `guardrails-test-${Date.now()}`)
+    testDir = join(tmpdir(), `guiderails-test-${Date.now()}`)
     mkdirSync(testDir, { recursive: true })
     predicateRegistry = new PredicateRegistry()
   })

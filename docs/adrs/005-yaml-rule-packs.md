@@ -12,7 +12,7 @@ Not everyone who wants to contribute a guardrail rule knows TypeScript. Security
 
 ### YAML for Both Built-in and User Packs
 
-All built-in rule packs — security packs (`env`, `sops`, `private-key`, `encryption-tools`, `secret-managers`, `hardening`) and steering packs (`modern-cli`, `package-manager`, `git-safety`) — are defined in YAML, not TypeScript. Users extend the system with the same format — drop a `.yaml` file in `.agent-guardrails/packs/` and it's loaded automatically.
+All built-in rule packs — security packs (`env`, `sops`, `private-key`, `encryption-tools`, `secret-managers`, `hardening`) and steering packs (`modern-cli`, `package-manager`, `git-safety`) — are defined in YAML, not TypeScript. Users extend the system with the same format — drop a `.yaml` file in `.guiderails/packs/` and it's loaded automatically.
 
 This means no dual-maintenance: built-in packs and community packs use identical formats and the same validation pipeline.
 

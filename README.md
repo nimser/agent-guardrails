@@ -1,21 +1,21 @@
-# Agent Guardrails
+# Guiderails
 
 > **⚠️ Heavy development:** Not yet published to npm. Expect breakage. The quick start below shows the expected workflow once the package is available.
 
 ---
 
-[![npm](https://img.shields.io/npm/v/agent-guardrails.svg)](https://www.npmjs.com/package/agent-guardrails)
-[![Build](https://img.shields.io/github/actions/workflow/status/nimser/agent-guardrails/ci.yml?branch=main)](https://github.com/nimser/agent-guardrails/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/nimser/agent-guardrails)](https://codecov.io/gh/nimser/agent-guardrails)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/agent-guardrails)](https://bundlephobia.com/package/agent-guardrails)
+[![npm](https://img.shields.io/npm/v/guiderails.svg)](https://www.npmjs.com/package/guiderails)
+[![Build](https://img.shields.io/github/actions/workflow/status/nimser/guiderails/ci.yml?branch=main)](https://github.com/nimser/guiderails/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/nimser/guiderails)](https://codecov.io/gh/nimser/guiderails)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/guiderails)](https://bundlephobia.com/package/guiderails)
 [![TypeScript](https://img.shields.io/badge/TypeScript-first-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 <!-- SonarCloud -->
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nimser_agent-guardrails&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nimser_agent-guardrails)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nimser_agent-guardrails&metric=coverage)](https://sonarcloud.io/summary/new_code?id=nimser_agent-guardrails)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nimser_guiderails&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nimser_guiderails)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nimser_guiderails&metric=coverage)](https://sonarcloud.io/summary/new_code?id=nimser_guiderails)
 
 <!-- /SonarCloud -->
 
@@ -30,19 +30,19 @@ That's the whole idea: a steering layer for AI coding agents. Instead of stoppin
 Rules work out of the box — no config, no flags:
 
 ```bash
-npx agent-guardrails install pi        # or: install claude-code
+npx guiderails install pi        # or: install claude-code
 ```
 
 Try `cat .env` in your agent — it comes back with a redacted read instead of the raw file. A stricter posture is on the roadmap: `--strict` will confirm-gate anything secret-shaped even without a specific rule and lock the `hardening` pack on ([ADR-007](docs/adrs/007-trust-and-self-protection.md)).
 
 ## Three doors
 
-- **Pi plugin** — in-process, all five behaviors native. `npx agent-guardrails install pi`
-- **Claude Code hooks** — out-of-process, all five behaviors bound to native hook mechanisms. `npx agent-guardrails install claude-code`
-- **TypeScript library** — building your own harness? `npm install agent-guardrails`, one function:
+- **Pi plugin** — in-process, all five behaviors native. `npx guiderails install pi`
+- **Claude Code hooks** — out-of-process, all five behaviors bound to native hook mechanisms. `npx guiderails install claude-code`
+- **TypeScript library** — building your own harness? `npm install guiderails`, one function:
 
   ```typescript
-  import { createEngine, loadAllRulePacks } from "agent-guardrails";
+  import { createEngine, loadAllRulePacks } from "guiderails";
 
   const engine = createEngine(loadAllRulePacks("./packs", registry), capabilities);
   const action = engine.evaluate(ctx); // per tool call / tool result / user prompt

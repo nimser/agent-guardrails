@@ -1,8 +1,8 @@
 # Security Policy
 
-## What Agent Guardrails Is (and Isn't)
+## What Guiderails Is (and Isn't)
 
-Agent Guardrails is a **pattern-based steering engine** for AI coding agent workflows. It mediates user input, tool calls, and tool output against rule packs. Whether that's a genuinely independent security layer or cooperative enforcement depends on the harness: the external-hook adapter (Claude Code) adds a process boundary the agent can't reach into; the in-process plugin adapter (Pi) doesn't (`tamperResistant`, see [ADR-007](docs/adrs/007-trust-and-self-protection.md)).
+Guiderails is a **pattern-based steering engine** for AI coding agent workflows. It mediates user input, tool calls, and tool output against rule packs. Whether that's a genuinely independent security layer or cooperative enforcement depends on the harness: the external-hook adapter (Claude Code) adds a process boundary the agent can't reach into; the in-process plugin adapter (Pi) doesn't (`tamperResistant`, see [ADR-007](docs/adrs/007-trust-and-self-protection.md)).
 
 It is **not** a security audit tool, a sandbox, or a complete security boundary. Deterministic regex matching cannot catch every adversarial payload. See [LIMITATIONS.md](LIMITATIONS.md) for the full statement of what this architecture cannot do, and for the containment pairing (agentjail).
 
@@ -36,7 +36,7 @@ Open a **public GitHub issue** for any issue with rule packs, matchers, defaults
 
 In rare cases where the issue isn't a rule bypass but a fundamental flaw in how the engine itself processes invocations (for example, a condition that silently disables all rule matching), report privately:
 
-- **Email**: security-agent-guardrails「at」nwo「dot」pm
+- **Email**: security-guiderails「at」nwo「dot」pm
 - **GitHub Security Advisory**: Use the repository's private advisory feature
 
 ### What to Include

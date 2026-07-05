@@ -1,12 +1,12 @@
-# Contributing to Agent Guardrails
+# Contributing to Guiderails
 
 Welcome! This project is designed to be easy to contribute to. Whether you're adding a rule pack, building an adapter, or improving the engine — here's how to get started.
 
 ## Quick Setup
 
 ```bash
-git clone https://github.com/nimser/agent-guardrails.git
-cd agent-guardrails
+git clone https://github.com/nimser/guiderails.git
+cd guiderails
 npm install
 ```
 
@@ -36,7 +36,7 @@ The easiest way to contribute is writing a YAML rule pack. No TypeScript require
 
 Ideas for new packs: AWS SSM/Secrets Manager, Terraform, HashiCorp Vault, database CLIs, Azure CLI, GCP CLI. Pick whichever your team uses most — likelihood of encounter matters more than completeness.
 
-**Sharing your rule packs:** Once accepted, community rule packs are curated in the companion repo [awesome-agent-guardrails](https://github.com/nimser/awesome-agent-guardrails). We'll feature useful packs there for others to discover.
+**Sharing your rule packs:** Once accepted, community rule packs are curated in the companion repo [awesome-guiderails](https://github.com/nimser/awesome-guiderails). We'll feature useful packs there for others to discover.
 
 ### 🟡 Medium Effort: New Adapters
 

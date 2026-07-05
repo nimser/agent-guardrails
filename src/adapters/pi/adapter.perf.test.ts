@@ -57,10 +57,10 @@ interface LatencyStats {
 async function measure(packs: RulePack[] | undefined): Promise<LatencyStats> {
   packsOverride = packs
   vi.resetModules()
-  const { default: piGuardrails } = await import('./index.js')
+  const { default: piGuiderails } = await import('./index.js')
   let toolCall: ToolCallHandler | undefined
   const ctx: PiContext = { ui: { notify: () => {} } }
-  piGuardrails({
+  piGuiderails({
     on: (event: string, handler: unknown) => {
       if (event === 'tool_call') toolCall = handler as ToolCallHandler
     },

@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-The package has two kinds of consumers: the two Tier 1 adapters in this repository, and people building their own harness who want to embed guardrails with one function call. The second door only works if the public surface is small enough to learn in minutes and stable enough to depend on. Without a defined surface, consumers import from any layer — creating coupling that makes refactoring impossible.
+The package has two kinds of consumers: the two Tier 1 adapters in this repository, and people building their own harness who want to embed guiderails with one function call. The second door only works if the public surface is small enough to learn in minutes and stable enough to depend on. Without a defined surface, consumers import from any layer — creating coupling that makes refactoring impossible.
 
 ## Decision
 
@@ -15,7 +15,7 @@ The package has two kinds of consumers: the two Tier 1 adapters in this reposito
 The public API is three things: an engine factory, the pack loader, and the public types. Everything else is `@internal`.
 
 ```typescript
-import { createEngine, loadAllRulePacks } from "agent-guardrails";
+import { createEngine, loadAllRulePacks } from "guiderails";
 
 const packs = loadAllRulePacks("./packs", registry);
 const engine = createEngine(packs, capabilities);
@@ -44,7 +44,7 @@ Visibility is enforced mechanically: every non-public symbol carries `@internal`
 ### Adapter bootstrap pattern
 
 ```typescript
-import { createEngine, loadAllRulePacks, PredicateRegistry } from "agent-guardrails";
+import { createEngine, loadAllRulePacks, PredicateRegistry } from "guiderails";
 
 const registry = new PredicateRegistry();
 registry.register("my-check", (ctx) => /* ... */);

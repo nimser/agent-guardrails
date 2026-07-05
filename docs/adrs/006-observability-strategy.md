@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-Engine owners need to know: how many tool calls were checked? How many were blocked? Which rules fire most? Without this, Agent Guardrails is a black box. But a full observability suite isn't justified in the MVP — it needs to be lightweight, zero-dependency, and ready to evolve.
+Engine owners need to know: how many tool calls were checked? How many were blocked? Which rules fire most? Without this, Guiderails is a black box. But a full observability suite isn't justified in the MVP — it needs to be lightweight, zero-dependency, and ready to evolve.
 
 ## Decision
 

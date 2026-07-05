@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-Agent Guardrails currently ships with no answer to three credibility questions a
+Guiderails currently ships with no answer to three credibility questions a
 security-literate evaluator asks immediately: *Can a locked-down rule be overridden by
 the user's own config?* *Can I get a stricter default posture than "allow" with one
 flag?* *Does the adapter itself run somewhere the agent it governs could tamper with
@@ -73,7 +73,7 @@ come up.
 **Built-in-packs-only privilege.** `overridable: false` is not available to
 community/user-authored packs. Enforced at the pack loader
 (`infrastructure/yaml-pack-loader.ts`), not left as a documented convention: a
-community pack loaded from `.agent-guardrails/packs/` that declares
+community pack loaded from `.guiderails/packs/` that declares
 `overridable: false` on any rule MUST have that field silently downgraded to
 `overridable: true`, with a validation warning surfaced (visibility, not
 silent-rewrite-without-trace). This prevents a third-party pack author from locking

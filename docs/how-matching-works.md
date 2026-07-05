@@ -1,6 +1,6 @@
 # How Matching Works
 
-This is the practical companion to [ADR-004: Matching Strategy](adrs/004-matching-strategy.md). Here we walk through each layer with real examples, so you can understand how Agent Guardrails decides whether to allow, block, or suggest alternatives for a command.
+This is the practical companion to [ADR-004: Matching Strategy](adrs/004-matching-strategy.md). Here we walk through each layer with real examples, so you can understand how Guiderails decides whether to allow, block, or suggest alternatives for a command.
 
 ## The Three Layers
 
