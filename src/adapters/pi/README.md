@@ -28,7 +28,7 @@ export default piGuardrails
   - `suggest` rules also block for now; the `reason` carries the safer replacement
     so the agent retries with it. Native suggest support lands in change-5.
   - Non-matching and unknown tool calls pass through untouched.
-- **`session_end` hook** — logs a one-line summary when any rule intervened:
+- **`session_shutdown` hook** — notifies a one-line summary when any rule intervened:
 
   ```
   🛡️ Guardrails: 7 interventions this session (5 blocked, 2 suggested)

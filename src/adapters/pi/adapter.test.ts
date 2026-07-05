@@ -1,26 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import piGuardrails from './index.js'
-import type { ExtensionAPI, PiHookResponse } from './index.js'
+import type { ExtensionAPI, PiContext, PiHookResponse } from './index.js'
 import type { PiToolCallEvent } from './normalize.js'
 
-type ToolCallHandler = (event: PiToolCallEvent) => Promise<PiHookResponse | undefined>
-
-function mockPi() {
-  const handlers = new Map<string, (event?: unknown) => unknown>()
-  const logs: string[] = []
-  const pi: ExtensionAPI = {
-    on: (event, handler) => handlers.set(event, handler as (event?: unknown) => unknown),
-    log: (message) => logs.push(message),
-  }
-  return { pi, handlers, logs }
-}
+type Handler = (event: unknown, ctx: PiContext) => unknown
 
 function setup() {
-  const { pi, handlers, logs } = mockPi()
+  const handlers = new Map<string, Handler>()
+  const logs: string[] = []
+  const ctx: PiContext = { ui: { notify: (message) => logs.push(message) } }
+  const pi: ExtensionAPI = {
+    on: (event: string, handler: unknown) => handlers.set(event, handler as Handler),
+  }
   piGuardrails(pi)
   return {
-    toolCall: handlers.get('tool_call') as ToolCallHandler,
-    sessionEnd: handlers.get('session_end') as () => void,
+    toolCall: (event: PiToolCallEvent) =>
+      (handlers.get('tool_call') as Handler)(event, ctx) as Promise<PiHookResponse | undefined>,
+    sessionEnd: () => handlers.get('session_shutdown')?.({}, ctx),
+    handlers,
     logs,
   }
 }
@@ -28,11 +25,11 @@ function setup() {
 const bash = (command: string): PiToolCallEvent => ({ toolName: 'bash', input: { command } })
 
 describe('pi adapter', () => {
-  it('is a function that registers tool_call and session_end handlers', () => {
-    const { toolCall, sessionEnd } = setup()
+  it('is a function that registers tool_call and session_shutdown handlers', () => {
+    const { handlers } = setup()
     expect(typeof piGuardrails).toBe('function')
-    expect(typeof toolCall).toBe('function')
-    expect(typeof sessionEnd).toBe('function')
+    expect(handlers.has('tool_call')).toBe(true)
+    expect(handlers.has('session_shutdown')).toBe(true)
   })
 
   it('blocks reading .env via bash with a reason naming the match', async () => {

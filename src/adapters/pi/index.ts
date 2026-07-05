@@ -11,14 +11,18 @@ export interface PiHookResponse {
   reason: string
 }
 
-/** The slice of Pi's extension API the adapter uses. */
+/** The slice of Pi's extension context the adapter uses. */
+export interface PiContext {
+  ui: { notify(message: string, type?: 'info' | 'warning' | 'error'): void }
+}
+
+/** The slice of Pi's extension API the adapter uses (verified against @earendil-works/pi-coding-agent 0.80.3). */
 export interface ExtensionAPI {
   on(
     event: 'tool_call',
-    handler: (event: PiToolCallEvent) => Promise<PiHookResponse | undefined>
+    handler: (event: PiToolCallEvent, ctx: PiContext) => Promise<PiHookResponse | undefined>
   ): void
-  on(event: 'session_end', handler: () => void): void
-  log(message: string): void
+  on(event: 'session_shutdown', handler: (event: unknown, ctx: PiContext) => void): void
 }
 
 /**
@@ -41,11 +45,11 @@ export default function piGuardrails(pi: ExtensionAPI): void {
     return undefined
   })
 
-  pi.on('session_end', () => {
+  pi.on('session_shutdown', (_event, ctx) => {
     const { blocks, suggests } = stats.getStats()
     const matches = blocks + suggests
     if (matches > 0) {
-      pi.log(
+      ctx.ui.notify(
         `🛡️ Guardrails: ${matches} interventions this session (${blocks} blocked, ${suggests} suggested)`
       )
     }

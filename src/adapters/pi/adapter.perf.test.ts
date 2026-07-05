@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import piGuardrails from './index.js'
-import type { ExtensionAPI, PiHookResponse } from './index.js'
+import type { ExtensionAPI, PiContext, PiHookResponse } from './index.js'
 import type { PiToolCallEvent } from './normalize.js'
 
-type ToolCallHandler = (event: PiToolCallEvent) => Promise<PiHookResponse | undefined>
+type ToolCallHandler = (
+  event: PiToolCallEvent,
+  ctx: PiContext
+) => Promise<PiHookResponse | undefined>
 
 const EVENTS: PiToolCallEvent[] = [
   { toolName: 'bash', input: { command: 'ls -la' } },
@@ -16,11 +19,11 @@ const EVENTS: PiToolCallEvent[] = [
 describe('pi adapter performance', () => {
   it('handles a tool_call in under 10ms with all rule packs loaded', async () => {
     let toolCall: ToolCallHandler | undefined
+    const ctx: PiContext = { ui: { notify: () => {} } }
     const pi: ExtensionAPI = {
-      on: (event, handler) => {
+      on: (event: string, handler: unknown) => {
         if (event === 'tool_call') toolCall = handler as ToolCallHandler
       },
-      log: () => {},
     }
     piGuardrails(pi)
 
@@ -28,7 +31,7 @@ describe('pi adapter performance', () => {
     for (let i = 0; i < 500; i++) {
       const event = EVENTS[i % EVENTS.length]
       const start = performance.now()
-      await toolCall!(event)
+      await toolCall!(event, ctx)
       samples.push(performance.now() - start)
     }
 
