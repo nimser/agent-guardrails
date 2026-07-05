@@ -22,6 +22,8 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      - name: Verify pack gallery is up to date
+        run: npm run docs:packs && git diff --exit-code docs/packs.md
 
   test:
     name: Test

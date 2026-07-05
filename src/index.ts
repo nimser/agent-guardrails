@@ -21,6 +21,16 @@ export {
   claudeCodeCapabilities,
 } from './core/harness-capabilities.js'
 
+// ── Built-in Rule Packs ─────────────────────────────────
+export {
+  /** Register built-in predicates and load every shipped rule pack — the zero-config path. */
+  loadBuiltInRulePacks,
+  /** Register the predicates the built-in packs reference. */
+  registerBuiltInPredicates,
+  /** Directory containing the shipped YAML rule packs. */
+  BUILTIN_PACKS_DIR,
+} from './packs/index.js'
+
 // ── Core Types ──────────────────────────────────────────
 export type { HarnessCapabilities } from './core/types.js'
 export type {
