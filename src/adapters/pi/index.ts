@@ -35,8 +35,16 @@ export default function piGuardrails(pi: ExtensionAPI): void {
   const engine = createEngine(loadBuiltInRulePacks(registry), PI_CAPABILITIES, { registry })
 
   pi.on('tool_call', async (event) => {
-    const ctx = normalizeToContext(event)
-    const result = engine.evaluate(ctx)
+    // Fail closed: an engine error must block the call, never let it through.
+    let result
+    try {
+      result = engine.evaluate(normalizeToContext(event))
+    } catch (error) {
+      return {
+        block: true,
+        reason: `agent-guardrails failed to evaluate this call (blocking to be safe): ${String(error)}`,
+      }
+    }
     if (result?.type === 'block' || result?.type === 'suggest') {
       return { block: true, reason: result.message ?? 'Blocked by agent-guardrails.' }
     }
