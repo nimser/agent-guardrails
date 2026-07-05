@@ -79,7 +79,10 @@ export function loadYamlRulePack(filePath: string, predicateRegistry: PredicateR
     }
   })
 
-  const pack: unknown = { id, name, description, rules }
+  const pack: unknown =
+    raw.nonOverridable === true
+      ? { id, name, description, rules, nonOverridable: true }
+      : { id, name, description, rules }
 
   if (!validateRulePack(pack)) {
     const errors = getRulePackErrors(pack)

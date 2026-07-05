@@ -1,0 +1,37 @@
+id: private-key
+name: Private Key Protection
+description: Block reads of private key material — there is nothing safe to transform a key read into
+
+rules:
+  - id: private-key.cat
+    title: Block shell reads of key files
+    description: Catches cat/less/head/tail on .pem/.key/id_* files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)(cat|less|more|head|tail)\\s+[^;&|]*(\\.pem|\\.key|id_(rsa|ed25519|ecdsa|dsa))\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` would expose private key material.'
+
+  - id: private-key.read
+    title: Block read tool calls on key files
+    description: Catches direct read tool calls on private key files by extension
+    phase: before-tool
+    match:
+      type: file-path
+      pattern: "\\.(pem|key|p12|pfx|p8)$"
+    defaultAction:
+      type: block
+      message: 'Blocked: reading `{matched}` would expose private key material.'
+
+  - id: private-key.read-ssh-dir
+    title: Block reads of non-public SSH directory files
+    description: Blocks any .ssh/ file except public keys, config, known_hosts, and authorized_keys
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: ssh-private-key
+    defaultAction:
+      type: block
+      message: 'Blocked: reading `{matched}` would expose private key material.'

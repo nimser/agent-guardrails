@@ -5,7 +5,6 @@ import type {
   HarnessCapabilities,
   MatchResult,
   DomainEvent,
-  BeforeToolAction,
 } from '../core/types.js'
 import type { PredicateRegistry } from '../core/predicate-registry.js'
 import type { StatsTracker } from './stats-tracker.js'
@@ -49,7 +48,9 @@ export function processMatch(
     return handleMissingTargetsTraced(ctx, stats)
   }
 
-  const commands = command ? splitCommands(command) : ['']
+  // user-input contexts carry prompt text, which is never command-split (ADR-010)
+  const commands =
+    ctx.toolName === 'user-input' ? [command ?? ''] : command ? splitCommands(command) : ['']
   const result = findFirstMatchTraced(ctx, commands, packs, capabilities, registry)
   stats.record(result.action)
   return result
@@ -100,11 +101,12 @@ function matchPackRulesTraced(
   cmd: string,
   registry: PredicateRegistry
 ): MatchResult | undefined {
+  const ctxPhase = ctx.toolName === 'user-input' ? 'user-input' : 'before-tool'
   for (const rule of pack.rules) {
     // eslint-disable-next-line no-warning-comments
     // TODO(after-tool): Evaluate after-tool rules in a second pass for redact behavior.
     // Currently unimplemented — after-tool phase is reserved for output redaction.
-    if (rule.phase !== 'before-tool') continue
+    if (rule.phase !== ctxPhase) continue
     if (!matchesMatcher(rule.match, matchCtx, registry)) continue
 
     const matchedValue = cmd || ctx.filePath || ''
@@ -117,7 +119,14 @@ function matchPackRulesTraced(
       matched: matchedValue,
     }
 
-    const resolved = resolveAction(rule.defaultAction, capabilities, {
+    // In the user-input phase, prompt rewriting is gated on the dedicated
+    // redactUserInput capability rather than tool-output redact (ADR-010).
+    const effectiveCapabilities: HarnessCapabilities =
+      ctxPhase === 'user-input'
+        ? { ...capabilities, redact: capabilities.redactUserInput === true }
+        : capabilities
+
+    const resolved = resolveAction(rule.defaultAction, effectiveCapabilities, {
       matched: matchedValue,
       replacement,
     })
@@ -137,7 +146,7 @@ function matchPackRulesTraced(
  * the rule's declared action type against the resolved action type.
  */
 function detectFallback(
-  original: BeforeToolAction,
+  original: GuardrailAction,
   resolved: GuardrailAction
 ): DomainEvent | undefined {
   if (original.type === resolved.type) return undefined

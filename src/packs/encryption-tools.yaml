@@ -1,0 +1,37 @@
+id: encryption-tools
+name: Encryption Tool Protection
+description: Block decrypt operations from generic encryption CLIs
+
+rules:
+  - id: encryption-tools.age
+    title: Block age decrypt
+    description: Catches age -d / --decrypt
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)age\\s+(.*\\s)?(-d|--decrypt)\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` would put decrypted content into context.'
+
+  - id: encryption-tools.gpg
+    title: Block gpg decrypt
+    description: Catches gpg -d / --decrypt
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)gpg\\s+(.*\\s)?(-d|--decrypt)\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` would put decrypted content into context.'
+
+  - id: encryption-tools.openssl
+    title: Block openssl decrypt
+    description: Catches openssl enc -d
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)openssl\\s+enc\\s+(.*\\s)?-d\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` would put decrypted content into context.'

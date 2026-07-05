@@ -33,7 +33,9 @@ export function matchesMatcher(
 ): boolean {
   switch (matcher.type) {
     case 'bash-command': {
-      if (ctx.toolName !== 'bash' || !ctx.command) return false
+      // user-input contexts carry the prompt text in `command`, so
+      // bash-command patterns apply to it unchanged (ADR-010).
+      if ((ctx.toolName !== 'bash' && ctx.toolName !== 'user-input') || !ctx.command) return false
       if (ctx.command.length > MAX_MATCH_INPUT_LENGTH) return true
       // Local copy defends against shared-state regex (global / sticky flags).
       const re = new RegExp(matcher.pattern.source, matcher.pattern.flags)

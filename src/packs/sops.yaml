@@ -1,0 +1,27 @@
+id: sops
+name: SOPS Decrypt Protection
+description: Steer SOPS decrypt operations to redacted output instead of raw secrets
+
+rules:
+  - id: sops.decrypt
+    title: Redacted pipe for sops decrypt
+    description: Catches sops -d / --decrypt and suggests piping through a values-redacting sed
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)sops\\s+(.*\\s)?(-d|--decrypt)\\b"
+    defaultAction:
+      type: suggest
+      replacement: "sops -d <file> | sed -E 's/(: ).+/\\1[REDACTED]/'"
+      message: '`{matched}` would put decrypted secrets into context. Pipe through a redactor to inspect structure: `{replacement}`'
+
+  - id: sops.exec-env
+    title: Block sops exec-env
+    description: sops exec-env injects decrypted values into a child process environment the agent controls
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)sops\\s+exec-env\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` exposes decrypted secrets to an agent-controlled process.'
