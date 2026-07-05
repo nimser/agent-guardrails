@@ -23,6 +23,17 @@ describe('normalizeToContext', () => {
     })
   })
 
+  it('defaults to an empty command when a bash event has no input', () => {
+    expect(normalizeToContext({ toolName: 'bash' })).toEqual({ toolName: 'bash', command: '' })
+  })
+
+  it('defaults to an empty file path when a read event has an empty input', () => {
+    expect(normalizeToContext({ toolName: 'read', input: {} })).toEqual({
+      toolName: 'read',
+      filePath: '',
+    })
+  })
+
   it('maps an unknown tool to a catch-all context with no targets', () => {
     expect(normalizeToContext({ toolName: 'fetch', input: { url: 'https://x' } })).toEqual({
       toolName: 'fetch',
