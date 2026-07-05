@@ -19,28 +19,61 @@
 
 <!-- /SonarCloud -->
 
-### What is this?
+Your agent just tried `cat .env`. It got back the keys — not the values — and kept working.
 
-A pattern-based steering engine for AI coding agent workflows.
-**Keep your agent shipping — not spilling secrets no one's watching for.** Agent Guardrails steers agents away from costly mistakes instead of just stopping them cold.
+<!-- TODO: terminal GIF — `cat .env` → suggest → redacted read, one uninterrupted agent turn -->
 
-### Is this just a set of guards to block bad behaviour?
+That's the whole idea: a steering layer for AI coding agents. Instead of stopping the agent cold, rules hand it a safer or better move it can act on immediately — `suggest` a redacted read, `run` a rewritten command, `redact` a leaked value, `confirm` with a human, or `block` when nothing safe exists.
 
-No — mostly it transforms. Wherever a Safer Alternative exists, that's the default: reading `.env` or decrypting a SOPS file resolves to `suggest`, handing the agent a redacted command it can retry immediately instead of stalling out. `block` is what's left for the cases with nothing safe to transform into — pulling a full secret out of a password manager, an adversarial shell wrapper. `redact` catches what no rule predicted, scrubbing output after the fact. `run` (executing the Safer Alternative for the agent instead of just suggesting it) and `confirm` are supported by the engine for harnesses and rule packs that need them, but nothing ships wired to them by default today.
+## Batteries included
 
-### Scenarios
+Rules work out of the box — no config, no flags:
 
-What ships out of the box — no config, no flags:
+```bash
+npx agent-guardrails install pi        # or: install claude-code
+```
 
-| Agent tries to...                     | Without                               | With                                                          |
-| ------------------------------------- | -------------------------------------- | -------------------------------------------------------------- |
-| `cat .env` "just to see the setup"    | Secret leaks into context             | `suggest` swaps in a redacted read — keys visible, values gone |
-| `sops -d secrets.yaml`                | Full decrypted secret reaches the LLM | `suggest` offers a format-aware redacted pipe instead          |
-| `git push --force`                    | Rewrites shared history               | `suggest` offers `--force-with-lease`                         |
-| Reads an untracked `credentials.json` | Silent leak, no rule covers it        | `redact` scrubs the secret shape from the output anyway        |
-| `pass show secret/path`               | Full secret value reaches the LLM     | `block` — no safe partial exists, nothing to transform into    |
+Try `cat .env` in your agent — it comes back with a redacted read instead of the raw file. A stricter posture is on the roadmap: `--strict` will confirm-gate anything secret-shaped even without a specific rule and lock the `hardening` pack on ([ADR-007](docs/adrs/007-trust-and-self-protection.md)).
 
-## How It Works
+## Three doors
+
+- **Pi plugin** — in-process, all five behaviors native. `npx agent-guardrails install pi`
+- **Claude Code hooks** — out-of-process, all five behaviors bound to native hook mechanisms. `npx agent-guardrails install claude-code`
+- **TypeScript library** — building your own harness? `npm install agent-guardrails`, one function:
+
+  ```typescript
+  import { createEngine, loadAllRulePacks } from "agent-guardrails";
+
+  const engine = createEngine(loadAllRulePacks("./packs", registry), capabilities);
+  const action = engine.evaluate(ctx); // per tool call / tool result / user prompt
+  ```
+
+## Rule packs
+
+**Steering (quality of life)** — fires every session, keeps the agent on the fast path:
+
+| Pack              | What it does                                                              |
+| ----------------- | ------------------------------------------------------------------------- |
+| `modern-cli`      | `grep` → `rg`, `find` → `fd`, `cat` on a huge file → `head`               |
+| `package-manager` | `npm install` in a pnpm repo → `pnpm add` (and the other mismatches)      |
+| `git-safety`      | commit to a protected branch → confirm; `push --force` → `--force-with-lease` |
+
+**Security** — fires rarely, saves your week when it does:
+
+| Pack               | What it does                                                            |
+| ------------------ | ------------------------------------------------------------------------ |
+| `env`              | `.env` reads come back redacted — keys visible, values gone             |
+| `sops`             | `sops -d` swapped for a format-aware redacted pipe                      |
+| `private-key`      | `.pem`, `.key`, SSH key reads blocked                                   |
+| `secret-managers`  | `pass show`, `op read`, `gopass`, `bw get` blocked — nothing safe to transform into |
+| `encryption-tools` | `age -d`, `gpg --decrypt`, `openssl enc -d` blocked                     |
+| `hardening`        | shell wrappers (`eval`, `bash -c`, `$()`) around risky commands force-blocked |
+
+Status: the packs above are the v0.1.0 shipping set; anything not listed here doesn't exist yet and isn't claimed.
+
+Every boundary where a secret can cross into the model's context is mediated: **user input** (a key pasted into the prompt is scrubbed before it reaches the API), **tool calls**, and **tool output**.
+
+## How it works
 
 ```
 Agent Tool Call → Match Rules → Resolve Action → Enforce
@@ -49,94 +82,39 @@ ToolCallContext   Rule Packs   GuardrailAction   Harness Specific
                (YAML)       + Fallback Chain      Behaviour
 ```
 
-1. **ToolCallContext** — the adapter normalizes harness-specific events into this common shape
-2. **Rule Packs** — match conditions (regex, file-path, predicate) and default actions that define what to watch for
-3. **GuardrailAction** — the engine evaluates rules and resolves the action through a fallback chain
-4. **Behaviour** — the adapter translates the resolved behaviour (`block`, `suggest`, `run`, `redact`, `confirm`) into harness-specific enforcement
+Rules are YAML (plus TypeScript predicates for complex logic). Each adapter declares what its harness can do (`HarnessCapabilities`); when a capability is missing, the engine degrades deterministically (`run → suggest → block`, `confirm → block`, `redact → block`) — declared, never silent. Details in the [ADRs](docs/adrs/).
 
-## Features
+## Trust & self-protection
 
-### Core Engine
+- Built-in rules can be locked (`overridable: false`) so no user config softens them; community packs can't claim that privilege.
+- Unmatched calls fail **open** (the agent keeps working); an engine crash fails **closed** (`block`), unconditionally, on every adapter.
+- Whether the layer runs somewhere the agent could tamper with it is a declared per-adapter fact (`tamperResistant`), not a hand-wave.
 
-- **Multi-layer matching** — substring pre-filter, structural regex, and adversarial wrapper detection
-- **Action fallback chain** — `run → suggest → block` when capabilities are missing
-- **Harness capability model** — each adapter declares what behaviors its harness supports
-- **YAML rule packs** — author guardrails without writing TypeScript
-- **Zero runtime dependencies** — the engine itself is pure logic
-- **Hub-and-spoke architecture** — a dependency-free `core/` sits at the center; every other module imports into it and never back out, keeping the domain logic trivially testable ([details](docs/getting-started.md#architecture))
+See [ADR-007](docs/adrs/007-trust-and-self-protection.md) and [LIMITATIONS.md](LIMITATIONS.md).
 
-### Behaviors
+## Adapters
 
-| Behavior  | What it does                                       | Phase       |
-| --------- | -------------------------------------------------- | ----------- |
-| `block`   | Stop the tool call, no alternative                 | before-tool |
-| `suggest` | Stop the call, offer a safer replacement           | before-tool |
-| `run`     | Execute the replacement in the hook, return output | before-tool |
-| `redact`  | Allow the call, sanitize output before LLM sees it | after-tool  |
-| `confirm` | Ask the user (native UI, falls back to `block`)    | before-tool |
-
-### Built-in Rule Packs
-
-- **env** — Block `.env` file reads (both file-path and bash commands) (_upcoming_)
-- **private-key** — Block private key access, including SSH directory files (_upcoming_)
-- **secret-managers** — Block 1Password, gopass, pass, and Bitwarden secret retrieval (_upcoming_)
-- **encryption-tools** — Block `age`, `gpg`, and `openssl` decrypt commands (_upcoming_)
-- **sops** — Block SOPS decrypt operations (_upcoming_)
-- **hardening** — Detect shell wrappers (`eval`, `bash -c`, `$()`) and redirects to sensitive paths (_upcoming_)
-- **direnv**, **kubernetes**, **gh-cli** — Platform-specific guardrails (_upcoming_)
-
-### Trust & Self-Protection
-
-Four questions a security-literate evaluator asks first — answered by design, not convention:
-
-- **Can a locked-down rule be overridden by the user's own config?** No. Built-in rules can be marked `overridable: false`, enforced at the pack loader — no `Configured Action` can soften them. Community packs can't claim this privilege for their own rules; the loader silently downgrades it and warns.
-- **Can I get a stricter default than "allow" with one flag?** Yes — `--strict` sets `defaultDecision: confirm` for the `env`, `private-key`, and `secret-managers` categories, so anything secret-shaped that slips past a named rule still hits a human gate instead of silently passing through, and force-locks the `hardening` pack on.
-- **Does the adapter run somewhere the agent it governs could tamper with it?** Depends on the harness, and it's a declared, checkable fact per adapter (`tamperResistant`), not a hand-wave — external hook processes (Claude Code, Codex) are tamper-resistant, in-process plugins (Pi, OpenCode) aren't.
-- **What happens when nothing matches, or the engine itself breaks?** Two different, deliberate answers. An unmatched call fails **open** (`allow`) by default, since a coding agent that halts on every unmatched call is unusable; `defaultDecision`/`--strict` exist for operators who want to trade that ergonomics away deliberately. An engine crash, timeout, or oversized input (past the matcher's `MAX_MATCH_INPUT_LENGTH` cap) fails **closed** (`block`) instead, unconditionally, on every adapter — never derived from `defaultDecision`, never user-tunable, because a crash means the engine never got far enough to know if the call was even in scope.
-
-See [ADR-007](docs/adrs/007-trust-and-self-protection.md) for the full design.
-
-### Adapters
-
-- 🚧 **Pi** — native plugin for [Pi](https://github.com/earendil-works/pi) — WIP
-- 🚧 **OpenCode** — native plugin for [OpenCode](https://github.com/anomalyco/opencode) — WIP
-- 🚧 **Codex** — coming later
-- 🚧 **Claude Code** — coming later
-- 🔌 **Community adapters welcome** — from v0.2.0 onwards, any harness can integrate by implementing a thin adapter shim
-
-## Quick Start
-
-> Not yet published. The workflow below shows the expected v0.1.0 experience.
-
-```bash
-npx agent-guardrails install pi
-```
-
-That's it. Try `cat .env` in your agent — it should come back with a redacted read instead of the raw file.
-
-Want a stricter posture — confirm-gate anything secret-shaped even without a specific rule, and lock `hardening` so no config can disable it?
-
-```bash
-npx agent-guardrails install pi --strict
-```
-
-To build from source today, see [Getting Started](docs/getting-started.md).
-
-## What this is NOT
-
-Not a security audit tool or sandbox. See [SECURITY.md](SECURITY.md) for details.
+- **Pi** — first-party, in-process plugin for [Pi](https://github.com/earendil-works/pi)
+- **Claude Code** — first-party, external hooks
+- **Community adapters welcome** — any harness integrates against the stable adapter interface ([ADR-009](docs/adrs/009-adapter-scope-and-tiering.md), [ADR-003](docs/adrs/003-public-api-contract.md))
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — contributor gateway, full architecture deep dive, adapter capability table, vocabulary
-- [Architecture Decisions (ADRs)](docs/adrs/) — the _why_ behind core design choices
-- [How Matching Works](docs/how-matching-works.md) — layer-by-layer walkthrough with real examples
-- [Rule Pack Guide](docs/rule-pack-guide.md) — complete YAML format spec, action types, multi-matcher coverage tips
+- [Getting Started](docs/getting-started.md) — install, capability table, embedding quickstart, architecture
+- [Rule Pack Guide](docs/rule-pack-guide.md) — complete YAML format spec with steering and security examples
+- [Pack Gallery](docs/packs.md) — every shipped pack and rule, auto-generated
+- [How Matching Works](docs/how-matching-works.md) — layer-by-layer walkthrough
+- [ADRs](docs/adrs/) — the _why_ behind core design choices
+- [LIMITATIONS.md](LIMITATIONS.md) · [SECURITY.md](SECURITY.md)
 
 ## Contributing
 
-We welcome rule packs, adapters, and engine improvements. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started — the lowest-friction way to contribute is creating and sharing a YAML rule pack.
+We welcome rule packs, community adapters, and engine improvements. See [CONTRIBUTING.md](CONTRIBUTING.md) — the lowest-friction contribution is a YAML rule pack.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+A steering layer, not a sandbox — pair with [agentjail](https://github.com/LuD1161/agentjail) for containment.

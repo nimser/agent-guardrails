@@ -29,18 +29,18 @@ source of truth, not two. Tier 3 is an extension of that same persisted log
 
 - Total checks, blocks, and suggests
 
-Public API: `stats.getStats()` for snapshots, `stats.resetStats()` to zero counters. Adapters own a `StatsTracker` instance (constructed at startup), pass it to every `matchAndResolve` / `processMatch` call, and call `stats.getStats()` at session end to log to their harness-native output.
+Public API: `engine.getStats()` for snapshots, `engine.resetStats()` to zero counters (ADR-003). The engine instance owns the tracker; adapters call `engine.getStats()` at session end to log to their harness-native output.
 
 ### Domain Events
 
-The engine produces a decision trace alongside every action via `processMatch()`, which returns a `MatchResult` containing both the resolved `action` and an ordered list of `DomainEvent`s.
+The engine produces a decision trace alongside every action via `engine.processMatch()`, which returns a `MatchResult` containing both the resolved `action` and an ordered list of `DomainEvent`s.
 
 | Event Type             | When Emitted                                                        |
 | ---------------------- | ------------------------------------------------------------------- |
 | `RuleMatchedEvent`     | A rule's match condition fires against the tool call                |
 | `FallbackTriggeredEvent` | The resolver walks the fallback chain (e.g., run→suggest→block)   |
 
-`matchAndResolve()` remains the primary public API and returns only the `GuardrailAction`. Adapters that need the trace (audit, telemetry, debugging) call `processMatch()` instead.
+`engine.evaluate()` remains the primary public API and returns only the `GuardrailAction`. Adapters that need the trace (audit, telemetry, debugging) call `engine.processMatch()` instead.
 
 ### Tier 2: Persisted `DomainEvent` Log (design, deferred)
 
@@ -76,8 +76,7 @@ audit/telemetry use cases. Deferred until a concrete consumer is requested.
 - Stats are lost on process restart — Tier 2 needed for historical analysis
 - Domain events are not exposed yet — the public API returns only actions
 - Tier 2 requires file I/O infrastructure (append-only writer, age-capped retention,
-  redaction-at-write reusing the same redaction logic as `redact` — see
-  `change-10-redact-output`); a persisted, replayable event store is low-cost
-  follow-on work since the trace already exists
+  redaction-at-write reusing the same redaction logic as `redact`); a persisted,
+  replayable event store is low-cost follow-on work since the trace already exists
 - Tier 3 is a streaming extension of Tier 2's log, not an independent design — no
   separate event system needs to be built

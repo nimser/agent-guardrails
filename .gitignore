@@ -6,6 +6,7 @@
 .opencode
 .pi
 .claude
+CLAUDE.md
 
 # Built artifacts
 node_modules

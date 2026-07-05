@@ -37,19 +37,19 @@ Adapters depend on `engine`.
 | `matcher/matchers.ts`                | Evaluates `MatchCondition`s via `matchesMatcher()` | Pure |
 | `matcher/command-splitter.ts`        | Shell command splitting              | Pure                    |
 | `resolver/action-resolver.ts`        | Fallback chain, interpolation        | Pure                    |
-| `engine/engine.ts`                   | Orchestrates match → resolve. `matchAndResolve` and `processMatch` are pure functions — collaborators (`PredicateRegistry`, `StatsTracker`) are passed as arguments. | Pure (no owned state) |
+| `engine/engine.ts`                   | Orchestrates match → resolve behind `createEngine()` (ADR-003). Evaluation is pure; the engine instance encapsulates its collaborators (`PredicateRegistry`, `StatsTracker`). | Pure evaluation, encapsulated state |
 | `engine/stats-tracker.ts`            | Stats accumulation                   | Stateful (encapsulated) |
 | `infrastructure/yaml-pack-loader.ts` | YAML parsing, pack loading           | Stateless               |
 
 ### Concrete Infrastructure (No Ports Yet)
 
-`infrastructure/` contains concrete implementations. Loaders are imported directly — no port interfaces. Ports will be introduced when the 3rd adapter forces dependency inversion (see § Package Split Trigger).
+`infrastructure/` contains concrete implementations. Loaders are imported directly — no port interfaces. Ports will be introduced when the public embeddable-lib API (ADR-003) ships and embedders need to substitute their own loading — dependency inversion earns its cost then, not before.
 
 ### Package Split Trigger
 
 Split into separate packages when:
 
-1. **3+ adapters exist** (the cost of interfaces is amortized)
+1. **A community adapter ecosystem exists** (Tier 2 adapters, ADR-009, need a lean core to depend on)
 2. **Independent versioning is needed** (adapters and core diverge in release cadence)
 3. **Community rule pack registry is needed** (separate publishing lifecycle)
 
@@ -58,7 +58,7 @@ Split into separate packages when:
 - **Lowest barrier:** One clone, one `npm install`, one `npm test`
 - **Test isolation:** Each module independently testable via pure functions
 - **Growth path:** Adding features = adding modules, not growing a monolith
-- **No over-engineering:** Ports deferred until the 3rd adapter forces them
+- **No over-engineering:** Ports deferred until embedders actually need them
 
 ## Consequences
 
@@ -66,5 +66,5 @@ Split into separate packages when:
 - The layering is a contract: `core` has no dependencies; `resolver` never imports from `infrastructure`
 - `core/` remains zero-dep; the `yaml` package lives in `infrastructure/` only
 - When the split trigger fires, each directory maps cleanly to a package
-- The engine is a **pure function** at the call site. The `PredicateRegistry` and `StatsTracker` instances are passed as arguments and owned by the caller for its lifetime.
-- Adapter bootstrap: `new PredicateRegistry()`, `new StatsTracker()`, `loadAllRulePacks(path, registry)`. Adapters that need shared state across requests hold the same instances for the lifetime of the session.
+- Evaluation is **pure** at the call site: `engine.evaluate(ctx)` has no hidden module-level state; the engine instance owns its collaborators for the session's lifetime.
+- Adapter bootstrap: `createEngine(loadAllRulePacks(path, registry), capabilities)` — see ADR-003 for the full pattern.

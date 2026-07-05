@@ -173,7 +173,7 @@ describe('resolveAction', () => {
       expect(result.type).toBe('suggest')
     })
 
-    it('falls back to suggest via ctx.replacement when confirm unavailable and no fallback defined', () => {
+    it('falls back to block when confirm unavailable and no fallback defined, even when suggest is available (ADR-002)', () => {
       const action: GuardrailAction = {
         type: 'confirm',
         message: 'Confirm: {matched}',
@@ -189,11 +189,7 @@ describe('resolveAction', () => {
         matched: 'test',
         replacement: 'safe-cmd',
       })
-      expect(result).toEqual({
-        type: 'suggest',
-        replacement: 'safe-cmd',
-        message: 'Confirm: test',
-      })
+      expect(result.type).toBe('block')
     })
 
     it('falls back to block when confirm capability unavailable, no fallback, and no suggest', () => {
@@ -227,7 +223,7 @@ describe('resolveAction', () => {
       expect(result.type).toBe('block')
     })
 
-    it('confirm → suggest → block', () => {
+    it('confirm → block', () => {
       const action: GuardrailAction = { type: 'confirm', message: 'Confirm?' }
       const noConfirmNoSuggest: HarnessCapabilities = {
         block: true,
@@ -295,7 +291,7 @@ describe('resolveAction', () => {
       expect(result.type).toBe('block')
       if (result.type === 'block') {
         expect(result.fallbackReason).toBe(
-          '`confirm` capability is not supported, no `fallback` action was defined, and no upstream `replacement` is available. Falling back to a `block`.'
+          '`confirm` capability is not supported and no `fallback` action was defined. Falling back to a `block`.'
         )
       }
     })
