@@ -34,6 +34,12 @@ export default piGuardrails
   🛡️ Guardrails: 7 interventions this session (5 blocked, 2 suggested)
   ```
 
+## Capabilities
+
+The adapter declares `tamperResistant: false`: Pi's adapter is an in-process
+plugin, so the agent process itself could unload or bypass the extension —
+guardrails here protect against mistakes, not a malicious host.
+
 ## Example
 
 ```
