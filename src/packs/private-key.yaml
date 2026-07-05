@@ -16,11 +16,22 @@ rules:
 
   - id: private-key.read
     title: Block read tool calls on key files
-    description: Catches direct read tool calls on private key files, including the SSH directory
+    description: Catches direct read tool calls on private key files by extension
     phase: before-tool
     match:
       type: file-path
-      pattern: "(\\.pem|\\.key)$|/\\.ssh/(?!.*\\.pub$)"
+      pattern: "\\.(pem|key|p12|pfx|p8)$"
+    defaultAction:
+      type: block
+      message: 'Blocked: reading `{matched}` would expose private key material.'
+
+  - id: private-key.read-ssh-dir
+    title: Block reads of non-public SSH directory files
+    description: Blocks any .ssh/ file except public keys, config, known_hosts, and authorized_keys
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: ssh-private-key
     defaultAction:
       type: block
       message: 'Blocked: reading `{matched}` would expose private key material.'

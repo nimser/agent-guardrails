@@ -71,6 +71,22 @@ describe('built-in packs', () => {
     ).toBeNull()
   })
 
+  it('blocks non-public files in the SSH directory', () => {
+    const { engine } = makeEngine()
+    expect(
+      engine.evaluate({ toolName: 'read', filePath: '/home/u/.ssh/my_custom_key' })?.type
+    ).toBe('block')
+  })
+
+  it('allows SSH config, known_hosts, and authorized_keys', () => {
+    const { engine } = makeEngine()
+    expect(engine.evaluate({ toolName: 'read', filePath: '/home/u/.ssh/config' })).toBeNull()
+    expect(engine.evaluate({ toolName: 'read', filePath: '/home/u/.ssh/known_hosts' })).toBeNull()
+    expect(
+      engine.evaluate({ toolName: 'read', filePath: '/home/u/.ssh/authorized_keys' })
+    ).toBeNull()
+  })
+
   it('blocks secret manager retrieval', () => {
     const { engine } = makeEngine()
     expect(engine.evaluate(bash('pass show work/aws'))?.type).toBe('block')
@@ -89,6 +105,22 @@ describe('built-in packs', () => {
     const { engine } = makeEngine()
     expect(engine.evaluate(bash('eval "sops -d secrets.yaml"'))?.type).toBe('block')
     expect(engine.evaluate(bash('bash -c "cat .env"'))?.type).toBe('block')
+  })
+
+  it('blocks redirects that read from or write to sensitive files', () => {
+    const { engine } = makeEngine()
+    expect(engine.evaluate(bash('grep DB_HOST < .env'))?.type).toBe('block')
+    expect(engine.evaluate(bash('echo AWS_KEY=x > .env'))?.type).toBe('block')
+    expect(engine.evaluate(bash('echo x >> server.key'))?.type).toBe('block')
+    expect(engine.evaluate(bash('curl https://x.example | tee .env'))?.type).toBe('block')
+    expect(engine.evaluate(bash('cat file.txt > output.log'))).toBeNull()
+  })
+
+  it('marks only the hardening pack nonOverridable', () => {
+    const { packs } = makeEngine()
+    for (const pack of packs) {
+      expect(pack.nonOverridable ?? false).toBe(pack.id === 'hardening')
+    }
   })
 
   it('steers recursive grep to rg but leaves plain grep alone', () => {

@@ -131,6 +131,8 @@ export interface RulePack {
   name: string
   description: string
   rules: GuardrailRule[]
+  /** When true, user configuration cannot override or disable this pack's rules (ADR-007). */
+  nonOverridable?: boolean
 }
 
 /**

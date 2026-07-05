@@ -38,6 +38,7 @@ EOF
 id: my-pack # Unique identifier (kebab-case)
 name: My Rule Pack # Human-readable name
 description: What this protects # Explains the pack's purpose
+nonOverridable: true # Optional; user config cannot disable this pack's rules
 
 # ─── Rules ───
 rules:
@@ -209,6 +210,8 @@ You can disable or change any built-in rule in `agent-guardrails.json`:
   }
 }
 ```
+
+Packs marked `nonOverridable: true` (currently only `hardening`) ignore these overrides — their rules always fire with their default action ([ADR-007](adrs/007-trust-and-self-protection.md)). Adversarial wrapper patterns are guilty until proven innocent.
 
 ## Defense in Depth Tip
 
