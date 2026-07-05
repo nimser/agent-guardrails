@@ -57,6 +57,37 @@ describe('pi adapter', () => {
     expect(result).toMatchObject({ block: true })
   })
 
+  it.each([
+    ['secret-managers: op read', 'op read op://vault/item/password'],
+    ['secret-managers: pass show', 'pass show work/github'],
+    ['secret-managers: gopass show', 'gopass show web/site'],
+    ['secret-managers: bw get', 'bw get password github'],
+    ['encryption-tools: age -d', 'age -d secrets.age'],
+    ['encryption-tools: gpg --decrypt', 'gpg --decrypt backup.gpg'],
+    ['encryption-tools: openssl enc -d', 'openssl enc -d -in secrets.enc'],
+    ['hardening: eval wrapper', 'eval "cat .env"'],
+    ['hardening: nested shell', 'sh -c "cat .env"'],
+    ['hardening: command substitution', 'echo $(cat .env)'],
+  ])('blocks %s', async (_name, command) => {
+    const { toolCall } = setup()
+    expect(await toolCall(bash(command))).toMatchObject({ block: true })
+  })
+
+  it.each([
+    ['alternate reader: less', 'less .env'],
+    ['alternate reader: head', 'head .env'],
+    ['alternate reader: tail', 'tail .env'],
+    ['quoted path', "cat './.env'"],
+  ])('blocks adversarial variant — %s', async (_name, command) => {
+    const { toolCall } = setup()
+    expect(await toolCall(bash(command))).toMatchObject({ block: true })
+  })
+
+  it('blocks a bash event with no input at all (missing required fields fail closed)', async () => {
+    const { toolCall } = setup()
+    expect(await toolCall({ toolName: 'bash' })).toMatchObject({ block: true })
+  })
+
   it('passes through safe commands and files', async () => {
     const { toolCall } = setup()
     expect(await toolCall(bash('ls -la'))).toBeUndefined()
