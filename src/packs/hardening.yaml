@@ -1,0 +1,71 @@
+id: hardening
+name: Adversarial Wrapper Hardening
+description: Force-block shell constructs that hide risky operations from structural matching
+nonOverridable: true
+
+rules:
+  - id: hardening.eval
+    title: Block eval around sensitive operations
+    description: eval hides its payload from structural matchers
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)eval\\s+.*(\\.env|\\.pem|\\.key|sops|decrypt|pass\\s+show|op\\s+read)"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` — eval can hide dangerous commands from guardrails.'
+
+  - id: hardening.shell-c
+    title: Block bash -c / sh -c around sensitive operations
+    description: Nested shell invocations hide their payload from structural matchers
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(^|[;&|]\\s*)(bash|sh|zsh)\\s+-c\\s+.*(\\.env|\\.pem|\\.key|sops|decrypt|pass\\s+show|op\\s+read)"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` — nested shells can hide dangerous commands from guardrails.'
+
+  - id: hardening.substitution
+    title: Block command substitution around sensitive operations
+    description: $() and backticks hide their payload from structural matchers
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "(\\$\\(|`).*(\\.env|\\.pem|\\.key|sops\\s|decrypt|pass\\s+show|op\\s+read)"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` — command substitution can hide dangerous commands from guardrails.'
+
+  - id: hardening.redirect-read-sensitive
+    title: Block redirects reading from sensitive files
+    description: Detects < redirect from .env/.pem/.key/.p12/.pfx/.p8 files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "<\\s*\\S*\\.(env|pem|key|p12|pfx|p8)\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` — redirecting from sensitive files may leak secrets.'
+
+  - id: hardening.redirect-write-sensitive
+    title: Block redirects writing to sensitive files
+    description: Detects > or >> redirect to .env/.pem/.key files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: ">>?\\s*\\S*\\.(env|pem|key)\\s*$"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` — writing to sensitive files via redirect.'
+
+  - id: hardening.redirect-tee-sensitive
+    title: Block tee to sensitive files
+    description: Detects tee writing to .env/.pem/.key files
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "\\btee\\s+[^|;&]*\\.(env|pem|key)\\b"
+    defaultAction:
+      type: block
+      message: 'Blocked: `{matched}` — tee can write secrets to sensitive files.'
