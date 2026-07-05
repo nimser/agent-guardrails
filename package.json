@@ -40,7 +40,8 @@
     "format:check": "oxfmt --check .",
     "check": "oxlint --type-aware . && oxfmt --check . && tsc --noEmit",
     "docs": "typedoc",
-    "docs:check": "typedoc --emit none"
+    "docs:check": "typedoc --emit none",
+    "docs:packs": "node scripts/generate-packs-gallery.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.12.0",
