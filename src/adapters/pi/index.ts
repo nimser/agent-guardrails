@@ -1,7 +1,6 @@
-import { PredicateRegistry } from '../../core/predicate-registry.js'
 import { PI_CAPABILITIES } from '../../core/harness-capabilities.js'
-import { matchAndResolve } from '../../engine/engine.js'
-import { StatsTracker } from '../../engine/stats-tracker.js'
+import { PredicateRegistry } from '../../core/predicate-registry.js'
+import { createEngine } from '../../engine/create-engine.js'
 import { loadBuiltInRulePacks } from '../../packs/index.js'
 import { normalizeToContext, type PiToolCallEvent } from './normalize.js'
 
@@ -33,12 +32,11 @@ export interface ExtensionAPI {
  */
 export default function piGuardrails(pi: ExtensionAPI): void {
   const registry = new PredicateRegistry()
-  const packs = loadBuiltInRulePacks(registry)
-  const stats = new StatsTracker()
+  const engine = createEngine(loadBuiltInRulePacks(registry), PI_CAPABILITIES, { registry })
 
   pi.on('tool_call', async (event) => {
     const ctx = normalizeToContext(event)
-    const result = matchAndResolve(ctx, packs, PI_CAPABILITIES, registry, stats)
+    const result = engine.evaluate(ctx)
     if (result?.type === 'block' || result?.type === 'suggest') {
       return { block: true, reason: result.message ?? 'Blocked by agent-guardrails.' }
     }
@@ -46,13 +44,13 @@ export default function piGuardrails(pi: ExtensionAPI): void {
   })
 
   pi.on('session_shutdown', (_event, ctx) => {
-    const { blocks, suggests } = stats.getStats()
+    const { blocks, suggests } = engine.getStats()
     const matches = blocks + suggests
     if (matches > 0) {
       ctx.ui.notify(
         `🛡️ Guardrails: ${matches} interventions this session (${blocks} blocked, ${suggests} suggested)`
       )
     }
-    stats.resetStats()
+    engine.resetStats()
   })
 }
