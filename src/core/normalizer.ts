@@ -4,6 +4,7 @@ import type { ToolCallContext } from './types.js'
  * Well-known tool names that require specific fields in ToolCallContext.
  * - bash requires `command`
  * - read/write require `filePath`
+ * - user-input requires `command` (the prompt text, ADR-010)
  *
  * Unknown tool names are allowed through with whatever fields are present.
  *
@@ -11,7 +12,7 @@ import type { ToolCallContext } from './types.js'
  * `isKnownTool` to check membership so the engine's enforcement behavior
  * cannot be mutated at runtime.
  */
-export const KNOWN_TOOLS = ['bash', 'read', 'write'] as const
+export const KNOWN_TOOLS = ['bash', 'read', 'write', 'user-input'] as const
 
 const KNOWN_TOOLS_SET: ReadonlySet<string> = new Set(KNOWN_TOOLS)
 
@@ -54,6 +55,7 @@ export function isMissingRequiredFields(
 ): boolean {
   switch (ctx.toolName) {
     case 'bash':
+    case 'user-input':
       return !command
     case 'read':
     case 'write':

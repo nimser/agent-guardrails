@@ -44,7 +44,7 @@ rules:
   - id: my-pack.rule-name # Stable dotted ID (pack.rule)
     title: Short title # Appears in match reports
     description: What this catches and why it matters
-    phase: before-tool # before-tool or after-tool
+    phase: before-tool # user-input, before-tool, or after-tool
     match:
       type: bash-command # bash-command or file-path
       pattern: "regex-here" # Regex matching the tool call input
@@ -111,6 +111,67 @@ defaultAction:
     message: "Blocked: `{matched}` — confirmation required."
 ```
 
+## Steering Rules (Quality of Life)
+
+The same format covers non-security steering — rules that keep the agent on the fast path. These fire every session:
+
+```yaml
+rules:
+  # grep → rg: the agent gets a faster tool and keeps moving
+  - id: modern-cli.grep
+    title: Prefer ripgrep over grep
+    phase: before-tool
+    match:
+      type: bash-command
+      pattern: "^grep\\b|[;&|]\\s*grep\\b"
+    defaultAction:
+      type: suggest
+      replacement: "rg"
+      message: "`{matched}` — use `rg` instead: faster, respects .gitignore."
+
+  # npm in a pnpm repo: catch the mismatch before it corrupts the lockfile
+  - id: package-manager.npm-in-pnpm
+    title: npm install in a pnpm repository
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: npm-in-pnpm-repo
+    defaultAction:
+      type: suggest
+      replacement: "pnpm add"
+      message: "This repo uses pnpm (`pnpm-lock.yaml` present). `{matched}` would create a conflicting lockfile."
+
+  # committing to a protected branch: a human should decide
+  - id: git-safety.commit-to-main
+    title: Confirm commits to protected branches
+    phase: before-tool
+    match:
+      type: predicate
+      predicateName: on-protected-branch
+    defaultAction:
+      type: confirm
+      message: "You're about to commit directly to a protected branch. Proceed?"
+```
+
+## User-Input Rules
+
+The `user-input` phase matches the prompt text the user submits, before it reaches the provider API ([ADR-010](adrs/010-user-input-mediation.md)). Use it to scrub pasted secrets:
+
+```yaml
+rules:
+  - id: env.pasted-key
+    title: Scrub API keys pasted into prompts
+    phase: user-input
+    match:
+      type: bash-command # matches the prompt text for user-input rules
+      pattern: "(sk|ghp|xox[bap])-[A-Za-z0-9_-]{20,}"
+    defaultAction:
+      type: redact
+      message: "A secret-shaped value in your prompt was replaced with a placeholder before sending."
+```
+
+`redact` rewrites the prompt; `block` and `confirm` are also valid in this phase. `suggest` and `run` are tool-call concepts and are rejected at load time.
+
 ## Message Templates
 
 Use `{matched}` in any message field. At match time, it's replaced with the actual command or file path that triggered the rule:
@@ -122,30 +183,19 @@ message: "Blocked: `{matched}` — this file may contain secrets."
 
 ## Phase-Behavior Matrix
 
-Not every action works in every phase:
+Not every action works in every phase ([ADR-002](adrs/002-behavior-model.md)):
 
 | Phase         | block | suggest | run | redact | confirm |
 | ------------- | :---: | :-----: | :-: | :----: | :-----: |
+| `user-input`  |  ✅   |   ❌    | ❌  |   ✅   |   ✅    |
 | `before-tool` |  ✅   |   ✅    | ✅  |   ❌   |   ✅    |
 | `after-tool`  |  ❌   |   ❌    | ❌  |   ✅   |   ❌    |
 
-`before-tool` fires _before_ the command runs (most common). `after-tool` fires after and can only redact output. Invalid combinations are rejected at load time.
+`user-input` fires on the prompt the user submits. `before-tool` fires _before_ the command runs (most common). `after-tool` fires after and can only redact output. Invalid combinations are rejected at load time.
 
 ## Built-in Rule Packs
 
-Agent Guardrails will ship with these packs (_all upcoming_):
-
-| Pack ID            | What it catches                                      |
-| ------------------ | ---------------------------------------------------- |
-| `env`              | `.env` and `.env.*` file reads                       |
-| `sops`             | `sops -d` / `sops --decrypt` commands                |
-| `private-key`      | `.pem`, `.key`, SSH key file reads                   |
-| `encryption-tools` | `age -d`, `gpg --decrypt`, `openssl enc -d`          |
-| `secret-managers`  | `op read`, `gopass show`, `pass show`, `bw get`      |
-| `kubernetes`       | `kubectl get secrets`, `kubectl describe secrets`    |
-| `gh-cli`           | `gh secret view`, `gh variable get`                  |
-| `direnv`           | `direnv exec`, `source .env`                         |
-| `hardening`        | Eval/subshell wrappers, redirects to sensitive paths |
+See the [Pack Gallery](packs.md) for the full auto-generated list of shipped packs and rules. Steering packs: `modern-cli`, `package-manager`, `git-safety`. Security packs: `env`, `sops`, `private-key`, `encryption-tools`, `secret-managers`, `hardening`.
 
 ## Overriding Built-in Rules
 

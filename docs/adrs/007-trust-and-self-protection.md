@@ -30,9 +30,9 @@ no specific matched pattern:
 - **`run` excluded** — a catch-all has no single replacement command to execute; `run`
   only makes sense tied to a specific matched pattern.
 - **`redact` excluded** — phase mismatch. `defaultDecision` is before-tool only;
-  catch-all output scrubbing is a separate concern (see Phase 2 / `change-15`).
+  catch-all output scrubbing is a separate concern.
 - **`confirm`** gives the synchronous, harness-native human gate, with its existing
-  capability-driven fallback (now `confirm → block`, see the ADR-002 revision below).
+  capability-driven fallback (`confirm → block`, ADR-002).
 - **`suggest`** gives the LLM-directed steer ("tell the agent to ask the user") with no
   native-UI dependency and no synchronous human involvement. A single `ask`
   enum can't express both this and `confirm`'s synchronous human gate in one value,
@@ -52,8 +52,8 @@ packs already define as "sensitive," rather than inventing a new concept.
 **`strict` preset:** `{ defaultDecision: 'confirm' }` scoped as above, plus the
 `hardening` pack forced on and non-overridable. One flag, one trust signal. No
 preset-specific fallback override is needed — `confirm`'s universal fallback chain
-(`confirm → block`, see the ADR-002 revision) already produces the safe behavior
-`strict` requires on harnesses without native confirm UI.
+(`confirm → block`, ADR-002) already produces the safe behavior `strict` requires on
+harnesses without native confirm UI.
 
 **Adapter contract, distinct from `defaultDecision`.** Engine throw/timeout is not
 "no rule matched" — on a crash the engine failed *before* determining whether the call
@@ -62,10 +62,7 @@ was even in `defaultDecision`'s scope, so there's no scope to apply.
 non-configurably** — not derived from `defaultDecision`, not user-tunable. A crash is
 rare (a bug, not routine traffic), so the ergonomic cost `defaultDecision`'s scoping
 exists to avoid doesn't apply here, and there is no legitimate case for "allow on
-crash." This is currently unspecified — nothing today says what an adapter does if
-`matchAndResolve`/`processMatch` throws. It is the actual fail-open hole. Enforced as
-a testable requirement in each adapter's `spec.md` (`change-3`, `change-4`, `change-6`,
-`change-7`).
+crash." Enforced as a testable requirement in each adapter's spec.
 
 ### 2. `overridable: false` — rule-level, built-in-packs-only
 
@@ -90,21 +87,16 @@ designed now — tracked as a one-line forward pointer in
 `future-architecture-decisions.md`.
 
 **Resolver requirement:** a `Configured Action` MUST be rejected/ignored for any
-built-in rule with `overridable: false`, regardless of `mode`/config precedence. This
-closes the gap `design-session-summary.md` flagged as "NonOverridable Block Action" and
-never carried into the type system. Tracked as two new requirements in
-`change-13-rule-configuration/specs/config/spec.md`: "Configuration Override
-Rejection" and "Community Pack Trust Boundary."
+built-in rule with `overridable: false`, regardless of `mode`/config precedence.
 
 ### 3. `capabilities.tamperResistant: boolean`
 
 Added to `HarnessCapabilities`. `true` only for adapters that run as an external hook
-process the harness invokes (Claude Code, Codex). `false` for in-process plugin
-adapters (Pi, OpenCode). This is a statement of fact about the adapter's deployment,
-not a behavior the engine changes — no resolver logic needed, just a declared field
-each adapter's `spec.md` sets and justifies in one sentence. It is the same
-in-process/out-of-process split that determines `haltTurnBeforeTool` (see the ADR-002
-revision) — the two findings are related, not coincidental.
+process the harness invokes (Claude Code). `false` for in-process plugin adapters
+(Pi). This is a statement of fact about the adapter's deployment, not a behavior the
+engine changes — no resolver logic needed, just a declared field each adapter's spec
+sets and justifies in one sentence. Community adapters (ADR-009) declare it for their
+own harness the same way.
 
 Feeds directly into the README capability table and gives the "external hook process
 vs. in-process plugin" distinction a concrete, checkable artifact instead of prose in a
@@ -114,9 +106,9 @@ research doc.
 
 Default posture is `allow` on no-match, because a coding agent that halts on every
 unmatched call is unusable. `defaultDecision` exists precisely so an operator can opt
-into a stricter posture where the ergonomics trade-off is worth it. Previously this was
-an implicit `return null`. `SECURITY.md` and ADR-002/ADR-003 should link to this
-rationale instead of leaving it to be inferred from a bare `null`.
+into a stricter posture where the ergonomics trade-off is worth it. `SECURITY.md` and
+`LIMITATIONS.md` link to this rationale instead of leaving it to be inferred from a
+bare `null`.
 
 ## Rationale
 
@@ -131,7 +123,7 @@ rationale instead of leaving it to be inferred from a bare `null`.
 
 ## Consequences
 
-- `HarnessCapabilities` gains `tamperResistant: boolean` — every adapter's `spec.md`
+- `HarnessCapabilities` gains `tamperResistant: boolean` — every adapter's spec
   must declare and justify it.
 - `GuardrailRule` gains `overridable?: boolean` (default `true`); the pack loader
   gains a downgrade-with-warning path for community packs.

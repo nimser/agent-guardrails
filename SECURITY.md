@@ -2,9 +2,11 @@
 
 ## What Agent Guardrails Is (and Isn't)
 
-Agent Guardrails is a **pattern-based policy engine** for AI coding agent workflows. It intercepts tool calls and matches them against rule packs before execution. Whether that's a genuinely independent security layer or cooperative enforcement depends on the harness: external hook process adapters (Claude Code, Codex) add a boundary the agent can't reach into; in-process plugin adapters (Pi, OpenCode) don't (`tamperResistant`, see [ADR-007](docs/adrs/007-trust-and-self-protection.md)).
+Agent Guardrails is a **pattern-based steering engine** for AI coding agent workflows. It mediates user input, tool calls, and tool output against rule packs. Whether that's a genuinely independent security layer or cooperative enforcement depends on the harness: the external-hook adapter (Claude Code) adds a process boundary the agent can't reach into; the in-process plugin adapter (Pi) doesn't (`tamperResistant`, see [ADR-007](docs/adrs/007-trust-and-self-protection.md)).
 
-It is **not** a security audit tool, a sandbox, or a complete security boundary. Deterministic regex matching cannot catch every adversarial payload.
+It is **not** a security audit tool, a sandbox, or a complete security boundary. Deterministic regex matching cannot catch every adversarial payload. See [LIMITATIONS.md](LIMITATIONS.md) for the full statement of what this architecture cannot do, and for the containment pairing (agentjail).
+
+**Why redact rather than never-inject?** A credential-injection proxy is stronger for secrets registered ahead of time on flows the proxy sees; it doesn't cover unregistered secrets, tokens in files the agent reads, arbitrary command output, or pasted prompts. Never-inject what you know about; redact what you didn't. Pair them ([LIMITATIONS.md](LIMITATIONS.md)).
 
 ## Default Posture: Fail-Open, With Fail-Closed Exceptions
 

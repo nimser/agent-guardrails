@@ -1,3 +1,26 @@
+// ── Engine Factory (the public integration surface, ADR-003) ──
+export {
+  /**
+   * Create a guardrail engine over rule packs and harness capabilities.
+   * The public entry point for adapters and embedders: one `evaluate()`
+   * call per event, covering all three phases.
+   */
+  createEngine,
+} from './engine/create-engine.js'
+export type { Engine, CreateEngineOptions } from './engine/create-engine.js'
+
+// ── Tier 1 Harness Capabilities (ADR-009) ───────────────
+export {
+  /** Pi capability constant (in-process plugin; all behaviors native). */
+  PI_CAPABILITIES,
+  /** Claude Code capability constant (external hooks; all behaviors native, redact ≥ 2.1.121). */
+  CLAUDE_CODE_CAPABILITIES,
+  /** The Claude Code version floor for the `redact` behavior. */
+  CLAUDE_CODE_REDACT_MIN_VERSION,
+  /** Claude Code capabilities gated on the installed CLI version. */
+  claudeCodeCapabilities,
+} from './core/harness-capabilities.js'
+
 // ── Core Types ──────────────────────────────────────────
 export type { HarnessCapabilities } from './core/types.js'
 export type {
@@ -19,6 +42,10 @@ export type {
   BeforeToolAction,
   /** Actions available in the after-tool phase. */
   AfterToolAction,
+  /** Actions available in the user-input phase (ADR-010). */
+  UserInputAction,
+  /** A single guardrail rule evaluated in the user-input phase. */
+  UserInputRule,
   /** A named collection of guardrail rules. */
   RulePack,
   /** Emitted when a rule's matcher fires against a tool call. */
@@ -33,11 +60,11 @@ export type {
 
 // ── Normalizer ─────────────────────────────────────────
 export {
-  /** Check whether a tool name is one of the well-known tools with required fields. */
+  /** @internal Check whether a tool name is one of the well-known tools with required fields. */
   isKnownTool,
-  /** Extract command and filePath from a ToolCallContext. */
+  /** @internal Extract command and filePath from a ToolCallContext. */
   extractTargets,
-  /** Check whether a ToolCallContext is missing required fields. */
+  /** @internal Check whether a ToolCallContext is missing required fields. */
   isMissingRequiredFields,
 } from './core/normalizer.js'
 
@@ -60,37 +87,24 @@ export {
   getRulePackErrors,
 } from './core/validator.js'
 
-// ── Engine ──────────────────────────────────────────────
+// ── Engine internals ────────────────────────────────────
 export type { Stats } from './engine/stats-tracker.js'
 export {
-  /**
-   * The main entry point: evaluate a ToolCallContext against RulePacks and
-   * return the resolved GuardrailAction (or null if no rule matched).
-   *
-   * `registry` and `stats` are explicit collaborators — the engine does not
-   * own their lifecycle. Construct fresh ones (or share between calls)
-   * however fits the caller's use case.
-   */
+  /** @internal Engine plumbing — use `createEngine().evaluate()` instead. */
   matchAndResolve,
-  /**
-   * Internal engine entry point. Returns both the resolved action and
-   * the domain events that explain how the decision was reached.
-   */
+  /** @internal Engine plumbing — use `createEngine().processMatch()` instead. */
   processMatch,
 } from './engine/engine.js'
 export {
-  /** Accumulator for intervention stats (checks, blocks, suggests). */
+  /** @internal Accumulator for intervention stats — owned by the engine instance. */
   StatsTracker,
 } from './engine/stats-tracker.js'
 
-// ── Matcher ─────────────────────────────────────────────
+// ── Matcher internals ───────────────────────────────────
 export {
-  /**
-   * The single entry point for evaluating a MatchCondition against a
-   * ToolCallContext. Replaces the old registry/handler split.
-   */
+  /** @internal Matching dispatch — production code goes through `createEngine().evaluate()`. */
   matchesMatcher,
-  /** Maximum input length before regex matchers fail-closed. */
+  /** @internal Maximum input length before regex matchers fail-closed. */
   MAX_MATCH_INPUT_LENGTH,
 } from './matcher/matchers.js'
 

@@ -23,7 +23,16 @@ export type BeforeToolAction =
  */
 export type AfterToolAction = { type: 'redact'; replacement: string }
 
-/** Union of all possible guardrail actions across both phases. */
+/**
+ * Actions available in the `user-input` phase.
+ * `suggest` and `run` are tool-call concepts and are excluded (ADR-010).
+ */
+export type UserInputAction =
+  | { type: 'block'; message: string; fallbackReason?: string }
+  | { type: 'redact'; replacement: string }
+  | { type: 'confirm'; message: string; fallback?: BeforeToolAction }
+
+/** Union of all possible guardrail actions across all phases. */
 export type GuardrailAction = BeforeToolAction | AfterToolAction
 
 /**
@@ -46,6 +55,12 @@ export type ToolCallContext =
   | { toolName: 'bash'; command: string; filePath?: string }
   | { toolName: 'read'; filePath: string }
   | { toolName: 'write'; filePath: string }
+  /**
+   * The `user-input` phase context (ADR-010): `command` carries the prompt
+   * text the user submitted, so bash-command and predicate matchers apply
+   * to it unchanged. The prompt is never command-split.
+   */
+  | { toolName: 'user-input'; command: string; filePath?: undefined }
   | { toolName: string; command?: string; filePath?: string }
 
 /** A single guardrail rule evaluated in the before-tool phase. */
@@ -68,8 +83,18 @@ export interface AfterToolRule {
   defaultAction: AfterToolAction
 }
 
-/** Union of rules from both phases. */
-export type GuardrailRule = BeforeToolRule | AfterToolRule
+/** A single guardrail rule evaluated in the user-input phase (ADR-010). */
+export interface UserInputRule {
+  id: string
+  title: string
+  description: string
+  phase: 'user-input'
+  match: MatchCondition
+  defaultAction: UserInputAction
+}
+
+/** Union of rules from all phases. */
+export type GuardrailRule = BeforeToolRule | AfterToolRule | UserInputRule
 
 // ── Domain Events ───────────────────────────────────────
 
@@ -118,4 +143,12 @@ export interface HarnessCapabilities {
   run: boolean
   redact: boolean
   confirm: boolean
+  /** Whether the harness can rewrite the submitted prompt in the `user-input` phase (ADR-010). Defaults to false. */
+  redactUserInput?: boolean
+  /** Whether the adapter runs outside the process of the agent it governs (ADR-007). A declared fact, not engine behavior. */
+  tamperResistant?: boolean
+  /** Whether the harness can stop the current turn from the before-tool phase (ADR-002). */
+  haltTurnBeforeTool?: boolean
+  /** Whether the harness can stop the current turn from the after-tool phase (ADR-002). */
+  haltTurnAfterTool?: boolean
 }

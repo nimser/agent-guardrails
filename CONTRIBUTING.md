@@ -43,14 +43,14 @@ Ideas for new packs: AWS SSM/Secrets Manager, Terraform, HashiCorp Vault, databa
 Want to add support for another AI coding harness? Adapters are thin shims:
 
 1. Normalize the harness event → `ToolCallContext`
-2. Call `matchAndResolve()` from the engine
+2. Call `engine.evaluate()` from the public API
 3. Translate the result back to the harness's native mechanism
 
-The existing Pi and OpenCode adapters show the pattern. Community adapters for Codex, Claude Code, Aider, and others are welcome starting at v0.2.0.
+The first-party Pi and Claude Code adapters show the pattern. Adapters for other harnesses (OpenCode, Codex, Aider, …) are community-owned and live outside this repo, built against the stable interface ([ADR-009](docs/adrs/009-adapter-scope-and-tiering.md)).
 
 ### 🔴 Deeper Work: Engine Improvements
 
-Changes to the matcher registry, resolver, action fallback chain, or type system require more context. Start with the [Architecture Decisions](docs/adrs/) (read in order 1–5), then open an issue to discuss your approach before diving in.
+Changes to the matcher registry, resolver, action fallback chain, or type system require more context. Start with the [Architecture Decisions](docs/adrs/) (read in order), then open an issue to discuss your approach before diving in.
 
 ## Code Style
 

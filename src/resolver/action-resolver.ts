@@ -28,9 +28,9 @@ function interpolateMessage(message: string | undefined, ctx: ResolveContext): s
  * Resolve a GuardrailAction against HarnessCapabilities, walking the fallback chain
  * when a behavior is not supported.
  *
- * Fallback chains:
+ * Fallback chains (ADR-002):
  * - run → suggest → block
- * - confirm → suggest → block
+ * - confirm → block
  * - redact → block (when unsupported)
  * - suggest → block (when unsupported)
  */
@@ -150,15 +150,11 @@ function resolveConfirm(
   if (action.fallback) {
     return resolveAction(action.fallback, capabilities, ctx)
   }
-  if (capabilities.suggest && ctx.replacement) {
-    return {
-      type: 'suggest',
-      replacement: ctx.replacement,
-      message: interpolate(action.message, ctx),
-    }
-  }
+  // ADR-002: confirm falls back straight to block, never to suggest — a rule
+  // that asked for a human decision must not degrade into handing the agent
+  // an actionable replacement.
   return fallbackBlock(
-    '`confirm` capability is not supported, no `fallback` action was defined, and no upstream `replacement` is available. Falling back to a `block`.',
+    '`confirm` capability is not supported and no `fallback` action was defined. Falling back to a `block`.',
     action.message,
     ctx
   )

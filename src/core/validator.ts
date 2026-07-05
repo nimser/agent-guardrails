@@ -1,12 +1,13 @@
 import type {
   AfterToolAction,
   BeforeToolAction,
+  UserInputAction,
   MatchCondition,
   GuardrailRule,
   RulePack,
 } from './types.js'
 
-const VALID_PHASES = new Set(['before-tool', 'after-tool'])
+const VALID_PHASES = new Set(['user-input', 'before-tool', 'after-tool'])
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object'
@@ -53,6 +54,14 @@ function isBeforeToolAction(v: unknown): v is BeforeToolAction {
     default:
       return false
   }
+}
+
+function isUserInputAction(v: unknown): v is UserInputAction {
+  if (!isObject(v)) return false
+  // suggest and run are tool-call concepts, excluded from user-input (ADR-010)
+  if (v.type === 'suggest' || v.type === 'run' || v.type === 'allow') return false
+  if (v.type === 'redact') return isAfterToolAction(v)
+  return isBeforeToolAction(v)
 }
 
 function isAfterToolAction(v: unknown): v is AfterToolAction {
@@ -103,7 +112,7 @@ function checkRequiredStringFields(input: Record<string, unknown>): string[] {
 
 function checkPhase(input: Record<string, unknown>): string[] {
   if (typeof input.phase !== 'string' || !VALID_PHASES.has(input.phase)) {
-    return ['Rule "phase" must be "before-tool" or "after-tool"']
+    return ['Rule "phase" must be "user-input", "before-tool", or "after-tool"']
   }
   return []
 }
@@ -124,6 +133,9 @@ function checkActionForPhase(input: Record<string, unknown>): string[] {
   }
   if (input.phase === 'after-tool' && !isAfterToolAction(input.defaultAction)) {
     return ['Rule "defaultAction" must be a redact action for after-tool phase']
+  }
+  if (input.phase === 'user-input' && !isUserInputAction(input.defaultAction)) {
+    return ['Rule "defaultAction" must be a redact, block, or confirm action for user-input phase']
   }
   return []
 }

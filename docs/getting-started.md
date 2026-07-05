@@ -1,10 +1,10 @@
 # Getting Started with Agent Guardrails
 
-Welcome! This is the contributor gateway for Agent Guardrails — a policy engine that intercepts AI coding agent tool calls and enforces security rules before they execute.
+Welcome! This is the contributor gateway for Agent Guardrails — a steering engine that mediates AI coding agent events (user input, tool calls, tool output) against rule packs.
 
 ## What This Project Does
 
-Your AI coding agent shouldn't read `.env` files, decrypt secrets, or expose private keys. Agent Guardrails stops it before it happens.
+Your AI coding agent shouldn't read `.env` files raw, `grep` when `rg` is faster, or force-push over shared history. Agent Guardrails steers it to the better move — and blocks when nothing safe exists.
 
 ```
 Agent Tool Call → Match Rules → Resolve Action → Enforce
@@ -28,48 +28,27 @@ No TypeScript required. Write a YAML file describing what to watch for, submit a
 - **Examples:** Built-in packs in `src/packs/`
 - **Ideas:** Check the backlog of planned packs below
 
-### 🟡 Medium: Build an Adapter
+### 🟡 Medium: Embed the Library or Build an Adapter
 
-Adapters are thin shims between a harness (Pi, OpenCode, Codex, Claude Code) and the engine. If your favorite harness isn't supported yet, this is a high-impact contribution.
-
-The engine (`matchAndResolve` / `processMatch`) is a pure function with a stable public
-API ([ADR-003](adrs/003-public-api-contract.md)). Import it directly as your harness's
-permission-system implementation instead of writing rule matching from scratch. You own
-the adapter glue; the engine owns matching, resolution, and fallback. See ADR-003's
-Adapter Bootstrap Pattern for the full pattern.
-
-#### Programmatic API
-
-Adapters use the engine's public API to match and resolve actions:
+Building your own harness, or want guardrails in an agent app? The library is one function ([ADR-003](adrs/003-public-api-contract.md)):
 
 ```typescript
-import { matchAndResolve, loadAllRulePacks, PredicateRegistry, StatsTracker } from "agent-guardrails";
+import { createEngine, loadAllRulePacks, PredicateRegistry } from "agent-guardrails";
 
-// Construct collaborators — the caller owns their lifecycle
 const registry = new PredicateRegistry();
-const stats = new StatsTracker();
-
-// Register adapter-specific predicates (if any)
 registry.register("my-check", (ctx) => /* ... */);
 
-const packs = loadAllRulePacks("./packs", registry);
-
-const capabilities = {
+const engine = createEngine(loadAllRulePacks("./packs", registry), {
   block: true,
   suggest: true,
   run: false,
   redact: false,
   confirm: true,
-};
+  redactUserInput: false,
+}, { registry });
 
-// On each tool call:
-const action = matchAndResolve(
-  { toolName: "bash", command: "cat .env" },
-  packs,
-  capabilities,
-  registry,
-  stats,
-);
+// On each tool call, tool result, or user prompt:
+const action = engine.evaluate({ toolName: "bash", command: "cat .env" });
 
 if (action?.type === "block") {
   console.log(action.message);
@@ -77,21 +56,22 @@ if (action?.type === "block") {
 }
 ```
 
+You own the glue; the engine owns matching, resolution, and fallback. Community adapters for other harnesses (OpenCode, Codex, …) build against this same surface — see [ADR-009](adrs/009-adapter-scope-and-tiering.md) for the tiering model.
+
 Run `npm run docs` to generate the full API reference locally (outputs to `docs/api/`).
 
-#### Adapter Capabilities (design target)
+#### Adapter Capabilities
 
 Not every harness supports every behavior. Source-verified per
 [ADR-002](adrs/002-behavior-model.md) / [ADR-007](adrs/007-trust-and-self-protection.md).
-Unsupported behaviors degrade via the [fallback chain](#fallback-chains). Pi and OpenCode
-adapters are WIP; Codex and Claude Code are planned — see the main [README](../README.md#adapters).
+Unsupported behaviors degrade via the [fallback chain](#fallback-chains).
 
-| Harness     | `run` | `redact` | `confirm` | `tamperResistant` | `haltTurnBeforeTool` | `haltTurnAfterTool` |
-| ----------- | :---: | :------: | :-------: | :----------------: | :-------------------: | :--------------------: |
-| Pi          |  ✅   |    ✅    |    ✅     |         ❌          |           ✅           |           ✅            |
-| OpenCode    |  ✅   |    ✅    |    ✅     |         ❌          |           ✅           |           ✅            |
-| Claude Code |  ❌   |    ❌    |    ✅     |         ✅          |           ✅           |           ✅            |
-| Codex       |  ❌   |    ❌    |    ✅     |         ✅          |           ❌           |           ✅            |
+| Harness     | `run` | `redact` | `confirm` | `redactUserInput` | `tamperResistant` | `haltTurnBeforeTool` | `haltTurnAfterTool` |
+| ----------- | :---: | :------: | :-------: | :---------------: | :----------------: | :-------------------: | :--------------------: |
+| Pi          |  ✅   |    ✅    |    ✅     |        ✅         |         ❌          |           ✅           |           ✅            |
+| Claude Code |  ✅   |    ✅ (≥ 2.1.121)    |    ✅     |        ✅         |         ✅          |           ✅           |           ✅            |
+
+Community adapters declare their own row against the same flags ([ADR-009](adrs/009-adapter-scope-and-tiering.md)).
 
 ### 🔴 Deeper: Engine Improvements
 
@@ -172,16 +152,20 @@ L1+L3 match = force-block regardless of L2 (adversarial pattern detected).
 
 ### Architectural Decisions
 
-Agent Guardrails is built on six core architectural decisions. Read these in order:
+Read these in order:
 
-| #   | ADR                                                      | What it covers                                                                                |
-| --- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 1   | [Layered Architecture](adrs/001-layered-architecture.md) | Package structure, dependency direction, module responsibilities                              |
-| 2   | [Behavior Model](adrs/002-behavior-model.md)             | What the engine can do (block/suggest/run/redact/confirm), phase constraints, fallback chains |
-| 3   | [Public API Contract](adrs/003-public-api-contract.md)   | What's exported, what's internal, adapter bootstrap pattern                                   |
-| 4   | [Matching Strategy](adrs/004-matching-strategy.md)       | Three-layer defense-in-depth, risk escalation, command splitting                              |
-| 5   | [YAML Rule Packs](adrs/005-yaml-rule-packs.md)           | Why YAML, built-in packs, predicate limitations                                               |
-| 6   | [Observability](adrs/006-observability-strategy.md)      | In-memory stats, tiered roadmap                                                               |
+| #   | ADR                                                              | What it covers                                                                                |
+| --- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1   | [Layered Architecture](adrs/001-layered-architecture.md)         | Package structure, dependency direction, module responsibilities                              |
+| 2   | [Behavior Model](adrs/002-behavior-model.md)                     | Five behaviors, three phases, capability table, fallback chains                               |
+| 3   | [Public API Contract](adrs/003-public-api-contract.md)           | The minimal embeddable surface: `createEngine`/`evaluate`, pack loader, public types          |
+| 4   | [Matching Strategy](adrs/004-matching-strategy.md)               | Three-layer defense-in-depth, risk escalation, command splitting                              |
+| 5   | [YAML Rule Packs](adrs/005-yaml-rule-packs.md)                   | Why YAML, built-in packs, predicate limitations                                               |
+| 6   | [Observability](adrs/006-observability-strategy.md)              | In-memory stats, tiered roadmap                                                               |
+| 7   | [Trust & Self-Protection](adrs/007-trust-and-self-protection.md) | `defaultDecision`, `--strict`, `overridable`, `tamperResistant`, fail-open/fail-closed        |
+| 8   | [Non-Goals](adrs/008-non-goals.md)                               | What this project deliberately does not build                                                 |
+| 9   | [Adapter Scope & Tiering](adrs/009-adapter-scope-and-tiering.md) | Tier 1 (Pi, Claude Code) vs. community-owned Tier 2 adapters                                  |
+| 10  | [User-Input Mediation](adrs/010-user-input-mediation.md)         | The `user-input` phase — scrubbing what the user pastes into the prompt                       |
 
 ### Practical Guides
 
@@ -200,10 +184,10 @@ Agent Guardrails uses precise terms. Here's what you need to know:
 | Rule Pack         | Named collection of rules (YAML or TypeScript)                                                                                                                                                                |
 | Behavior          | Category: block/suggest/run/redact/confirm                                                                                                                                                                    |
 | Action            | Concrete response object (e.g., a suggest action with replacement + message)                                                                                                                                  |
-| Phase             | When a rule fires: before-tool or after-tool                                                                                                                                                                  |
+| Phase             | When a rule fires: user-input, before-tool, or after-tool                                                                                                                                                     |
 | ToolCallContext   | Normalized input from a harness (discriminated union on `toolName`)                                                                                                                                           |
-| Adapter           | Integration shim for a specific harness (Pi, OpenCode, etc.)                                                                                                                                                  |
-| Harness           | The platform (Pi, OpenCode). NOT the agent (the AI model).                                                                                                                                                    |
+| Adapter           | Integration shim for a specific harness. Tier 1 (first-party): Pi, Claude Code. Tier 2: community-owned ([ADR-009](adrs/009-adapter-scope-and-tiering.md)).                                                   |
+| Harness           | The platform (Pi, Claude Code). NOT the agent (the AI model).                                                                                                                                                 |
 | Fallback Chain    | Deterministic degradation when a harness lacks a capability                                                                                                                                                   |
 | Matcher           | User-facing name for a match condition: bash-command (regex), file-path (regex), or predicate (TypeScript function). Internally represented as a `MatchCondition` discriminated union.                       |
 | Match Condition   | A rule's `match` field — a declarative spec that the engine evaluates via `matchesMatcher()`. Type alias: `MatchCondition`.                                                                                  |
@@ -216,7 +200,7 @@ Agent Guardrails uses precise terms. Here's what you need to know:
 
 - **Behavior vs Action:** Behavior is the category (block/suggest/run/redact/confirm). Action is the concrete response object (e.g., a "suggest action" with a replacement and message).
 - **Rule Pack vs package:** A rule pack is a domain concept (a collection of rules). A package is the npm artifact.
-- **Harness vs agent:** The harness is the platform (Pi, OpenCode). The agent is the AI model running inside it. Adapters integrate with harnesses, not agents.
+- **Harness vs agent:** The harness is the platform (Pi, Claude Code). The agent is the AI model running inside it. Adapters integrate with harnesses, not agents.
 
 ## Code Style (Quick Reference)
 
