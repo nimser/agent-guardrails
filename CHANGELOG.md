@@ -9,3 +9,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.1.0] - 2026-07-06
 
 - Initial release — core policy engine, matcher registry, YAML rule packs (env, sops, private-key, secret-managers, encryption-tools, hardening), Pi adapter
+
+[Unreleased]: https://github.com/nimser/guiderails/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/nimser/guiderails/releases/tag/v0.1.0

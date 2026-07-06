@@ -80,6 +80,18 @@ For architectural reasoning, see the docs in this repo:
 
 The source of truth is the code and tests. If a doc and the code disagree, trust the code — and please open an issue so we can fix the doc.
 
+## Releasing
+
+Releases are cut from `main` and published by [`.github/workflows/release.yml`](.github/workflows/release.yml) whenever a `v*` tag is pushed. The process is deterministic — every step is either a required file edit or a CI gate that fails the release if skipped.
+
+1. Move the relevant entries from `## [Unreleased]` in [`CHANGELOG.md`](CHANGELOG.md) under a new `## [X.Y.Z] - YYYY-MM-DD` heading. Leave `## [Unreleased]` in place, empty, for the next round of changes.
+2. Add the compare link for the new version at the bottom of `CHANGELOG.md` and update the `[Unreleased]` link to diff from the new tag.
+3. Bump `version` in `package.json` to `X.Y.Z`.
+4. Commit, then tag: `git tag vX.Y.Z` and push both the commit and the tag.
+5. CI takes over: it verifies the tag matches `package.json`, verifies `CHANGELOG.md` has a matching entry (failing closed if either is missing), publishes to npm with provenance, and creates the GitHub Release with notes extracted straight from that `CHANGELOG.md` entry.
+
+A missing or mismatched changelog entry fails the release before anything is published — there is no path to a tagged release without changelog notes.
+
 ## Reporting Security Issues
 
 See [SECURITY.md](SECURITY.md).

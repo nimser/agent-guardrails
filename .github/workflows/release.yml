@@ -5,7 +5,7 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: read
+  contents: write # create the GitHub Release
   id-token: write # npm provenance
 
 jobs:
@@ -27,6 +27,19 @@ jobs:
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
           [ "${GITHUB_REF_NAME}" = "v${PKG_VERSION}" ] || { echo "Tag ${GITHUB_REF_NAME} != package version v${PKG_VERSION}"; exit 1; }
+      - name: Verify CHANGELOG.md has an entry for this version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          node scripts/extract-changelog.mjs "${PKG_VERSION}" > /dev/null
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          node scripts/extract-changelog.mjs "${PKG_VERSION}" > /tmp/release-notes.md
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file /tmp/release-notes.md
