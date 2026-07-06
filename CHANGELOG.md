@@ -6,4 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-- Initial release — core policy engine, matcher registry, YAML rule packs, Pi and OpenCode adapters
+## [0.1.0] - 2026-07-06
+
+- Initial release — core policy engine, matcher registry, YAML rule packs (env, sops, private-key, secret-managers, encryption-tools, hardening), Pi adapter
