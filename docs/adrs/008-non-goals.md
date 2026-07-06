@@ -17,7 +17,7 @@ Guiderails will **not** build:
 - **A daemon process.** The engine is a pure function invoked synchronously inside an adapter's hook call. A long-running daemon is a different architecture (process lifecycle, IPC, privilege separation) built for a containment guarantee this project doesn't claim. That is agentjail's shape, not ours.
 - **An auto-update mechanism.** Guiderails ships as a library/CLI installed via npm; version management is the package manager's job.
 - **A telemetry service.** No usage data leaves the user's machine. Tier 2/3 observability (ADR-006) is a local, opt-in event log — not a service this project operates or receives data from.
-- **A local UI server.** No always-on process to serve a dashboard. `npx ag stats` (ADR-006) is a one-shot CLI query over a local file, not a server.
+- **A local UI server.** No always-on process to serve a dashboard. `npx guiderails stats` (ADR-006) is a one-shot CLI query over a local file, not a server.
 - **A network egress proxy.** Filtering outbound network traffic requires a process positioned in the network path (or a kernel-level hook) — a fundamentally different architecture than intercepting events inside an agent harness. Pair with an OS-level sandbox or network-policy tool for this.
 - **A secrets broker.** Guiderails detects and blocks/redacts secret access; it does not vault, rotate, or issue credentials. That's a distinct product category this project integrates around (`secret-managers` rule pack), not replaces.
 
