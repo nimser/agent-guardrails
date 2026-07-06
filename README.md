@@ -14,8 +14,8 @@
 
 <!-- SonarCloud -->
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nimser_guiderails&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nimser_guiderails)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nimser_guiderails&metric=coverage)](https://sonarcloud.io/summary/new_code?id=nimser_guiderails)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nimser_agent-guardrails&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nimser_agent-guardrails)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nimser_agent-guardrails&metric=coverage)](https://sonarcloud.io/summary/new_code?id=nimser_agent-guardrails)
 
 <!-- /SonarCloud -->
 
