@@ -1,6 +1,6 @@
 # Writing Rule Packs
 
-Rule packs are YAML files that tell Agent Guardrails what to watch for and what to do when a match is found. They're the primary way to contribute — no TypeScript required.
+Rule packs are YAML files that tell Guiderails what to watch for and what to do when a match is found. They're the primary way to contribute — no TypeScript required.
 
 This guide covers the format. For the _why_ behind rule packs, see [ADR-005](adrs/005-yaml-rule-packs.md).
 
@@ -8,10 +8,10 @@ This guide covers the format. For the _why_ behind rule packs, see [ADR-005](adr
 
 ```bash
 # Create a packs directory in your project
-mkdir -p .agent-guardrails/packs
+mkdir -p .guiderails/packs
 
 # Write your rule pack
-cat > .agent-guardrails/packs/docker-secrets.yaml << 'EOF'
+cat > .guiderails/packs/docker-secrets.yaml << 'EOF'
 id: docker-secrets
 name: Docker Secrets Protection
 description: Prevent leaking Docker secrets via --env-file
@@ -200,7 +200,7 @@ See the [Pack Gallery](packs.md) for the full auto-generated list of shipped pac
 
 ## Overriding Built-in Rules
 
-You can disable or change any built-in rule in `agent-guardrails.json`:
+You can disable or change any built-in rule in `guiderails.json`:
 
 ```json
 {
@@ -248,4 +248,4 @@ The first catches shell commands; the second catches agents that use harness-nat
 2. Test it locally with `npm test`
 3. Submit a PR — the easiest contribution path
 
-Community packs are curated in [awesome-agent-guardrails](https://github.com/nimser/awesome-agent-guardrails).
+Community packs are curated in [awesome-guiderails](https://github.com/nimser/awesome-guiderails).

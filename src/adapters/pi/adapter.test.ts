@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import piGuardrails from './index.js'
+import piGuiderails from './index.js'
 import type { ExtensionAPI, PiContext, PiHookResponse } from './index.js'
 import type { PiToolCallEvent } from './normalize.js'
 
@@ -12,7 +12,7 @@ function setup() {
   const pi: ExtensionAPI = {
     on: (event: string, handler: unknown) => handlers.set(event, handler as Handler),
   }
-  piGuardrails(pi)
+  piGuiderails(pi)
   return {
     toolCall: (event: PiToolCallEvent) =>
       (handlers.get('tool_call') as Handler)(event, ctx) as Promise<PiHookResponse | undefined>,
@@ -27,7 +27,7 @@ const bash = (command: string): PiToolCallEvent => ({ toolName: 'bash', input: {
 describe('pi adapter', () => {
   it('is a function that registers tool_call and session_shutdown handlers', () => {
     const { handlers } = setup()
-    expect(typeof piGuardrails).toBe('function')
+    expect(typeof piGuiderails).toBe('function')
     expect(handlers.has('tool_call')).toBe(true)
     expect(handlers.has('session_shutdown')).toBe(true)
   })

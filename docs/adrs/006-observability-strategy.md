@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-Engine owners need to know: how many tool calls were checked? How many were blocked? Which rules fire most? Without this, Agent Guardrails is a black box. But a full observability suite isn't justified in the MVP — it needs to be lightweight, zero-dependency, and ready to evolve.
+Engine owners need to know: how many tool calls were checked? How many were blocked? Which rules fire most? Without this, Guiderails is a black box. But a full observability suite isn't justified in the MVP — it needs to be lightweight, zero-dependency, and ready to evolve.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Engine owners need to know: how many tool calls were checked? How many were bloc
 | Tier   | Description                                                     | Status              |
 | ------ | ---------------------------------------------------------------- | ------------------- |
 | Tier 1 | In-memory stats, session-end logging                             | ✅ Shipped in 0.1.0 |
-| Tier 2 | Persisted `DomainEvent` log + `npx ag stats` CLI query/replay     | Deferred            |
+| Tier 2 | Persisted `DomainEvent` log + `npx guiderails stats` CLI query/replay     | Deferred            |
 | Tier 3 | Streaming consumers of the same persisted log (real-time)        | Deferred            |
 
 Tier 2 persists the same `DomainEvent` trace the engine already produces via
@@ -45,7 +45,7 @@ The engine produces a decision trace alongside every action via `engine.processM
 ### Tier 2: Persisted `DomainEvent` Log (design, deferred)
 
 Append the `DomainEvent[]` trace `processMatch()` already produces to a local event
-log, one entry per call. `npx ag stats` becomes a query/aggregation over this log
+log, one entry per call. `npx guiderails stats` becomes a query/aggregation over this log
 instead of a separately-maintained counter file — one source of truth, not two.
 
 - **Redaction at write time.** Sensitive values in `matched` fields MUST be redacted

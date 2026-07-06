@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-Agent Guardrails needs an internal structure that's easy to understand on first glance, but ready to grow. The tension: a single package is easiest to contribute to, but packages can become unstructured monoliths. The answer is strict internal layering from day one.
+Guiderails needs an internal structure that's easy to understand on first glance, but ready to grow. The tension: a single package is easiest to contribute to, but packages can become unstructured monoliths. The answer is strict internal layering from day one.
 
 ## Decision
 

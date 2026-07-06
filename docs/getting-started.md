@@ -1,10 +1,10 @@
-# Getting Started with Agent Guardrails
+# Getting Started with Guiderails
 
-Welcome! This is the contributor gateway for Agent Guardrails — a steering engine that mediates AI coding agent events (user input, tool calls, tool output) against rule packs.
+Welcome! This is the contributor gateway for Guiderails — a steering engine that mediates AI coding agent events (user input, tool calls, tool output) against rule packs.
 
 ## What This Project Does
 
-Your AI coding agent shouldn't read `.env` files raw, `grep` when `rg` is faster, or force-push over shared history. Agent Guardrails steers it to the better move — and blocks when nothing safe exists.
+Your AI coding agent shouldn't read `.env` files raw, `grep` when `rg` is faster, or force-push over shared history. Guiderails steers it to the better move — and blocks when nothing safe exists.
 
 ```
 Agent Tool Call → Match Rules → Resolve Action → Enforce
@@ -30,10 +30,10 @@ No TypeScript required. Write a YAML file describing what to watch for, submit a
 
 ### 🟡 Medium: Embed the Library or Build an Adapter
 
-Building your own harness, or want guardrails in an agent app? The library is one function ([ADR-003](adrs/003-public-api-contract.md)):
+Building your own harness, or want guiderails in an agent app? The library is one function ([ADR-003](adrs/003-public-api-contract.md)):
 
 ```typescript
-import { createEngine, loadAllRulePacks, PredicateRegistry } from "agent-guardrails";
+import { createEngine, loadAllRulePacks, PredicateRegistry } from "guiderails";
 
 const registry = new PredicateRegistry();
 registry.register("my-check", (ctx) => /* ... */);
@@ -176,7 +176,7 @@ Read these in order:
 
 ## Key Vocabulary
 
-Agent Guardrails uses precise terms. Here's what you need to know:
+Guiderails uses precise terms. Here's what you need to know:
 
 | Term              | Meaning                                                                                                                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

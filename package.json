@@ -1,21 +1,22 @@
 {
-  "name": "agent-guardrails",
+  "name": "guiderails",
   "version": "0.1.0-dev",
   "description": "Policy engine for AI coding agents",
   "keywords": [
     "agent",
     "ai",
     "guardrails",
+    "guiderails",
     "safety"
   ],
   "bugs": {
-    "url": "https://github.com/nimser/agent-guardrails/issues"
+    "url": "https://github.com/nimser/guiderails/issues"
   },
   "license": "MIT",
   "author": "Nicolas Wormser",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nimser/agent-guardrails"
+    "url": "https://github.com/nimser/guiderails"
   },
   "files": [
     "dist"

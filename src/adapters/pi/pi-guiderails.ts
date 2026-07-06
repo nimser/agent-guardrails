@@ -30,7 +30,7 @@ export interface ExtensionAPI {
  * Suggest actions also block — Pi's `reason` carries the safer replacement
  * back to the agent, which retries with it (change-5 adds native suggest).
  */
-export function piGuardrails(pi: ExtensionAPI): void {
+export function piGuiderails(pi: ExtensionAPI): void {
   const registry = new PredicateRegistry()
   const engine = createEngine(loadBuiltInRulePacks(registry), PI_CAPABILITIES, { registry })
 
@@ -42,11 +42,11 @@ export function piGuardrails(pi: ExtensionAPI): void {
     } catch (error) {
       return {
         block: true,
-        reason: `agent-guardrails failed to evaluate this call (blocking to be safe): ${String(error)}`,
+        reason: `guiderails failed to evaluate this call (blocking to be safe): ${String(error)}`,
       }
     }
     if (result?.type === 'block' || result?.type === 'suggest') {
-      return { block: true, reason: result.message ?? 'Blocked by agent-guardrails.' }
+      return { block: true, reason: result.message ?? 'Blocked by guiderails.' }
     }
     return undefined
   })
@@ -56,7 +56,7 @@ export function piGuardrails(pi: ExtensionAPI): void {
     const matches = blocks + suggests
     if (matches > 0) {
       ctx.ui.notify(
-        `🛡️ Guardrails: ${matches} interventions this session (${blocks} blocked, ${suggests} suggested)`
+        `🛡️ Guiderails: ${matches} interventions this session (${blocks} blocked, ${suggests} suggested)`
       )
     }
     engine.resetStats()

@@ -1,7 +1,7 @@
-import { piGuardrails } from './pi-guardrails.js'
+import { piGuiderails } from './pi-guiderails.js'
 
-export { piGuardrails } from './pi-guardrails.js'
-export type { ExtensionAPI, PiContext, PiHookResponse } from './pi-guardrails.js'
+export { piGuiderails } from './pi-guiderails.js'
+export type { ExtensionAPI, PiContext, PiHookResponse } from './pi-guiderails.js'
 export { normalizeToContext, type PiToolCallEvent } from './normalize.js'
 
-export default piGuardrails
+export default piGuiderails

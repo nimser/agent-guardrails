@@ -17,11 +17,11 @@ vi.mock('../../engine/create-engine.js', () => ({
 
 describe('pi adapter fail-closed', () => {
   it('blocks the tool call when the engine throws', async () => {
-    const { default: piGuardrails } = await import('./index.js')
+    const { default: piGuiderails } = await import('./index.js')
     let toolCall:
       | ((event: PiToolCallEvent, ctx: PiContext) => Promise<PiHookResponse | undefined>)
       | undefined
-    piGuardrails({
+    piGuiderails({
       on: (event: string, handler: unknown) => {
         if (event === 'tool_call') toolCall = handler as typeof toolCall
       },
