@@ -1,6 +1,6 @@
 # Guiderails
 
-> **⚠️ Heavy development:** Not yet published to npm. Expect breakage. The quick start below shows the expected workflow once the package is available.
+> **⚠️ Early release:** APIs may change before 1.0.
 
 ---
 
@@ -30,15 +30,22 @@ That's the whole idea: a steering layer for AI coding agents. Instead of stoppin
 Rules work out of the box — no config, no flags:
 
 ```bash
-npx guiderails install pi        # or: install claude-code
+npm install guiderails
+```
+
+Using [Pi](https://github.com/earendil-works/pi)? Register the extension and you're done:
+
+```typescript
+import piGuiderails from "guiderails/adapters/pi";
+
+export default piGuiderails;
 ```
 
 Try `cat .env` in your agent — it comes back with a redacted read instead of the raw file. A stricter posture is on the roadmap: `--strict` will confirm-gate anything secret-shaped even without a specific rule and lock the `hardening` pack on ([ADR-007](docs/adrs/007-trust-and-self-protection.md)).
 
-## Three doors
+## Two doors (a third on the roadmap)
 
-- **Pi plugin** — in-process, all five behaviors native. `npx guiderails install pi`
-- **Claude Code hooks** — out-of-process, all five behaviors bound to native hook mechanisms. `npx guiderails install claude-code`
+- **Pi plugin** — in-process, ships today. Register as shown above ([adapter docs](src/adapters/pi/README.md)).
 - **TypeScript library** — building your own harness? `npm install guiderails`, one function:
 
   ```typescript
@@ -48,15 +55,9 @@ Try `cat .env` in your agent — it comes back with a redacted read instead of t
   const action = engine.evaluate(ctx); // per tool call / tool result / user prompt
   ```
 
+- **Claude Code hooks** — on the roadmap; not shipped yet.
+
 ## Rule packs
-
-**Steering (quality of life)** — fires every session, keeps the agent on the fast path:
-
-| Pack              | What it does                                                              |
-| ----------------- | ------------------------------------------------------------------------- |
-| `modern-cli`      | `grep` → `rg`, `find` → `fd`, `cat` on a huge file → `head`               |
-| `package-manager` | `npm install` in a pnpm repo → `pnpm add` (and the other mismatches)      |
-| `git-safety`      | commit to a protected branch → confirm; `push --force` → `--force-with-lease` |
 
 **Security** — fires rarely, saves your week when it does:
 
@@ -69,7 +70,7 @@ Try `cat .env` in your agent — it comes back with a redacted read instead of t
 | `encryption-tools` | `age -d`, `gpg --decrypt`, `openssl enc -d` blocked                     |
 | `hardening`        | shell wrappers (`eval`, `bash -c`, `$()`) around risky commands force-blocked |
 
-Status: the packs above are the v0.1.0 shipping set; anything not listed here doesn't exist yet and isn't claimed.
+Status: the packs above are the v0.1.0 shipping set; anything not listed here doesn't exist yet and isn't claimed. Steering packs (`modern-cli`, `package-manager`, `git-safety`) are on the roadmap.
 
 Every boundary where a secret can cross into the model's context is mediated: **user input** (a key pasted into the prompt is scrubbed before it reaches the API), **tool calls**, and **tool output**.
 
@@ -95,7 +96,7 @@ See [ADR-007](docs/adrs/007-trust-and-self-protection.md) and [LIMITATIONS.md](L
 ## Adapters
 
 - **Pi** — first-party, in-process plugin for [Pi](https://github.com/earendil-works/pi)
-- **Claude Code** — first-party, external hooks
+- **Claude Code** — first-party, external hooks (roadmap)
 - **Community adapters welcome** — any harness integrates against the stable adapter interface ([ADR-009](docs/adrs/009-adapter-scope-and-tiering.md), [ADR-003](docs/adrs/003-public-api-contract.md))
 
 ## Documentation
